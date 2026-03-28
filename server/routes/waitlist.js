@@ -7,12 +7,21 @@ router.post('/', async (req, res) => {
   const { email } = req.body
   if (!email) return res.status(400).json({ error: 'Email is required' })
 
-  await pool.query('INSERT INTO waitlist (email) VALUES ($1)', [email])
+  try {
+    await pool.query('INSERT INTO waitlist (email) VALUES ($1)', [email])
+  } catch (err) {
+    console.error('Waitlist DB error:', err.message)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
 
-  await sendNotification({
-    subject: 'New Android waitlist signup',
-    text: `Email: ${email}`,
-  })
+  try {
+    await sendNotification({
+      subject: 'New Android waitlist signup',
+      text: `Email: ${email}`,
+    })
+  } catch (err) {
+    console.error('Waitlist email error:', err.message)
+  }
 
   res.json({ ok: true })
 })
