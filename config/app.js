@@ -2,12 +2,10 @@ require('dotenv').config()
 
 module.exports = {
   appName: 'Breathe Collection',
-  supportEmail: 'support@breathecollection.com',
-  smtp: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+  supportEmail: 'support@breathecollection.app',
+  fromEmail: 'noreply@breathecollection.app',
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
   },
   db: {
     connectionString: process.env.DATABASE_URL,

@@ -1,19 +1,11 @@
-const nodemailer = require('nodemailer')
+const { Resend } = require('resend')
 const config = require('../../config/app')
 
-const transporter = nodemailer.createTransport({
-  host: config.smtp.host,
-  port: config.smtp.port,
-  secure: false,
-  auth: {
-    user: config.smtp.user,
-    pass: config.smtp.pass,
-  },
-})
+const resend = new Resend(config.resend.apiKey)
 
 async function sendNotification({ subject, text }) {
-  await transporter.sendMail({
-    from: `"${config.appName}" <${config.smtp.user}>`,
+  await resend.emails.send({
+    from: `${config.appName} <${config.fromEmail}>`,
     to: config.supportEmail,
     subject,
     text,
