@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe Collection | Creator Program</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --primary: #2C7873;
+            --secondary: #52AB98;
+            --accent: #E07B39;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.6; letter-spacing: 0.02em; -webkit-font-smoothing: antialiased; }
+        section { padding: 5rem 1.5rem; max-width: 900px; margin: 0 auto; }
+        .hero { text-align: center; padding-top: 8rem; padding-bottom: 3rem; }
+        h1 { font-size: clamp(2rem,5vw,3.5rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 1rem; line-height: 1.2; }
+        .subtitle { font-size: clamp(1rem,2vw,1.2rem); color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 300; }
+        .value-prop { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 4rem; }
+        .perk { background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 12px; }
+        .perk h3 { font-weight: 500; color: var(--secondary); margin-bottom: 0.5rem; }
+        .perk p { color: var(--text-muted); font-weight: 300; font-size: 0.95rem; }
+        .flow-container { text-align: center; margin-bottom: 6rem; }
+        .flow-steps { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; }
+        .step { display: flex; align-items: center; gap: 1.5rem; }
+        .step-text { background: rgba(82,171,152,0.1); color: var(--secondary); padding: 0.8rem 1.5rem; border-radius: 100px; font-weight: 400; font-size: 0.95rem; }
+        .arrow { color: var(--card-border); }
+        @media (max-width: 768px) { .step { flex-direction: column; } .arrow { transform: rotate(90deg); } }
+        .application-form { background: var(--card-bg); border: 1px solid var(--card-border); padding: 3rem; border-radius: 16px; margin-bottom: 6rem; }
+        .application-form h2 { font-weight: 300; margin-bottom: 2rem; text-align: center; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 1rem; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.3); color: white; font-family: inherit; outline: none; transition: border-color 0.3s ease; }
+        .form-control:focus { border-color: var(--secondary); }
+        select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+        .btn-submit { width: 100%; background-color: var(--text-main); color: var(--bg); padding: 1.2rem; border-radius: 8px; border: none; font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: transform 0.3s ease; margin-top: 1rem; font-family: inherit; }
+        .btn-submit:hover { transform: translateY(-2px); }
+        .faq { margin-bottom: 5rem; }
+        .faq h2 { font-weight: 300; margin-bottom: 2rem; text-align: center; }
+        .faq-item { border-bottom: 1px solid var(--card-border); padding: 1.5rem 0; }
+        .faq-q { font-weight: 500; color: var(--secondary); margin-bottom: 0.5rem; }
+        .faq-a { color: var(--text-muted); font-weight: 300; }
+        footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
+        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
+        footer a:hover { color: var(--text-main); }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>Partner with Breathe Collection</h1>
+        <p class="subtitle">Free lifetime Pro access. Run a giveaway your audience will actually want.</p>
+    </section>
+
+    <section>
+        <div class="value-prop">
+            <div class="perk"><h3>Free lifetime Pro</h3><p>Yours to keep, no obligations, no expiry.</p></div>
+            <div class="perk"><h3>Giveaway codes</h3><p>Lifetime or 1-year Pro codes to give away to your followers. Easy engagement content.</p></div>
+            <div class="perk"><h3>Early access</h3><p>Experience new features and patterns before they go public.</p></div>
+        </div>
+
+        <div class="flow-container">
+            <h2 style="font-weight: 300; margin-bottom: 1rem;">How it works</h2>
+            <div class="flow-steps">
+                <div class="step"><div class="step-text">Apply</div><div class="arrow">→</div></div>
+                <div class="step"><div class="step-text">Get approved</div><div class="arrow">→</div></div>
+                <div class="step"><div class="step-text">Receive codes</div><div class="arrow">→</div></div>
+                <div class="step"><div class="step-text">Post your giveaway</div></div>
+            </div>
+        </div>
+
+        <div class="application-form">
+            <h2>Apply Now</h2>
+            <form id="creator-form">
+                <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" required></div>
+                <div class="form-group"><label>Email Address</label><input type="email" name="email" class="form-control" required></div>
+                <div class="form-group"><label>Instagram / TikTok Handle</label><input type="text" name="handle" class="form-control" placeholder="@username" required></div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select name="platform" class="form-control" required>
+                        <option value="">Select primary platform</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="twitter">X / Twitter</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Follower Count</label>
+                    <select name="followers" class="form-control" required>
+                        <option value="">Select range</option>
+                        <option value="<10k">&lt; 10k</option>
+                        <option value="10k-50k">10k - 50k</option>
+                        <option value="50k-150k">50k - 150k</option>
+                        <option value="150k+">150k+</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Your Niche</label>
+                    <select name="niche" class="form-control" required>
+                        <option value="">Select niche</option>
+                        <option value="biohacking">Biohacking</option>
+                        <option value="fitness">Fitness</option>
+                        <option value="mindfulness">Mindfulness</option>
+                        <option value="sleep">Sleep</option>
+                        <option value="productivity">Productivity</option>
+                        <option value="anxiety">Anxiety / Mental Health</option>
+                        <option value="cold_exposure">Cold Exposure</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Why do you want to partner?</label><textarea name="reason" class="form-control" required></textarea></div>
+                <button type="submit" class="btn-submit">Submit Application</button>
+            </form>
+            <p id="creator-msg" style="margin-top:1rem; text-align:center; display:none;"></p>
+        </div>
+
+        <div class="faq">
+            <h2>FAQ</h2>
+            <div class="faq-item"><div class="faq-q">Do I need a minimum following?</div><div class="faq-a">No minimum. We care about niche fit and engagement over raw numbers. Micro-creators in the right niche consistently outperform larger generalist accounts.</div></div>
+            <div class="faq-item"><div class="faq-q">How many giveaway codes do I get?</div><div class="faq-a">Typically 3-5 to start. If your giveaway performs well, we'll send more.</div></div>
+            <div class="faq-item"><div class="faq-q">Do I have to post on a specific schedule?</div><div class="faq-a">No obligations. Use the app honestly, and share it if it genuinely fits your content.</div></div>
+            <div class="faq-item"><div class="faq-q">Can I also have a referral link?</div><div class="faq-a">Yes — reply to your welcome email and we'll set one up. You earn 25% commission on any subscriptions your link drives.</div></div>
+        </div>
+    </section>
+
+    <footer>
+        <p style="margin-bottom: 1rem;"><a href="index.html">← Back to Breathe Collection</a></p>
+        <p>&copy; Breathe Collection. All rights reserved.</p>
+    </footer>
+
+    <script>
+    document.getElementById('creator-form').addEventListener('submit', async function(e) {
+        e.preventDefault()
+        const data = Object.fromEntries(new FormData(this))
+        const msg = document.getElementById('creator-msg')
+        try {
+            const res = await fetch('/api/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            msg.style.display = 'block'
+            msg.textContent = res.ok
+                ? "Application received. We'll be in touch."
+                : "Something went wrong. Try again."
+            msg.style.color = res.ok ? 'var(--secondary)' : 'var(--accent)'
+            if (res.ok) this.reset()
+        } catch {
+            msg.style.display = 'block'
+            msg.textContent = "Something went wrong. Try again."
+            msg.style.color = 'var(--accent)'
+        }
+    })
+    </script>
+</body>
+</html>

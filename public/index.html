@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe Collection | Nine Breathing Techniques. One Discipline.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --primary: #2C7873;
+            --secondary: #52AB98;
+            --accent: #E07B39;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+        section { padding: 5rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+        .hero {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; min-height: 90vh; justify-content: center;
+            position: relative; overflow: hidden; padding-top: 2rem;
+        }
+        .orb-container {
+            position: relative; width: 250px; height: 250px;
+            margin: 0 auto 3rem auto; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .orb {
+            width: 120px; height: 120px;
+            background: radial-gradient(circle at 30% 30%, rgba(82,171,152,0.9), rgba(44,120,115,0.4));
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(82,171,152,0.6), inset 0 0 20px rgba(255,255,255,0.2);
+            animation: breathe 8s ease-in-out infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 40px rgba(82,171,152,0.4); }
+            50% { transform: scale(1.6); opacity: 1; box-shadow: 0 0 100px rgba(82,171,152,0.8); }
+        }
+        h1 { font-size: clamp(2.5rem,6vw,4.5rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 1.5rem; line-height: 1.1; }
+        .subtitle { font-size: clamp(1.1rem,2vw,1.4rem); color: var(--text-muted); max-width: 600px; margin: 0 auto 3rem auto; font-weight: 300; }
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center;
+            background-color: var(--text-main); color: var(--bg);
+            padding: 1rem 2.5rem; border-radius: 100px; text-decoration: none;
+            font-weight: 500; font-size: 1.1rem; transition: all 0.3s ease;
+            border: none; cursor: pointer;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; justify-content: center;
+            background-color: transparent; color: var(--text-main);
+            padding: 1rem 2.5rem; border-radius: 100px; text-decoration: none;
+            font-weight: 400; font-size: 1rem; transition: all 0.3s ease;
+            border: 1px solid var(--card-border); cursor: pointer;
+        }
+        .btn-secondary:hover { border-color: var(--secondary); color: var(--secondary); }
+        .techniques { text-align: center; }
+        .section-title { font-size: 2rem; font-weight: 300; margin-bottom: 4rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 2.5rem 2rem; text-align: left;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(82,171,152,0.05) 0%, transparent 100%);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(82,171,152,0.3); }
+        .card:hover::before { opacity: 1; }
+        .card-name { font-size: 1.5rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .card-tagline { color: var(--secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+        .card-intention { color: var(--text-muted); font-size: 0.95rem; font-weight: 300; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; text-align: center; padding: 8rem 1.5rem; }
+        .feature-item h3 { font-size: 1.3rem; font-weight: 400; margin: 1.5rem 0 1rem 0; color: var(--secondary); }
+        .feature-item p { color: var(--text-muted); font-weight: 300; }
+        .feature-icon { width: 48px; height: 48px; margin: 0 auto; border-radius: 50%; background: rgba(82,171,152,0.1); display: flex; align-items: center; justify-content: center; color: var(--secondary); }
+        .social-proof { text-align: center; background: var(--card-bg); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border); }
+        .stars { color: var(--accent); font-size: 1.5rem; letter-spacing: 0.2rem; margin-bottom: 1rem; }
+        .rating-text { font-size: 1.2rem; font-weight: 300; margin-bottom: 3rem; }
+        .quotes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 900px; margin: 0 auto; }
+        .quote-card { padding: 2rem; }
+        .quote-text { font-style: italic; font-weight: 300; font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-muted); }
+        .cta-section { text-align: center; max-width: 600px; padding: 8rem 1.5rem; }
+        .waitlist-form { display: flex; gap: 1rem; margin-top: 2rem; justify-content: center; }
+        .waitlist-form input {
+            padding: 1rem 1.5rem; border-radius: 100px; border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.05); color: white; font-family: inherit;
+            width: 100%; max-width: 300px; outline: none; transition: border-color 0.3s ease;
+        }
+        .waitlist-form input:focus { border-color: var(--secondary); }
+        .creator-block { margin-top: 6rem; padding-top: 6rem; border-top: 1px solid var(--card-border); }
+        footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
+        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
+        footer a:hover { color: var(--text-main); }
+        .footer-links { margin-bottom: 2rem; }
+        @media (max-width: 768px) {
+            .waitlist-form { flex-direction: column; align-items: center; }
+            .waitlist-form input, .waitlist-form button { width: 100%; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="orb-container"><div class="orb"></div></div>
+        <h1>Nine breathing techniques.<br>One discipline.</h1>
+        <p class="subtitle">The only breathing app that treats breathwork as a discipline, not an afterthought.</p>
+        <a href="#" class="btn-primary">Download on the App Store</a>
+    </section>
+
+    <section class="techniques" id="techniques">
+        <h2 class="section-title">Master Your State</h2>
+        <div class="grid">
+            <div class="card"><div class="card-name">Wim Hof</div><div class="card-tagline">Energize</div><div class="card-intention">Physical Endurance</div></div>
+            <div class="card"><div class="card-name">Box</div><div class="card-tagline">Sharp Focus</div><div class="card-intention">Nervous System Reset</div></div>
+            <div class="card"><div class="card-name">Huberman</div><div class="card-tagline">Quick Reset</div><div class="card-intention">Fast Reset & Calm</div></div>
+            <div class="card"><div class="card-name">SEAL</div><div class="card-tagline">Control</div><div class="card-intention">Nervous System Reset</div></div>
+            <div class="card"><div class="card-name">Sleep</div><div class="card-tagline">Good Night</div><div class="card-intention">Deep Relaxation</div></div>
+            <div class="card"><div class="card-name">Calm</div><div class="card-tagline">Coherence</div><div class="card-intention">Coherence & Flow</div></div>
+            <div class="card"><div class="card-name">Belly</div><div class="card-tagline">Ground</div><div class="card-intention">Deep Relaxation</div></div>
+            <div class="card"><div class="card-name">Release</div><div class="card-tagline">Let Go</div><div class="card-intention">Coherence & Flow</div></div>
+            <div class="card"><div class="card-name">Custom</div><div class="card-tagline">Your Rhythm</div><div class="card-intention">Custom Flow</div></div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+            <h3>Eyes-closed sessions</h3>
+            <p>Haptic feedback synced to every breath phase. No screen required.</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </div>
+            <h3>Fully configurable</h3>
+            <p>Set your own inhale, exhale, hold durations, and cycle count.</p>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h3>No bloat</h3>
+            <p>No ads, no sleep stories, no courses. Just breathwork.</p>
+        </div>
+    </section>
+
+    <section class="social-proof">
+        <div class="stars">★★★★★</div>
+        <div class="rating-text">4.8 on the App Store</div>
+        <div class="quotes-grid">
+            <div class="quote-card">
+                <p class="quote-text">"The most focused breathwork app I've used. The haptic feedback is a game changer for eyes-closed sessions."</p>
+                <p>— User Review</p>
+            </div>
+            <div class="quote-card">
+                <p class="quote-text">"Finally an app that doesn't push a meditation course on me when I just want to do box breathing."</p>
+                <p>— User Review</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2>Android coming soon</h2>
+        <p class="subtitle" style="margin-top:0.5rem; margin-bottom: 0;">Join the waitlist to be notified.</p>
+        <form class="waitlist-form" id="waitlist-form">
+            <input type="email" name="email" placeholder="Your email address" required>
+            <button type="submit" class="btn-primary" style="padding: 1rem 1.5rem;">Join Waitlist</button>
+        </form>
+        <p id="waitlist-msg" style="margin-top:1rem; color: var(--secondary); display:none;"></p>
+
+        <div class="creator-block">
+            <h3 style="font-weight: 400; font-size: 1.5rem; margin-bottom: 0.5rem;">Are you a creator?</h3>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Run a giveaway your audience will actually want.</p>
+            <a href="creators.html" class="btn-secondary">Partner with us</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="mailto:support@breathecollection.com">Support</a>
+            <a href="#">App Store</a>
+            <a href="#">Privacy Policy</a>
+        </div>
+        <p>&copy; Breathe Collection. All rights reserved.</p>
+    </footer>
+
+    <script>
+    document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+        e.preventDefault()
+        const email = this.querySelector('input[type=email]').value
+        const msg = document.getElementById('waitlist-msg')
+        try {
+            const res = await fetch('/api/waitlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            msg.style.display = 'block'
+            msg.textContent = res.ok ? "You're on the list." : "Something went wrong. Try again."
+            msg.style.color = res.ok ? 'var(--secondary)' : 'var(--accent)'
+            if (res.ok) this.reset()
+        } catch {
+            msg.style.display = 'block'
+            msg.textContent = "Something went wrong. Try again."
+            msg.style.color = 'var(--accent)'
+        }
+    })
+    </script>
+</body>
+</html>
