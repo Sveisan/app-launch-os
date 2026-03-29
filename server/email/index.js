@@ -12,4 +12,13 @@ async function sendNotification({ subject, text }) {
   })
 }
 
-module.exports = { sendNotification }
+async function sendEmail({ to, subject, text }) {
+  await resend.emails.send({
+    from: `${config.appName} <${config.fromEmail}>`,
+    to,
+    subject,
+    text,
+  })
+}
+
+module.exports = { sendNotification, sendEmail }
