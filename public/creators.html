@@ -8,46 +8,33 @@
     <style>
         :root {
             --bg: #000000;
-            --primary: #2C7873;
             --secondary: #52AB98;
-            --accent: #E07B39;
             --text-main: #FFFFFF;
             --text-muted: #A0A0A0;
             --card-bg: rgba(255, 255, 255, 0.03);
             --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #E07B39;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.6; letter-spacing: 0.02em; -webkit-font-smoothing: antialiased; }
-        section { padding: 5rem 1.5rem; max-width: 900px; margin: 0 auto; }
-        .hero { text-align: center; padding-top: 8rem; padding-bottom: 3rem; }
-        h1 { font-size: clamp(2rem,5vw,3.5rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 1rem; line-height: 1.2; }
-        .subtitle { font-size: clamp(1rem,2vw,1.2rem); color: var(--text-muted); max-width: 600px; margin: 0 auto; font-weight: 300; }
-        .value-prop { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 4rem; }
-        .perk { background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 12px; }
-        .perk h3 { font-weight: 500; color: var(--secondary); margin-bottom: 0.5rem; }
-        .perk p { color: var(--text-muted); font-weight: 300; font-size: 0.95rem; }
-        .flow-container { text-align: center; margin-bottom: 6rem; }
-        .flow-steps { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; }
-        .step { display: flex; align-items: center; gap: 1.5rem; }
-        .step-text { background: rgba(82,171,152,0.1); color: var(--secondary); padding: 0.8rem 1.5rem; border-radius: 100px; font-weight: 400; font-size: 0.95rem; }
-        .arrow { color: var(--card-border); }
-        @media (max-width: 768px) { .step { flex-direction: column; } .arrow { transform: rotate(90deg); } }
-
-        /* Eligibility Checker */
-        .eligibility-section { margin-bottom: 6rem; }
-        .eligibility-card {
-            background: var(--card-bg); border: 1px solid var(--card-border);
-            border-radius: 16px; padding: 3rem; text-align: center;
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg); color: var(--text-main);
+            line-height: 1.6; letter-spacing: 0.02em;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 2rem 1.5rem;
         }
-        .eligibility-card h2 { font-weight: 300; font-size: 2rem; margin-bottom: 0.5rem; }
-        .eligibility-card .sub { color: var(--text-muted); margin-bottom: 2.5rem; font-weight: 300; }
-        .checker-form { display: flex; flex-direction: column; gap: 1rem; max-width: 480px; margin: 0 auto; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .wrapper { width: 100%; max-width: 460px; text-align: center; }
+        h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+        .sub { color: var(--text-muted); font-weight: 300; margin-bottom: 2.5rem; font-size: 1rem; }
+
+        .checker { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 2rem; }
+
         .form-control {
-            width: 100%; padding: 1rem 1.2rem; border-radius: 8px;
+            width: 100%; padding: 0.9rem 1rem; border-radius: 8px;
             border: 1px solid var(--card-border); background: rgba(0,0,0,0.4);
             color: white; font-family: inherit; font-size: 1rem;
-            outline: none; transition: border-color 0.3s ease;
+            outline: none; transition: border-color 0.3s ease; margin-bottom: 0.75rem;
         }
         .form-control:focus { border-color: var(--secondary); }
         select.form-control {
@@ -55,219 +42,167 @@
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
         }
-        .btn-check {
-            width: 100%; padding: 1.1rem; border-radius: 8px; border: none;
+        .btn {
+            width: 100%; padding: 1rem; border-radius: 8px; border: none;
             background: var(--text-main); color: var(--bg); font-size: 1rem;
             font-weight: 500; font-family: inherit; cursor: pointer;
-            transition: transform 0.2s ease, opacity 0.2s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease; margin-top: 0.25rem;
         }
-        .btn-check:hover { transform: translateY(-2px); }
-        .btn-check:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        /* Loading */
-        .loading-state { display: none; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem 0; }
+        /* States */
+        .state { display: none; }
+        .loading { flex-direction: column; align-items: center; gap: 1rem; padding: 1rem 0; }
         .spinner {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 2px solid rgba(82,171,152,0.2);
-            border-top-color: var(--secondary);
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid rgba(82,171,152,0.2); border-top-color: var(--secondary);
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-state p { color: var(--text-muted); font-weight: 300; }
+        .loading p { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* Results */
-        .result-state { display: none; padding: 2rem 0; }
-        .result-approved { color: var(--secondary); }
-        .result-rejected { color: var(--text-muted); }
-        .result-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-        .result-title { font-size: 1.5rem; font-weight: 400; margin-bottom: 0.5rem; }
-        .result-msg { font-weight: 300; }
-        .result-followers { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
-        .btn-retry {
-            margin-top: 1.5rem; padding: 0.7rem 1.5rem; border-radius: 100px;
-            border: 1px solid var(--card-border); background: transparent;
-            color: var(--text-muted); font-family: inherit; cursor: pointer;
-            transition: border-color 0.3s ease, color 0.3s ease;
+        .result { padding: 0.5rem 0; }
+        .result-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .result-title { font-size: 1.3rem; font-weight: 400; margin-bottom: 0.25rem; }
+        .result-sub { color: var(--text-muted); font-size: 0.9rem; font-weight: 300; margin-bottom: 1.25rem; }
+
+        .approved .result-icon { color: var(--secondary); }
+        .rejected .result-icon { color: var(--text-muted); }
+
+        .btn-ghost {
+            background: transparent; color: var(--text-muted); border: 1px solid var(--card-border);
+            font-size: 0.9rem; padding: 0.6rem 1.2rem; border-radius: 100px;
+            font-family: inherit; cursor: pointer; transition: border-color 0.3s ease, color 0.3s ease;
+            margin-top: 0.5rem;
         }
-        .btn-retry:hover { border-color: var(--secondary); color: var(--secondary); }
+        .btn-ghost:hover { border-color: var(--secondary); color: var(--secondary); }
 
-        .faq { margin-bottom: 5rem; }
-        .faq h2 { font-weight: 300; margin-bottom: 2rem; text-align: center; }
-        .faq-item { border-bottom: 1px solid var(--card-border); padding: 1.5rem 0; }
-        .faq-q { font-weight: 500; color: var(--secondary); margin-bottom: 0.5rem; }
-        .faq-a { color: var(--text-muted); font-weight: 300; }
-        footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
-        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
-        footer a:hover { color: var(--text-main); }
-        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        .success-msg { color: var(--secondary); font-weight: 300; font-size: 0.95rem; margin-top: 0.75rem; }
+
+        footer { margin-top: 3rem; color: var(--text-muted); font-size: 0.85rem; }
+        footer a { color: var(--text-muted); text-decoration: none; }
+        footer a:hover { color: var(--secondary); }
     </style>
 </head>
 <body>
-    <section class="hero">
-        <h1>Partner with Breathe Collection</h1>
-        <p class="subtitle">Free lifetime Pro access. Run a giveaway your audience will actually want.</p>
-    </section>
+    <div class="wrapper">
+        <h1>Get your giveaway codes.</h1>
+        <p class="sub">Free lifetime Pro access. Run a giveaway your audience will actually want.</p>
 
-    <section>
-        <div class="value-prop">
-            <div class="perk"><h3>Free lifetime Pro</h3><p>Yours to keep, no obligations, no expiry.</p></div>
-            <div class="perk"><h3>Giveaway codes</h3><p>Lifetime or 1-year Pro codes to give away to your followers. Easy engagement content.</p></div>
-            <div class="perk"><h3>Early access</h3><p>Experience new features and patterns before they go public.</p></div>
-        </div>
+        <div class="checker">
+            <!-- Step 1 -->
+            <form id="check-form">
+                <select id="platform" class="form-control" required>
+                    <option value="">Platform</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="x">X / Twitter</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="onlyfans">OnlyFans</option>
+                </select>
+                <input type="text" id="handle" class="form-control" placeholder="@yourhandle" required>
+                <button type="submit" class="btn">Check Eligibility</button>
+            </form>
 
-        <div class="flow-container">
-            <h2 style="font-weight: 300; margin-bottom: 1rem;">How it works</h2>
-            <div class="flow-steps">
-                <div class="step"><div class="step-text">Check eligibility</div><div class="arrow">→</div></div>
-                <div class="step"><div class="step-text">Get approved instantly</div><div class="arrow">→</div></div>
-                <div class="step"><div class="step-text">Receive codes</div><div class="arrow">→</div></div>
-                <div class="step"><div class="step-text">Post your giveaway</div></div>
+            <!-- Loading -->
+            <div class="state loading" id="loading">
+                <div class="spinner"></div>
+                <p>Checking your profile...</p>
             </div>
-        </div>
 
-        <!-- Eligibility Checker -->
-        <div class="eligibility-section">
-            <div class="eligibility-card">
-                <h2>Am I Eligible?</h2>
-                <p class="sub">Enter your handle and we'll check instantly. 500+ followers qualifies.</p>
-
-                <!-- Step 1: Check -->
-                <form class="checker-form" id="checker-form">
-                    <div class="form-row">
-                        <select name="platform" id="platform" class="form-control" required>
-                            <option value="">Platform</option>
-                            <option value="instagram">Instagram</option>
-                            <option value="tiktok">TikTok</option>
-                            <option value="x">X / Twitter</option>
-                            <option value="youtube">YouTube</option>
-                            <option value="onlyfans">OnlyFans</option>
-                        </select>
-                        <input type="text" name="handle" id="handle" class="form-control" placeholder="@yourhandle" required>
-                    </div>
-                    <button type="submit" class="btn-check" id="submit-btn">Check Eligibility</button>
+            <!-- Approved: Step 2 -->
+            <div class="state result approved" id="approved">
+                <div class="result-icon">✓</div>
+                <div class="result-title">You qualify.</div>
+                <div class="result-sub" id="followers-line"></div>
+                <form id="claim-form">
+                    <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
+                    <button type="submit" class="btn">Send me the codes</button>
                 </form>
+                <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — codes and everything you need to post are on the way.</div>
+            </div>
 
-                <!-- Loading -->
-                <div class="loading-state" id="loading">
-                    <div class="spinner"></div>
-                    <p>Checking your profile — this may take a moment.</p>
-                </div>
+            <!-- Rejected -->
+            <div class="state result rejected" id="rejected">
+                <div class="result-icon">—</div>
+                <div class="result-title">Not yet.</div>
+                <div class="result-sub" id="reject-line"></div>
+                <button class="btn-ghost" id="retry-btn">Try another handle</button>
+            </div>
 
-                <!-- Step 2: Claim (shown after qualifying) -->
-                <div class="result-state result-approved" id="result-approved">
-                    <div class="result-icon">✓</div>
-                    <div class="result-title">You qualify.</div>
-                    <div class="result-followers" id="followers-approved"></div>
-                    <form class="checker-form" id="claim-form" style="margin-top:1.5rem">
-                        <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
-                        <button type="submit" class="btn-check">Claim your spot</button>
-                    </form>
-                    <div id="claim-done" style="display:none; margin-top:1rem; color:var(--secondary); font-weight:300;">Check your email — your approval is on the way.</div>
-                </div>
-
-                <!-- Rejected -->
-                <div class="result-state result-rejected" id="result-rejected">
-                    <div class="result-icon">—</div>
-                    <div class="result-title">Not yet.</div>
-                    <div class="result-msg" id="reject-msg">Come back when you hit 500 followers.</div>
-                    <button class="btn-retry" id="retry-btn">Try another handle</button>
-                </div>
-
-                <!-- Error -->
-                <div class="result-state result-rejected" id="result-error">
-                    <div class="result-icon">!</div>
-                    <div class="result-title">Could not check.</div>
-                    <div class="result-msg" id="error-msg">Make sure your profile is public and try again.</div>
-                    <button class="btn-retry" id="error-retry-btn">Try again</button>
-                </div>
+            <!-- Error -->
+            <div class="state result rejected" id="error-state">
+                <div class="result-icon">!</div>
+                <div class="result-title">Couldn't check.</div>
+                <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
+                <button class="btn-ghost" id="error-retry">Try again</button>
             </div>
         </div>
 
-        <div class="faq">
-            <h2>FAQ</h2>
-            <div class="faq-item"><div class="faq-q">Do I need a minimum following?</div><div class="faq-a">500 followers across any platform qualifies. We care about niche fit — micro-creators in the right niche consistently outperform larger generalist accounts.</div></div>
-            <div class="faq-item"><div class="faq-q">How many giveaway codes do I get?</div><div class="faq-a">Typically 3-5 to start. If your giveaway performs well, we'll send more.</div></div>
-            <div class="faq-item"><div class="faq-q">Do I have to post on a specific schedule?</div><div class="faq-a">No obligations. Use the app honestly, and share it if it genuinely fits your content.</div></div>
-            <div class="faq-item"><div class="faq-q">Can I also have a referral link?</div><div class="faq-a">Yes — reply to your welcome email and we'll set one up. You earn 25% commission on any subscriptions your link drives.</div></div>
-        </div>
-    </section>
-
-    <footer>
-        <p style="margin-bottom: 1rem;"><a href="index.html">← Back to Breathe Collection</a></p>
-        <p>&copy; Breathe Collection. All rights reserved.</p>
-    </footer>
+        <footer>
+            <a href="index.html">← Breathe Collection</a>
+        </footer>
+    </div>
 
     <script>
-    const form = document.getElementById('checker-form')
-    const claimForm = document.getElementById('claim-form')
-    const loading = document.getElementById('loading')
-    const resultApproved = document.getElementById('result-approved')
-    const resultRejected = document.getElementById('result-rejected')
-    const resultError = document.getElementById('result-error')
+    let savedHandle, savedPlatform
 
-    let checkedHandle, checkedPlatform
-
-    function showOnly(el) {
-        [form, loading, resultApproved, resultRejected, resultError].forEach(e => e.style.display = 'none')
-        if (el) el.style.display = el === loading ? 'flex' : 'block'
-        else form.style.display = 'flex'
+    const states = ['check-form','loading','approved','rejected','error-state']
+    function show(id) {
+        states.forEach(s => {
+            const el = document.getElementById(s)
+            el.style.display = 'none'
+        })
+        const target = document.getElementById(id)
+        target.style.display = id === 'loading' ? 'flex' : (id === 'check-form' ? 'block' : 'block')
     }
 
-    function reset() {
-        form.style.display = 'flex'
-        ;[loading, resultApproved, resultRejected, resultError].forEach(e => e.style.display = 'none')
-    }
+    document.getElementById('retry-btn').onclick = () => show('check-form')
+    document.getElementById('error-retry').onclick = () => show('check-form')
 
-    document.getElementById('retry-btn').addEventListener('click', reset)
-    document.getElementById('error-retry-btn').addEventListener('click', reset)
-
-    // Step 1: Check eligibility
-    form.addEventListener('submit', async function(e) {
+    document.getElementById('check-form').addEventListener('submit', async e => {
         e.preventDefault()
-        checkedPlatform = document.getElementById('platform').value
-        checkedHandle = document.getElementById('handle').value.trim()
-
-        showOnly(loading)
+        savedPlatform = document.getElementById('platform').value
+        savedHandle = document.getElementById('handle').value.trim()
+        show('loading')
 
         try {
             const res = await fetch('/api/check-eligibility', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ handle: checkedHandle, platform: checkedPlatform })
+                body: JSON.stringify({ handle: savedHandle, platform: savedPlatform })
             })
             const data = await res.json()
 
             if (!res.ok) {
-                document.getElementById('error-msg').textContent = data.error || 'Could not check your profile. Make sure it is public and try again.'
-                showOnly(resultError)
+                document.getElementById('error-line').textContent = data.error || 'Make sure your profile is public and try again.'
+                show('error-state')
                 return
             }
 
             if (data.eligible) {
-                const followersEl = document.getElementById('followers-approved')
-                followersEl.textContent = data.followers ? `${data.followers.toLocaleString()} followers verified.` : ''
-                document.getElementById('claim-form').style.display = 'flex'
+                document.getElementById('followers-line').textContent = data.followers
+                    ? `${data.followers.toLocaleString()} followers verified.`
+                    : ''
+                document.getElementById('claim-form').style.display = 'block'
                 document.getElementById('claim-done').style.display = 'none'
-                showOnly(resultApproved)
-                resultApproved.style.display = 'block'
+                show('approved')
             } else {
                 const count = data.followers?.toLocaleString() ?? '0'
-                document.getElementById('reject-msg').textContent = `Your ${checkedPlatform} has ${count} followers. Come back when you hit 500.`
-                showOnly(resultRejected)
-                resultRejected.style.display = 'block'
+                document.getElementById('reject-line').textContent = `${count} followers on ${savedPlatform}. Come back when you hit 500.`
+                show('rejected')
             }
-        } catch (err) {
-            document.getElementById('error-msg').textContent = 'Something went wrong. Try again.'
-            showOnly(resultError)
-            resultError.style.display = 'block'
+        } catch {
+            document.getElementById('error-line').textContent = 'Something went wrong. Try again.'
+            show('error-state')
         }
     })
 
-    // Step 2: Claim with email
-    claimForm.addEventListener('submit', async function(e) {
+    document.getElementById('claim-form').addEventListener('submit', async e => {
         e.preventDefault()
         const email = document.getElementById('claim-email').value.trim()
-        const btn = this.querySelector('button')
+        const btn = e.target.querySelector('button')
         btn.disabled = true
         btn.textContent = 'Sending...'
 
@@ -275,11 +210,11 @@
             await fetch('/api/check-eligibility', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ handle: checkedHandle, platform: checkedPlatform, email })
+                body: JSON.stringify({ handle: savedHandle, platform: savedPlatform, email })
             })
-        } catch (err) {}
+        } catch {}
 
-        claimForm.style.display = 'none'
+        document.getElementById('claim-form').style.display = 'none'
         document.getElementById('claim-done').style.display = 'block'
     })
     </script>

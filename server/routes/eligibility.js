@@ -68,8 +68,36 @@ async function saveAndNotify({ handle, platform, email, followers }) {
   try {
     await sendEmail({
       to: email,
-      subject: "You're in — Breathe Collection Creator Program",
-      text: `Hi ${handle},\n\nYou're approved for the Breathe Collection creator program.\n\nHere's what happens next:\n\n1. You'll receive your free lifetime Pro access code within 24 hours\n2. We'll send giveaway codes to share with your audience\n3. You'll get early access to new features before they ship\n\nReply to this email with any questions.\n\nBreathe Collection`,
+      subject: "You're in — Breathe Collection",
+      text: `Hi ${handle},
+
+You're approved. Your Pro access code and giveaway codes are on the way within 24 hours.
+
+---
+
+While you wait, here's everything you need to run the giveaway the moment you have the codes.
+
+WHAT TO POST
+A giveaway post. Simple, no production needed. Show the app or just talk about it. Keep it honest — your audience can tell.
+
+CAPTION TEMPLATE (copy-paste, edit as you like)
+
+---
+Been using this breathing app for a while now. No ads, no sleep stories, no bloat — just 9 techniques (Wim Hof, Box, Huberman and more) with haptic feedback so you can do it eyes-closed.
+
+Giving away [X] lifetime Pro codes in the comments. Drop a 🌬️ to enter. I'll pick winners in 48h.
+
+[link in bio]
+---
+
+WHAT TO SHOW (optional)
+A screen recording of a session, or just you talking to camera. Either works.
+
+---
+
+Reply to this email with any questions.
+
+Breathe Collection`,
     })
   } catch (err) {
     console.error('Approval email error:', err.message)
