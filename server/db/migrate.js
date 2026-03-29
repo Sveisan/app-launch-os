@@ -11,6 +11,8 @@ async function migrate() {
       followers TEXT,
       niche TEXT,
       reason TEXT,
+      status TEXT DEFAULT 'trial',
+      post_url TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
@@ -29,6 +31,10 @@ async function migrate() {
       id SERIAL PRIMARY KEY,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    -- Add columns to existing tables if they don't exist yet
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'trial';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS post_url TEXT;
   `)
   console.log('Migration complete')
   await pool.end()

@@ -71,31 +71,32 @@ async function saveAndNotify({ handle, platform, email, followers }) {
       subject: "You're in — Breathe Collection",
       text: `Hi ${handle},
 
-You're approved. Your Pro access code and giveaway codes are on the way within 24 hours.
+You're approved. Here's how it works.
+
+STEP 1 — Try it (42 days free)
+Your trial code is on the way. Download Breathe Collection on the App Store and redeem it. Use it for real.
+
+STEP 2 — Post and get lifetime
+Once you've posted your giveaway, reply to this email with the link. We'll send your lifetime Pro code + giveaway codes for your audience the same day.
 
 ---
 
-While you wait, here's everything you need to run the giveaway the moment you have the codes.
+CAPTION TEMPLATE (for when you're ready)
 
-WHAT TO POST
-A giveaway post. Simple, no production needed. Show the app or just talk about it. Keep it honest — your audience can tell.
-
-CAPTION TEMPLATE (copy-paste, edit as you like)
-
----
 Been using this breathing app for a while now. No ads, no sleep stories, no bloat — just 9 techniques (Wim Hof, Box, Huberman and more) with haptic feedback so you can do it eyes-closed.
 
 Giving away [X] lifetime Pro codes in the comments. Drop a 🌬️ to enter. I'll pick winners in 48h.
 
 [link in bio]
+
 ---
 
-WHAT TO SHOW (optional)
+WHAT TO SHOW
 A screen recording of a session, or just you talking to camera. Either works.
 
 ---
 
-Reply to this email with any questions.
+Reply to this email with your post link when you're ready.
 
 Breathe Collection`,
     })
