@@ -35,6 +35,11 @@ async function migrate() {
     -- Add columns to existing tables if they don't exist yet
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'trial';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS post_url TEXT;
+
+    -- Issue #3: split followers TEXT into typed columns
+    -- followers TEXT is kept for backwards compatibility; new code writes to followers_count + auto_approved
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS followers_count INTEGER;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS auto_approved BOOLEAN DEFAULT FALSE;
   `)
   console.log('Migration complete')
   await pool.end()

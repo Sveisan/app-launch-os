@@ -19,7 +19,12 @@ router.post('/', async (req, res) => {
 
   // OnlyFans: auto-approve
   if (platform === 'onlyfans') {
-    if (email) await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+    if (email) {
+      if (!email.includes('@') || email.indexOf('@') === 0 || email.lastIndexOf('.') < email.indexOf('@')) {
+        return res.status(400).json({ error: 'A valid email address is required.' })
+      }
+      await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+    }
     return res.json({ eligible: true, followers: null, autoApproved: true })
   }
 
@@ -39,6 +44,9 @@ router.post('/', async (req, res) => {
 
   // If email is included (Step 2 claim) and they qualify, save and notify
   if (eligible && email) {
+    if (!email.includes('@') || email.indexOf('@') === 0 || email.lastIndexOf('.') < email.indexOf('@')) {
+      return res.status(400).json({ error: 'A valid email address is required.' })
+    }
     await saveAndNotify({ handle: cleanHandle, platform, email, followers })
   }
 
@@ -47,15 +55,23 @@ router.post('/', async (req, res) => {
 
 async function saveAndNotify({ handle, platform, email, followers }) {
   try {
+    const isAutoApproved = followers === null
     await pool.query(
-      `INSERT INTO contacts (name, email, handle, platform, followers, niche, reason)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      ['', email, handle, platform, followers?.toString() ?? 'auto-approved', '', 'eligibility-checker']
+      `INSERT INTO contacts (name, email, handle, platform, followers, followers_count, auto_approved, niche, reason)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      ['', email, handle, platform,
+       isAutoApproved ? 'auto-approved' : String(followers),  // legacy TEXT column
+       isAutoApproved ? null : followers,                      // typed INTEGER column
+       isAutoApproved,                                         // typed BOOLEAN column
+       '', 'eligibility-checker']
     )
   } catch (err) {
     console.error('Eligibility DB error:', err.message)
+    // Do not send emails if the DB write failed — creator would have a code but no record.
+    return
   }
 
+  // DB write succeeded — safe to send emails now
   try {
     await sendNotification({
       subject: `Creator approved: ${handle} (${platform})`,

@@ -18,7 +18,12 @@ async function getInstagramFollowers(handle) {
   const username = handle.replace(/^@/, '').toLowerCase()
   const data = await runActor('apify~instagram-profile-scraper', { usernames: [username] })
   if (!data || !data[0]) throw new Error('Instagram profile not found')
-  return data[0].followersCount
+  const count = data[0].followersCount
+  if (count == null) {
+    console.warn('[platforms] Instagram: expected followersCount, got undefined. Keys:', Object.keys(data[0]))
+    throw new Error('Instagram follower count field missing — actor response may have changed')
+  }
+  return count
 }
 
 async function getTikTokFollowers(handle) {
@@ -30,7 +35,12 @@ async function getTikTokFollowers(handle) {
   })
   if (!data || !data[0]) throw new Error('TikTok profile not found')
   const d = data[0]
-  return d.fans ?? d.followerCount ?? d.stats?.followerCount ?? null
+  const count = d.fans ?? d.followerCount ?? d.stats?.followerCount ?? null
+  if (count == null) {
+    console.warn('[platforms] TikTok: no known follower field found. Keys:', Object.keys(d))
+    throw new Error('TikTok follower count field missing — actor response may have changed')
+  }
+  return count
 }
 
 async function getXFollowers(handle) {
@@ -41,7 +51,12 @@ async function getXFollowers(handle) {
   })
   if (!data || !data[0]) throw new Error('X profile not found')
   const d = data[0]
-  return d.author?.followersCount ?? d.followersCount ?? null
+  const count = d.author?.followersCount ?? d.followersCount ?? null
+  if (count == null) {
+    console.warn('[platforms] X: no known follower field found. Keys:', Object.keys(d))
+    throw new Error('X follower count field missing — actor response may have changed')
+  }
+  return count
 }
 
 async function getYouTubeFollowers(handle) {
@@ -52,7 +67,12 @@ async function getYouTubeFollowers(handle) {
   })
   if (!data || !data[0]) throw new Error('YouTube channel not found')
   const d = data[0]
-  return d.numberOfSubscribers ?? d.subscriberCount ?? null
+  const count = d.numberOfSubscribers ?? d.subscriberCount ?? null
+  if (count == null) {
+    console.warn('[platforms] YouTube: no known subscriber field found. Keys:', Object.keys(d))
+    throw new Error('YouTube subscriber count field missing — actor response may have changed')
+  }
+  return count
 }
 
 async function getFollowers(platform, handle) {
