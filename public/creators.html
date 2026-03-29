@@ -131,7 +131,7 @@
                 <h2>Am I Eligible?</h2>
                 <p class="sub">Enter your handle and we'll check instantly. 500+ followers qualifies.</p>
 
-                <!-- Form -->
+                <!-- Step 1: Check -->
                 <form class="checker-form" id="checker-form">
                     <div class="form-row">
                         <select name="platform" id="platform" class="form-control" required>
@@ -144,7 +144,6 @@
                         </select>
                         <input type="text" name="handle" id="handle" class="form-control" placeholder="@yourhandle" required>
                     </div>
-                    <input type="email" name="email" id="email" class="form-control" placeholder="your@email.com" required>
                     <button type="submit" class="btn-check" id="submit-btn">Check Eligibility</button>
                 </form>
 
@@ -154,12 +153,16 @@
                     <p>Checking your profile — this may take a moment.</p>
                 </div>
 
-                <!-- Approved -->
+                <!-- Step 2: Claim (shown after qualifying) -->
                 <div class="result-state result-approved" id="result-approved">
                     <div class="result-icon">✓</div>
-                    <div class="result-title">You're in.</div>
-                    <div class="result-msg">Check your email — your approval is on the way.</div>
+                    <div class="result-title">You qualify.</div>
                     <div class="result-followers" id="followers-approved"></div>
+                    <form class="checker-form" id="claim-form" style="margin-top:1.5rem">
+                        <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
+                        <button type="submit" class="btn-check">Claim your spot</button>
+                    </form>
+                    <div id="claim-done" style="display:none; margin-top:1rem; color:var(--secondary); font-weight:300;">Check your email — your approval is on the way.</div>
                 </div>
 
                 <!-- Rejected -->
@@ -196,77 +199,88 @@
 
     <script>
     const form = document.getElementById('checker-form')
+    const claimForm = document.getElementById('claim-form')
     const loading = document.getElementById('loading')
     const resultApproved = document.getElementById('result-approved')
     const resultRejected = document.getElementById('result-rejected')
     const resultError = document.getElementById('result-error')
-    const submitBtn = document.getElementById('submit-btn')
+
+    let checkedHandle, checkedPlatform
 
     function showOnly(el) {
-        form.style.display = 'none'
-        loading.style.display = 'none'
-        resultApproved.style.display = 'none'
-        resultRejected.style.display = 'none'
-        resultError.style.display = 'none'
-        if (el) el.style.display = 'flex'
+        [form, loading, resultApproved, resultRejected, resultError].forEach(e => e.style.display = 'none')
+        if (el) el.style.display = el === loading ? 'flex' : 'block'
         else form.style.display = 'flex'
     }
 
     function reset() {
         form.style.display = 'flex'
-        loading.style.display = 'none'
-        resultApproved.style.display = 'none'
-        resultRejected.style.display = 'none'
-        resultError.style.display = 'none'
+        ;[loading, resultApproved, resultRejected, resultError].forEach(e => e.style.display = 'none')
     }
 
     document.getElementById('retry-btn').addEventListener('click', reset)
     document.getElementById('error-retry-btn').addEventListener('click', reset)
 
+    // Step 1: Check eligibility
     form.addEventListener('submit', async function(e) {
         e.preventDefault()
-        const platform = document.getElementById('platform').value
-        const handle = document.getElementById('handle').value.trim()
-        const email = document.getElementById('email').value.trim()
+        checkedPlatform = document.getElementById('platform').value
+        checkedHandle = document.getElementById('handle').value.trim()
 
         showOnly(loading)
-        loading.style.display = 'flex'
 
         try {
             const res = await fetch('/api/check-eligibility', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ handle, platform, email })
+                body: JSON.stringify({ handle: checkedHandle, platform: checkedPlatform })
             })
             const data = await res.json()
 
             if (!res.ok) {
                 document.getElementById('error-msg').textContent = data.error || 'Could not check your profile. Make sure it is public and try again.'
                 showOnly(resultError)
-                resultError.style.display = 'flex'
                 return
             }
 
             if (data.eligible) {
                 const followersEl = document.getElementById('followers-approved')
-                if (data.followers) {
-                    followersEl.textContent = `${data.followers.toLocaleString()} followers verified.`
-                } else {
-                    followersEl.textContent = ''
-                }
+                followersEl.textContent = data.followers ? `${data.followers.toLocaleString()} followers verified.` : ''
+                document.getElementById('claim-form').style.display = 'flex'
+                document.getElementById('claim-done').style.display = 'none'
                 showOnly(resultApproved)
-                resultApproved.style.display = 'flex'
+                resultApproved.style.display = 'block'
             } else {
                 const count = data.followers?.toLocaleString() ?? '0'
-                document.getElementById('reject-msg').textContent = `Your ${platform} has ${count} followers. Come back when you hit 500.`
+                document.getElementById('reject-msg').textContent = `Your ${checkedPlatform} has ${count} followers. Come back when you hit 500.`
                 showOnly(resultRejected)
-                resultRejected.style.display = 'flex'
+                resultRejected.style.display = 'block'
             }
         } catch (err) {
             document.getElementById('error-msg').textContent = 'Something went wrong. Try again.'
             showOnly(resultError)
-            resultError.style.display = 'flex'
+            resultError.style.display = 'block'
         }
+    })
+
+    // Step 2: Claim with email
+    claimForm.addEventListener('submit', async function(e) {
+        e.preventDefault()
+        const email = document.getElementById('claim-email').value.trim()
+        const btn = this.querySelector('button')
+        btn.disabled = true
+        btn.textContent = 'Sending...'
+
+        try {
+            await fetch('/api/check-eligibility', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ handle: checkedHandle, platform: checkedPlatform, email })
+            })
+        } catch (err) {}
+
+        claimForm.style.display = 'none'
+        document.getElementById('claim-done').style.display = 'block'
     })
     </script>
 </body>

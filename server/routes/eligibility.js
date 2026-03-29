@@ -7,17 +7,19 @@ const config = require('../../config/app')
 
 const THRESHOLD = config.eligibility.followerThreshold
 
+// Step 1: Check eligibility — no email required
+// Step 2: Claim (email provided) — saves to DB and sends emails
 router.post('/', async (req, res) => {
   const { handle, platform, email } = req.body
-  if (!handle || !platform || !email) {
-    return res.status(400).json({ error: 'handle, platform, and email are required' })
+  if (!handle || !platform) {
+    return res.status(400).json({ error: 'handle and platform are required' })
   }
 
   const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`
 
-  // OnlyFans: auto-approve no check needed
+  // OnlyFans: auto-approve
   if (platform === 'onlyfans') {
-    await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+    if (email) await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
     return res.json({ eligible: true, followers: null, autoApproved: true })
   }
 
@@ -33,12 +35,14 @@ router.post('/', async (req, res) => {
     return res.status(422).json({ error: 'Could not retrieve follower count. Make sure your profile is public.' })
   }
 
-  if (followers >= THRESHOLD) {
+  const eligible = followers >= THRESHOLD
+
+  // If email is included (Step 2 claim) and they qualify, save and notify
+  if (eligible && email) {
     await saveAndNotify({ handle: cleanHandle, platform, email, followers })
-    return res.json({ eligible: true, followers })
   }
 
-  return res.json({ eligible: false, followers })
+  return res.json({ eligible, followers })
 })
 
 async function saveAndNotify({ handle, platform, email, followers }) {
