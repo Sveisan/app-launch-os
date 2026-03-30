@@ -130,7 +130,13 @@
         .success-state p { color: var(--text-muted); margin-bottom: 2rem; }
 
         footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; margin-top: auto; }
-        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; }
+        footer a { color: var(--secondary); text-decoration: none; margin: 0 0.5rem; }
+        @media (max-width: 500px) {
+            .feedback-container { padding: 1.5rem 1rem 4rem 1rem; }
+            .category-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.8rem; }
+            .subtitle { margin-bottom: 2rem; }
+        }
     </style>
 </head>
 <body>

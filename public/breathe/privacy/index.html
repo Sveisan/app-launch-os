@@ -44,9 +44,15 @@
         .content-page a { color: var(--secondary); text-decoration: none; }
         .content-page a:hover { color: var(--text-main); }
         footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
-        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
+        footer a { color: var(--secondary); text-decoration: none; margin: 0 0.5rem; transition: color 0.3s ease; }
         footer a:hover { color: var(--text-main); }
-        .footer-links { margin-bottom: 2rem; }
+        .footer-links { margin-bottom: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+        
+        @media (max-width: 600px) {
+            .content-page { padding: 1rem 1rem 4rem 1rem; }
+            .card { padding: 1.5rem 1.2rem; }
+            .content-page h1 { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
