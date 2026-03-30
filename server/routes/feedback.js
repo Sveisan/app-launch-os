@@ -3,7 +3,7 @@ const router = express.Router()
 const { sendNotification } = require('../email/index')
 
 router.post('/', async (req, res) => {
-  const { category, email, message, os, version, tier, ua, phone_number } = req.body
+  const { category, firstName, email, message, os, version, tier, ua, phone_number } = req.body
 
   // 1. Honeypot check (Spam protection)
   if (phone_number) {
@@ -43,6 +43,10 @@ router.post('/', async (req, res) => {
         </div>
 
         <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #A0A0A0;">
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); width: 100px;">Name</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #FFFFFF;">${firstName || 'Anonymous'}</td>
+          </tr>
           <tr>
             <td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); width: 100px;">Platform</td>
             <td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #FFFFFF;">${os || 'Unknown'}</td>

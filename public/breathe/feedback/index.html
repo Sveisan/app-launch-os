@@ -164,6 +164,11 @@
                 <input type="hidden" name="category" id="category-input" value="other">
 
                 <div class="form-group">
+                    <label>First Name (optional)</label>
+                    <input type="text" name="firstName" class="type-input" placeholder="Your name" id="name-field">
+                </div>
+
+                <div class="form-group">
                     <label>Email (optional, if you'd like a reply)</label>
                     <input type="email" name="email" class="type-input" placeholder="your@email.com" id="email-field">
                 </div>
@@ -194,6 +199,7 @@
         const platformInfo = document.getElementById('platform-info');
         const categoryBtns = document.querySelectorAll('.category-btn');
         const categoryInput = document.getElementById('category-input');
+        const nameField = document.getElementById('name-field');
         const emailField = document.getElementById('email-field');
         const messageField = document.getElementById('message-field');
 
@@ -213,9 +219,11 @@
         platformInfo.textContent = `${os}${version ? ' v' + version : ''}${tier ? ' • ' + tier : ''}`;
 
         // 2. Draft Saving
+        nameField.value = localStorage.getItem('fb_name') || '';
         emailField.value = localStorage.getItem('fb_email') || '';
         messageField.value = localStorage.getItem('fb_msg') || '';
 
+        nameField.addEventListener('input', () => localStorage.setItem('fb_name', nameField.value));
         emailField.addEventListener('input', () => localStorage.setItem('fb_email', emailField.value));
         messageField.addEventListener('input', () => localStorage.setItem('fb_msg', messageField.value));
 
@@ -252,6 +260,8 @@
                 });
 
                 if (response.ok) {
+                    localStorage.removeItem('fb_name');
+                    localStorage.removeItem('fb_email');
                     localStorage.removeItem('fb_msg');
                     document.getElementById('form-state').style.display = 'none';
                     document.getElementById('success-state').style.display = 'block';
