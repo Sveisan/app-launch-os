@@ -38,14 +38,15 @@
         }
         .orb {
             width: 120px; height: 120px;
-            background: radial-gradient(circle at 30% 30%, rgba(82,171,152,0.9), rgba(44,120,115,0.4));
+            background: radial-gradient(circle at 30% 30%, var(--glow-color, #52AB98), rgba(44,120,115,0.4));
             border-radius: 50%;
-            box-shadow: 0 0 60px rgba(82,171,152,0.6), inset 0 0 20px rgba(255,255,255,0.2);
+            box-shadow: 0 0 60px var(--glow-color, #52AB98), inset 0 0 20px rgba(255,255,255,0.2);
             animation: breathe 8s ease-in-out infinite;
+            transition: all 1s ease;
         }
         @keyframes breathe {
-            0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 40px rgba(82,171,152,0.4); }
-            50% { transform: scale(1.6); opacity: 1; box-shadow: 0 0 100px rgba(82,171,152,0.8); }
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.6); opacity: 1; }
         }
         h1 { font-size: clamp(2.5rem,6vw,4.5rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 1.5rem; line-height: 1.1; }
         .subtitle { font-size: clamp(1.1rem,2vw,1.4rem); color: var(--text-muted); max-width: 600px; margin: 0 auto 3rem auto; font-weight: 300; }
@@ -177,9 +178,12 @@
 </head>
 <body>
     <section class="hero">
-        <div class="orb-container"><div class="orb"></div></div>
-        <h1>Nine breathing techniques.<br>One discipline.</h1>
-        <p class="subtitle">Protocols from Navy SEALs, neuroscientists, and elite coaches. One app.</p>
+        <div class="orb-container"><div class="orb" id="hero-orb"></div></div>
+        <h1>
+            <span id="header-word" style="transition: all 0.4s ease; display: inline-block;">Focus</span><br>
+            with Breathing Techniques
+        </h1>
+        <p class="subtitle">Collection of breathing techniques. Including yours (custom). In one app.</p>
         <a href="#" class="btn-primary">Download on the App Store</a>
     </section>
 
@@ -378,6 +382,44 @@
     </footer>
 
     <script>
+    // 1. Dynamic Hero Word Cycle
+    const words = [
+        { text: 'Focus', color: '#4A90E2' },
+        { text: 'Destress', color: '#FFB366' },
+        { text: 'Sleep', color: '#A18BFF' },
+        { text: 'Anxiety relief', color: '#FF5C5C' },
+        { text: 'Emotional stability', color: '#FF5C5C' },
+        { text: 'Calm', color: '#4BD663' },
+        { text: 'Relaxation', color: '#A18BFF' },
+        { text: 'Clarity', color: '#00D1FF' },
+        { text: 'Resilience', color: '#52AB98' }
+    ];
+    let currentWordIndex = 0;
+    const headerWord = document.getElementById('header-word');
+    const heroOrb = document.getElementById('hero-orb');
+
+    setInterval(() => {
+        currentWordIndex = (currentWordIndex + 1) % words.length;
+        headerWord.style.opacity = 0;
+        headerWord.style.transform = 'translateY(10px)';
+        
+        setTimeout(() => {
+            const next = words[currentWordIndex];
+            headerWord.textContent = next.text;
+            headerWord.style.color = next.color;
+            headerWord.style.textShadow = `0 0 25px ${next.color}`;
+            heroOrb.style.setProperty('--glow-color', next.color);
+            headerWord.style.opacity = 1;
+            headerWord.style.transform = 'translateY(0)';
+        }, 400);
+    }, 2000);
+
+    // Initial State
+    headerWord.style.color = words[0].color;
+    headerWord.style.textShadow = `0 0 25px ${words[0].color}`;
+    heroOrb.style.setProperty('--glow-color', words[0].color);
+
+    // 2. Waitlist Form
     document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
         e.preventDefault()
         const email = this.querySelector('input[type=email]').value
