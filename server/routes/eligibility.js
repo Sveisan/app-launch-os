@@ -72,10 +72,32 @@ async function saveAndNotify({ handle, platform, email, followers }) {
   }
 
   // DB write succeeded — safe to send emails now
+  
+  // Try to pop a trial code from the pool
+  let codeStr = null
+  try {
+    const codeRes = await pool.query(`
+      UPDATE offer_codes 
+      SET is_used = TRUE, used_by_email = $1, used_at = NOW() 
+      WHERE id = (
+        SELECT id FROM offer_codes WHERE type = 'trial' AND is_used = FALSE LIMIT 1 FOR UPDATE SKIP LOCKED
+      ) 
+      RETURNING code
+    `, [email])
+    
+    if (codeRes.rows.length > 0) {
+      codeStr = codeRes.rows[0].code
+    } else {
+      console.error('CRITICAL: Out of trial offer codes in the DB for', email)
+    }
+  } catch (err) {
+    console.error('Error allocating trial code:', err.message)
+  }
+
   try {
     await sendNotification({
       subject: `Creator approved: ${handle} (${platform})`,
-      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}`,
+      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}\nCode Granted: ${codeStr ?? 'NONE - POOL EMPTY'}`,
     })
   } catch (err) {
     console.error('Eligibility notification error:', err.message)
@@ -89,8 +111,8 @@ async function saveAndNotify({ handle, platform, email, followers }) {
 
 You're approved. Here's how it works.
 
-STEP 1 — Try it (42 days free)
-Your trial code is on the way. Download Breathe Collection on the App Store and redeem it. Use it for real.
+STEP 1 — Try it (1 month free)
+${codeStr ? `Your trial code is below. Download Breathe Collection on the App Store and redeem it.\nCode: ${codeStr}` : `Your trial code is being generated and is on the way. Download Breathe Collection on the App Store to get ready.`}
 
 STEP 2 — Post and get lifetime
 Once you've posted your giveaway, reply to this email with the link. We'll send your lifetime Pro code + giveaway codes for your audience the same day.

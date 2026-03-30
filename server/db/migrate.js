@@ -22,6 +22,16 @@ async function migrate() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS offer_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,
+      is_used BOOLEAN DEFAULT FALSE,
+      used_by_email TEXT,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS affiliates (
       id SERIAL PRIMARY KEY,
       created_at TIMESTAMPTZ DEFAULT NOW()
