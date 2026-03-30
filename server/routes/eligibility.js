@@ -7,6 +7,10 @@ const config = require('../../config/app')
 
 const THRESHOLD = config.eligibility.followerThreshold
 
+function isValidEmail(str) {
+  return str && str.includes('@') && str.indexOf('@') !== 0 && str.lastIndexOf('.') > str.indexOf('@')
+}
+
 // Step 1: Check eligibility — no email required
 // Step 2: Claim (email provided) — saves to DB and sends emails
 router.post('/', async (req, res) => {
@@ -20,10 +24,14 @@ router.post('/', async (req, res) => {
   // OnlyFans: auto-approve
   if (platform === 'onlyfans') {
     if (email) {
-      if (!email.includes('@') || email.indexOf('@') === 0 || email.lastIndexOf('.') < email.indexOf('@')) {
+      if (!isValidEmail(email)) {
         return res.status(400).json({ error: 'A valid email address is required.' })
       }
-      await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+      try {
+        await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+      } catch (err) {
+        console.error('saveAndNotify error:', err.message)
+      }
     }
     return res.json({ eligible: true, followers: null, autoApproved: true })
   }
@@ -44,10 +52,14 @@ router.post('/', async (req, res) => {
 
   // If email is included (Step 2 claim) and they qualify, save and notify
   if (eligible && email) {
-    if (!email.includes('@') || email.indexOf('@') === 0 || email.lastIndexOf('.') < email.indexOf('@')) {
+    if (!isValidEmail(email)) {
       return res.status(400).json({ error: 'A valid email address is required.' })
     }
-    await saveAndNotify({ handle: cleanHandle, platform, email, followers })
+    try {
+      await saveAndNotify({ handle: cleanHandle, platform, email, followers })
+    } catch (err) {
+      console.error('saveAndNotify error:', err.message)
+    }
   }
 
   return res.json({ eligible, followers })

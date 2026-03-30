@@ -7,12 +7,15 @@ router.post('/', async (req, res) => {
 
   // 1. Honeypot check (Spam protection)
   if (phone_number) {
-    console.log('Spam detected via honeypot')
     return res.json({ ok: true }) // Fake success to bot
   }
 
   if (!message) {
     return res.status(400).json({ error: 'Message is required' })
+  }
+
+  if (!category) {
+    return res.status(400).json({ error: 'Category is required' })
   }
 
   const subject = `[${os || 'Unknown'}] [${category.toUpperCase()}] New Feedback`
