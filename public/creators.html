@@ -80,6 +80,29 @@
 
         .success-msg { color: var(--secondary); font-weight: 300; font-size: 0.95rem; margin-top: 0.75rem; }
 
+        .journey { margin-top: 2.5rem; text-align: left; }
+        .journey-title { font-size: 1rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: center; }
+        .step { display: flex; gap: 1rem; align-items: flex-start; position: relative; padding-bottom: 1.5rem; }
+        .step:last-child { padding-bottom: 0; }
+        .step-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 32px; }
+        .step-dot {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(82,171,152,0.15); border: 1px solid var(--secondary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 500; color: var(--secondary);
+        }
+        .step-connector { width: 1px; flex: 1; background: var(--card-border); margin-top: 0.4rem; min-height: 20px; }
+        .step:last-child .step-connector { display: none; }
+        .step-content { padding-top: 0.4rem; }
+        .step-label { font-size: 1rem; font-weight: 400; margin-bottom: 0.15rem; }
+        .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; }
+        .step-highlight .step-dot { background: var(--secondary); color: var(--bg); font-weight: 600; }
+        .step-highlight .step-label { color: var(--secondary); font-weight: 500; }
+        .giveaway-badge {
+            display: inline-block; background: rgba(82,171,152,0.1); border: 1px solid rgba(82,171,152,0.3);
+            border-radius: 8px; padding: 0.6rem 1rem; margin-top: 1rem; font-size: 0.9rem;
+            color: var(--secondary); font-weight: 400; text-align: center; width: 100%;
+        }
         footer { margin-top: 3rem; color: var(--text-muted); font-size: 0.85rem; }
         footer a { color: var(--text-muted); text-decoration: none; }
         footer a:hover { color: var(--secondary); }
@@ -93,10 +116,60 @@
 </head>
 <body>
     <div class="wrapper">
-        <h1>Run a premium giveaway.</h1>
-        <p class="sub">Try Breathe Collection free for 1 month. Post your giveaway to unlock lifetime Pro for you and codes for your winners.</p>
+        <h1>Share your love for breathing</h1>
+        <p class="sub">and unlock lifetime Pro.</p>
 
-        <div class="checker">
+        <div class="giveaway-badge">🎁 Giveaways: 10× three months free codes</div>
+
+        <!-- Step-by-step journey -->
+        <div class="journey">
+            <div class="journey-title">How it works</div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Check your eligibility</div>
+                    <div class="step-desc">Enter your social handle below. We verify your reach instantly.</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Receive your codes</div>
+                    <div class="step-desc">Get a 1-month trial code for you and 10 giveaway codes for your audience.</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Post your giveaway</div>
+                    <div class="step-desc">Share the codes with your audience on your platform of choice.</div>
+                </div>
+            </div>
+
+            <div class="step step-highlight">
+                <div class="step-line">
+                    <div class="step-dot">★</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Unlock Lifetime Pro</div>
+                    <div class="step-desc">Once verified, you receive lifetime Pro access — forever free.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="checker" style="margin-top: 2.5rem;">
             <!-- Step 1 -->
             <form id="check-form">
                 <select id="platform" class="form-control" required>
