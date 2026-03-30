@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support & Feedback | Breathe Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --primary: #2C7873;
+            --secondary: #52AB98;
+            --accent: #E07B39;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(255, 255, 255, 0.03);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+        .nav {
+            padding: 2rem 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .nav a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover { color: var(--secondary); }
+        .content-page { padding: 2rem 1.5rem 8rem 1.5rem; max-width: 800px; margin: 0 auto; }
+        .content-page h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 300; margin-bottom: 1rem; }
+        .content-page h2 { font-size: 1.5rem; margin-top: 3rem; margin-bottom: 1rem; font-weight: 400; color: var(--secondary); }
+        .content-page h3 { font-size: 1.2rem; margin-top: 2rem; margin-bottom: 0.5rem; font-weight: 400; color: var(--text-main); }
+        .content-page p { margin-bottom: 1.5rem; color: var(--text-muted); font-weight: 300; }
+        .content-page a { color: var(--secondary); text-decoration: none; }
+        .content-page a:hover { color: var(--text-main); }
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center;
+            background-color: var(--text-main); color: var(--bg);
+            padding: 1rem 2.5rem; border-radius: 100px; text-decoration: none;
+            font-weight: 500; font-size: 1.1rem; transition: all 0.3s ease;
+            border: none; cursor: pointer; margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.1); color: var(--bg); }
+        .card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 2.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+        footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
+        footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
+        footer a:hover { color: var(--text-main); }
+        .footer-links { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">&larr; Back to Breathe Collection</a>
+    </div>
+    
+    <section class="content-page">
+        <h1>Support & Feedback</h1>
+        <p>We're here to help. Share your feedback, report issues, or get support with Breathe Collection. We typically respond within 1–2 business days.</p>
+
+        <div style="margin-top: 3rem;">
+            <h2>Quick help</h2>
+            
+            <div class="card">
+                <h3>Subscription & billing</h3>
+                <p>Manage or cancel your subscription in Settings &rarr; Apple ID &rarr; Subscriptions on your iPhone. Refunds are handled by Apple.</p>
+                <a href="https://support.apple.com/en-us/HT202039" target="_blank" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Apple subscription help &rarr;</a>
+            </div>
+
+            <div class="card">
+                <h3>Restore purchases</h3>
+                <p style="margin-bottom: 0;">If you've reinstalled the app or switched devices, use Restore Purchases in the app settings to regain access to premium content.</p>
+            </div>
+
+            <div class="card">
+                <h3>Share feedback</h3>
+                <p>Have an idea or found a bug? Use our fast feedback form to reach the developer directly.</p>
+                <a href="/breathe/feedback" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Open Feedback Form &rarr;</a>
+            </div>
+
+            <div class="card">
+                <h3>Email us directly</h3>
+                <p>Prefer to write from your own email client? We read every message and appreciate your feedback.</p>
+                <a href="mailto:e@eirikn.com?subject=Breathe%20Collection%20Support" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1rem;">e@eirikn.com &rarr;</a>
+            </div>
+        </div>
+
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="/breathe/support">Support</a>
+            <a href="/breathe/feedback">Feedback</a>
+            <a href="/breathe/terms">Terms of Service</a>
+            <a href="/breathe/privacy">Privacy Policy</a>
+        </div>
+        <p>&copy; Breathe Collection. All rights reserved.</p>
+    </footer>
+</body>
+</html>

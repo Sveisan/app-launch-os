@@ -8,6 +8,7 @@ app.use(express.static(path.join(__dirname, '../public')))
 app.use('/api/apply', require('./routes/creator'))
 app.use('/api/waitlist', require('./routes/waitlist'))
 app.use('/api/check-eligibility', require('./routes/eligibility'))
+app.use('/api/feedback', require('./routes/feedback'))
 
 app.use((err, req, res, next) => {
   console.error(err)
