@@ -81,28 +81,39 @@
         .success-msg { color: var(--secondary); font-weight: 300; font-size: 0.95rem; margin-top: 0.75rem; }
 
         .journey { margin-top: 2.5rem; text-align: left; }
-        .journey-title { font-size: 1rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: center; }
-        .step { display: flex; gap: 1rem; align-items: flex-start; position: relative; padding-bottom: 1.5rem; }
+        .journey-title { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; text-align: center; }
+        .step { display: flex; gap: 1.2rem; align-items: flex-start; position: relative; padding-bottom: 1.8rem; }
         .step:last-child { padding-bottom: 0; }
-        .step-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 32px; }
+        .step-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 40px; }
         .step-dot {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: rgba(82,171,152,0.15); border: 1px solid var(--secondary);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem; font-weight: 500; color: var(--secondary);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
         }
-        .step-connector { width: 1px; flex: 1; background: var(--card-border); margin-top: 0.4rem; min-height: 20px; }
+        .step:hover .step-dot { border-color: var(--secondary); background: rgba(82,171,152,0.1); transform: scale(1.1); }
+        .step-connector {
+            width: 1px; flex: 1; min-height: 16px; margin-top: 0.4rem;
+            background: linear-gradient(to bottom, var(--card-border), transparent);
+        }
         .step:last-child .step-connector { display: none; }
-        .step-content { padding-top: 0.4rem; }
-        .step-label { font-size: 1rem; font-weight: 400; margin-bottom: 0.15rem; }
-        .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; }
-        .step-highlight .step-dot { background: var(--secondary); color: var(--bg); font-weight: 600; }
+        .step-content { padding-top: 0.6rem; }
+        .step-label { font-size: 1rem; font-weight: 400; margin-bottom: 0.2rem; transition: color 0.3s ease; }
+        .step:hover .step-label { color: var(--secondary); }
+        .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; line-height: 1.5; }
+        .step-highlight .step-dot { background: rgba(82,171,152,0.15); border-color: var(--secondary); }
         .step-highlight .step-label { color: var(--secondary); font-weight: 500; }
-        .giveaway-badge {
-            display: inline-block; background: rgba(82,171,152,0.1); border: 1px solid rgba(82,171,152,0.3);
-            border-radius: 8px; padding: 0.6rem 1rem; margin-top: 1rem; font-size: 0.9rem;
-            color: var(--secondary); font-weight: 400; text-align: center; width: 100%;
+
+        .bonus-section { margin-top: 2rem; text-align: center; }
+        .bonus-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 0.6rem; }
+        .bonus-badge {
+            display: inline-block; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border);
+            border-radius: 100px; padding: 0.5rem 1.2rem; font-size: 0.9rem;
+            color: var(--text-muted); font-weight: 300;
         }
+
         footer { margin-top: 3rem; color: var(--text-muted); font-size: 0.85rem; }
         footer a { color: var(--text-muted); text-decoration: none; }
         footer a:hover { color: var(--secondary); }
@@ -110,7 +121,7 @@
             body { padding: 1rem 1rem; }
             .checker { padding: 1.5rem 1.25rem; }
             h1 { font-size: 1.8rem; }
-            .sub { margin-bottom: 2rem; }
+            .sub { margin-bottom: 1.5rem; }
         }
     </style>
 </head>
@@ -119,57 +130,8 @@
         <h1>Share your love for breathing</h1>
         <p class="sub">and unlock lifetime Pro.</p>
 
-        <div class="giveaway-badge">🎁 Giveaways: 10× three months free codes</div>
-
-        <!-- Step-by-step journey -->
-        <div class="journey">
-            <div class="journey-title">How it works</div>
-
-            <div class="step">
-                <div class="step-line">
-                    <div class="step-dot">1</div>
-                    <div class="step-connector"></div>
-                </div>
-                <div class="step-content">
-                    <div class="step-label">Check your eligibility</div>
-                    <div class="step-desc">Enter your social handle below. We verify your reach instantly.</div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-line">
-                    <div class="step-dot">2</div>
-                    <div class="step-connector"></div>
-                </div>
-                <div class="step-content">
-                    <div class="step-label">Receive your codes</div>
-                    <div class="step-desc">Get a 1-month trial code for you and 10 giveaway codes for your audience.</div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-line">
-                    <div class="step-dot">3</div>
-                    <div class="step-connector"></div>
-                </div>
-                <div class="step-content">
-                    <div class="step-label">Post your giveaway</div>
-                    <div class="step-desc">Share the codes with your audience on your platform of choice.</div>
-                </div>
-            </div>
-
-            <div class="step step-highlight">
-                <div class="step-line">
-                    <div class="step-dot">★</div>
-                </div>
-                <div class="step-content">
-                    <div class="step-label">Unlock Lifetime Pro</div>
-                    <div class="step-desc">Once verified, you receive lifetime Pro access — forever free.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="checker" style="margin-top: 2.5rem;">
+        <!-- Eligibility Checker — directly under header -->
+        <div class="checker">
             <!-- Step 1 -->
             <form id="check-form">
                 <select id="platform" class="form-control" required>
@@ -190,16 +152,16 @@
                 <p>Checking your profile...</p>
             </div>
 
-            <!-- Approved: Step 2 -->
+            <!-- Approved -->
             <div class="state result approved" id="approved">
                 <div class="result-icon">✓</div>
                 <div class="result-title">You qualify.</div>
                 <div class="result-sub" id="followers-line"></div>
                 <form id="claim-form">
                     <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
-                    <button type="submit" class="btn">Send me the codes</button>
+                    <button type="submit" class="btn">Send me the details</button>
                 </form>
-                <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — your trial code and posting instructions are on the way.</div>
+                <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — everything you need is on the way.</div>
             </div>
 
             <!-- Rejected -->
@@ -217,6 +179,60 @@
                 <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
                 <button class="btn-ghost" id="error-retry">Try again</button>
             </div>
+        </div>
+
+        <!-- Playful Journey -->
+        <div class="journey">
+            <div class="journey-title">Your journey</div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">🔍</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">We verify your reach</div>
+                    <div class="step-desc">Enter your handle above. We'll check your profile instantly.</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">🫁</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Try Breathe Collection free</div>
+                    <div class="step-desc">Get a 1-month trial to explore every technique on your own terms.</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-line">
+                    <div class="step-dot">✨</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Create value, your way</div>
+                    <div class="step-desc">Share your genuine experience however feels natural — a post, story, review, or video. No script required.</div>
+                </div>
+            </div>
+
+            <div class="step step-highlight">
+                <div class="step-line">
+                    <div class="step-dot">🏆</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-label">Unlock Lifetime Pro</div>
+                    <div class="step-desc">Once we see your post, lifetime Pro is yours. Forever.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional giveaway codes -->
+        <div class="bonus-section">
+            <div class="bonus-label">Optional bonus</div>
+            <div class="bonus-badge">🎁 Request 10× three-month codes for your audience</div>
         </div>
 
         <footer>
