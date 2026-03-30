@@ -80,6 +80,23 @@
 
         .success-msg { color: var(--secondary); font-weight: 300; font-size: 0.95rem; margin-top: 0.75rem; }
 
+        .giveaway-toggle {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem; border-radius: 8px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--card-border);
+            margin-bottom: 0.75rem; cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .giveaway-toggle:hover { border-color: var(--secondary); }
+        .giveaway-toggle input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--secondary);
+            cursor: pointer; flex-shrink: 0;
+        }
+        .giveaway-toggle span {
+            font-size: 0.85rem; color: var(--text-muted); font-weight: 300;
+            text-align: left; line-height: 1.4;
+        }
+
         .journey { margin-top: 2.5rem; text-align: left; }
         .journey-title { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; text-align: center; }
         .step { display: flex; gap: 1.2rem; align-items: flex-start; position: relative; padding-bottom: 1.8rem; }
@@ -159,6 +176,10 @@
                 <div class="result-sub" id="followers-line"></div>
                 <form id="claim-form">
                     <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
+                    <label class="giveaway-toggle">
+                        <input type="checkbox" id="wants-giveaways">
+                        <span>🎁 I'd also like giveaway codes for my audience & friends (10× 2-month access)</span>
+                    </label>
                     <button type="submit" class="btn">Send me the details</button>
                 </form>
                 <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — everything you need is on the way.</div>
@@ -300,6 +321,7 @@
     document.getElementById('claim-form').addEventListener('submit', async e => {
         e.preventDefault()
         const email = document.getElementById('claim-email').value.trim()
+        const wantsGiveaways = document.getElementById('wants-giveaways').checked
         const btn = e.target.querySelector('button')
         btn.disabled = true
         btn.textContent = 'Sending...'
@@ -308,7 +330,7 @@
             await fetch('/api/check-eligibility', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ handle: savedHandle, platform: savedPlatform, email })
+                body: JSON.stringify({ handle: savedHandle, platform: savedPlatform, email, wantsGiveaways })
             })
         } catch {}
 

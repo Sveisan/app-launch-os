@@ -14,7 +14,7 @@ function isValidEmail(str) {
 // Step 1: Check eligibility — no email required
 // Step 2: Claim (email provided) — saves to DB and sends emails
 router.post('/', async (req, res) => {
-  const { handle, platform, email } = req.body
+  const { handle, platform, email, wantsGiveaways } = req.body
   if (!handle || !platform) {
     return res.status(400).json({ error: 'handle and platform are required' })
   }
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'A valid email address is required.' })
       }
       try {
-        await saveAndNotify({ handle: cleanHandle, platform, email, followers: null })
+        await saveAndNotify({ handle: cleanHandle, platform, email, followers: null, wantsGiveaways })
       } catch (err) {
         console.error('saveAndNotify error:', err.message)
       }
@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'A valid email address is required.' })
     }
     try {
-      await saveAndNotify({ handle: cleanHandle, platform, email, followers })
+      await saveAndNotify({ handle: cleanHandle, platform, email, followers, wantsGiveaways })
     } catch (err) {
       console.error('saveAndNotify error:', err.message)
     }
@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
   return res.json({ eligible, followers })
 })
 
-async function saveAndNotify({ handle, platform, email, followers }) {
+async function saveAndNotify({ handle, platform, email, followers, wantsGiveaways }) {
   try {
     const isAutoApproved = followers === null
     await pool.query(
@@ -109,7 +109,7 @@ async function saveAndNotify({ handle, platform, email, followers }) {
   try {
     await sendNotification({
       subject: `Creator approved: ${handle} (${platform})`,
-      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}\nCode Granted: ${codeStr ?? 'NONE - POOL EMPTY'}`,
+      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}\nCode Granted: ${codeStr ?? 'NONE - POOL EMPTY'}\nWants Giveaway Codes: ${wantsGiveaways ? 'YES' : 'No'}`,
     })
   } catch (err) {
     console.error('Eligibility notification error:', err.message)
@@ -127,7 +127,7 @@ STEP 1 — Try it (1 month free)
 ${codeStr ? `Your trial code is below. Download Breathe Collection on the App Store and redeem it.\nCode: ${codeStr}` : `Your trial code is being generated and is on the way. Download Breathe Collection on the App Store to get ready.`}
 
 STEP 2 — Post and get lifetime
-Once you've posted your giveaway, reply to this email with the link. We'll send your lifetime Pro code + giveaway codes for your audience the same day.
+Once you've posted your giveaway, reply to this email with the link. We'll send your lifetime Pro code${wantsGiveaways ? ' + 10 giveaway codes (2-month access) for your audience' : ''} the same day.
 
 ---
 
