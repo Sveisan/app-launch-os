@@ -2,14 +2,16 @@
   "name": "breathe.collection.web",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server/index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
     "start": "node server/index.js",
     "migrate": "node server/db/migrate.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "content": "node scripts/content-admin.js",
+    "generate": "node scripts/content-admin.js generate"
   },
   "jest": {
     "testEnvironment": "node"
@@ -19,9 +21,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.81.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "nodemailer": "^8.0.4",
+    "node-cron": "^4.2.1",
     "pg": "^8.20.0",
     "resend": "^6.9.4"
   },

@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "npm install && npm run migrate"
 
 [deploy]
 startCommand = "npm start"

@@ -4,10 +4,13 @@ const APIFY_BASE = 'https://api.apify.com/v2'
 const TIMEOUT_SECS = 90
 
 async function runActor(actorId, input) {
-  const url = `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?token=${config.apify.apiToken}&timeout=${TIMEOUT_SECS}`
+  const url = `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?timeout=${TIMEOUT_SECS}`
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apify.apiToken}`,
+    },
     body: JSON.stringify(input),
   })
   if (!res.ok) throw new Error(`Apify responded ${res.status} for ${actorId}`)

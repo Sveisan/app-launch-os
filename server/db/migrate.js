@@ -42,6 +42,20 @@ async function migrate() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS content (
+      id SERIAL PRIMARY KEY,
+      slug TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,           -- 'technique' | 'use-case' | 'faq-cluster'
+      title TEXT NOT NULL,
+      meta_title TEXT NOT NULL,
+      meta_description TEXT NOT NULL,
+      content_json JSONB NOT NULL,  -- structured content
+      schema_json JSONB NOT NULL,   -- schema.org JSON-LD
+      published BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     -- Add columns to existing tables if they don't exist yet
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'trial';
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS post_url TEXT;

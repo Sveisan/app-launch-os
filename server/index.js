@@ -10,6 +10,9 @@ app.use('/api/waitlist', require('./routes/waitlist'))
 app.use('/api/check-eligibility', require('./routes/eligibility'))
 app.use('/api/feedback', require('./routes/feedback'))
 
+app.use('/breathing', require('./routes/content'))
+app.get('/sitemap.xml', require('./routes/content').sitemap)
+
 app.use((err, req, res, next) => {
   console.error(err)
   res.status(500).json({ error: 'Internal server error' })
@@ -17,3 +20,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+
+if (process.env.NODE_ENV !== 'test') {
+  require('./jobs/scheduler')
+}
