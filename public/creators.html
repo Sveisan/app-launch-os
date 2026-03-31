@@ -131,6 +131,30 @@
             color: var(--text-muted); font-weight: 300;
         }
 
+        /* FAQ */
+        .faq { margin-top: 3rem; text-align: left; }
+        .faq-title { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; text-align: center; }
+        .faq-item {
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 0; cursor: pointer;
+        }
+        .faq-q {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.95rem; font-weight: 400; transition: color 0.3s ease;
+        }
+        .faq-item:hover .faq-q { color: var(--secondary); }
+        .faq-arrow {
+            font-size: 0.8rem; color: var(--text-muted);
+            transition: transform 0.3s ease; flex-shrink: 0; margin-left: 1rem;
+        }
+        .faq-item.open .faq-arrow { transform: rotate(180deg); }
+        .faq-a {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            color: var(--text-muted); font-size: 0.85rem; font-weight: 300; line-height: 1.6;
+        }
+        .faq-item.open .faq-a { max-height: 200px; padding-top: 0.75rem; }
+
         footer { margin-top: 3rem; color: var(--text-muted); font-size: 0.85rem; }
         footer a { color: var(--text-muted); text-decoration: none; }
         footer a:hover { color: var(--secondary); }
@@ -259,6 +283,51 @@
 
         <p style="text-align: center; color: var(--text-muted); font-weight: 300; font-size: 0.95rem; margin-top: 2rem; font-style: italic;">Breathing buddies for life ⚡</p>
 
+        <!-- FAQ -->
+        <div class="faq">
+            <div class="faq-title">Questions</div>
+
+            <div class="faq-item">
+                <div class="faq-q">How many followers do I need? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">500+</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">What counts as a "post"? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">Anything genuine — a story, reel, TikTok, tweet, YouTube mention, a live breathing showcase, etc.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">How long do I have to post? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">There's no hard deadline. Use your free trial, and post whenever it feels right.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">What happens after I post? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">Reply to your welcome email with the link. We verify and send your lifetime Pro code in short time.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Can I use multiple platforms? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">Of course, we love that.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Is this available on Android? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">iOS only right now. Android is coming soon — join the waitlist on our home page.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Do I have to use the giveaway codes? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">No, they're completely optional. The codes are there if you want to share with your audience. Please don't request them if you will not use, as there is a monthly limit to codes, and all expire in 30 days.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Can I apply with a private account? <span class="faq-arrow">▼</span></div>
+                <div class="faq-a">Your profile needs to be public so we can verify your reach. We are allowing some private ones, but we must be able to clearly see value creation for Breathe Collection.</div>
+            </div>
+        </div>
+
         <footer>
             <a href="index.html">← Breathe Collection</a>
         </footer>
@@ -336,6 +405,13 @@
 
         document.getElementById('claim-form').style.display = 'none'
         document.getElementById('claim-done').style.display = 'block'
+    })
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('open')
+        })
     })
     </script>
 </body>

@@ -435,6 +435,29 @@
         });
     });
 
+    // 2b. Drag-to-scroll for desktop
+    const viewer = document.querySelector('.collection-viewer');
+    let isDown = false, startX, scrollLeft;
+    viewer.addEventListener('mousedown', e => {
+        isDown = true; viewer.style.cursor = 'grabbing';
+        startX = e.pageX - viewer.offsetLeft;
+        scrollLeft = viewer.scrollLeft;
+    });
+    viewer.addEventListener('mouseleave', () => { isDown = false; viewer.style.cursor = 'grab'; });
+    viewer.addEventListener('mouseup', () => { isDown = false; viewer.style.cursor = 'grab'; });
+    viewer.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - viewer.offsetLeft;
+        viewer.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+
+    // Auto-hint: nudge scroll on load to signal scrollability
+    setTimeout(() => {
+        viewer.scrollTo({ left: 80, behavior: 'smooth' });
+        setTimeout(() => viewer.scrollTo({ left: 0, behavior: 'smooth' }), 600);
+    }, 1500);
+
     // 3. Waitlist Form
     document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
         e.preventDefault()
