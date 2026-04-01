@@ -84,8 +84,8 @@ Please provide ONLY the raw JSON output.`;
         topic.title,
         parsed.meta_title || topic.title,
         parsed.meta_description || '',
-        parsed.content_json || {},
-        parsed.schema_json || {}
+        JSON.stringify(parsed.content_json || {}),
+        JSON.stringify(parsed.schema_json || {})
       ]
     );
 
