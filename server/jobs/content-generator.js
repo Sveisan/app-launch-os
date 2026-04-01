@@ -64,10 +64,19 @@ Please provide ONLY the raw JSON output.`;
 
     let jsonStr = response.content[0].text;
     
-    // Clean up potential markdown code block wrappers if present
-    jsonStr = jsonStr.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '').trim();
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    }
     
-    const parsed = JSON.parse(jsonStr);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error('Failed to parse JSON. Raw output from Claude:', response.content[0].text);
+      throw parseErr;
+    }
 
     await pool.query(
       `INSERT INTO content (slug, type, title, meta_title, meta_description, content_json, schema_json, published)
