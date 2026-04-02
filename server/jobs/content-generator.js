@@ -14,6 +14,7 @@ Your job is to generate the JSON content for a premium breathing app's website (
 The brand aesthetic is "Quiet Luxury", heavily grounded in science and protocols (think Andrew Huberman or Navy SEALs).
 You MUST output ONLY valid JSON without any markdown formatting wrappers.
 CRITICAL: When generating "research" citations, you MUST only use real, verifiable scientific studies. Do not hallucinate PMIDs or URLs. If you cannot find a real study, leave the research array empty.
+Limit output to a maximum of 3 use_cases, 3 research studies, and 3 FAQs to ensure the JSON does not exceed output token limits.
 Return JSON that strictly matches this structure:
 {
   "meta_title": "SEO title (under 60 chars)",
