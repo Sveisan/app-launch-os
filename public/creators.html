@@ -53,13 +53,20 @@
 
         /* States */
         .state { display: none; }
-        .loading { flex-direction: column; align-items: center; gap: 1rem; padding: 1rem 0; }
-        .spinner {
-            width: 36px; height: 36px; border-radius: 50%;
-            border: 2px solid rgba(82,171,152,0.2); border-top-color: var(--secondary);
-            animation: spin 1s linear infinite;
+        .loading { flex-direction: column; align-items: center; padding: 2rem 0; }
+        .loading-orb-container {
+            height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-orb {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--secondary), rgba(44,120,115,0.4));
+            box-shadow: 0 0 20px rgba(82,171,152,0.5), inset 0 0 10px rgba(255,255,255,0.2);
+            animation: pulse-breathe 8s ease-in-out infinite;
+        }
+        @keyframes pulse-breathe {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.6); opacity: 1; }
+        }
         .loading p { color: var(--text-muted); font-size: 0.9rem; }
 
         .result { padding: 0.5rem 0; }
@@ -97,9 +104,9 @@
             text-align: left; line-height: 1.4;
         }
 
-        .journey { margin-top: 2.5rem; text-align: left; }
+        .journey { margin-top: 1rem; text-align: left; width: 100%; }
         .journey-title { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; text-align: center; }
-        .step { display: flex; gap: 1.2rem; align-items: flex-start; position: relative; padding-bottom: 1.8rem; }
+        .step { display: flex; gap: 1.2rem; align-items: stretch; position: relative; padding-bottom: 1.8rem; }
         .step:last-child { padding-bottom: 0; }
         .step-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 40px; }
         .step-dot {
@@ -107,20 +114,20 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--card-border);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
+            font-size: 0.95rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-muted);
             transition: all 0.3s ease;
         }
-        .step:hover .step-dot { border-color: var(--secondary); background: rgba(82,171,152,0.1); transform: scale(1.1); }
+        .step:hover .step-dot { border-color: var(--secondary); background: rgba(82,171,152,0.1); transform: scale(1.1); color: var(--text-main); }
         .step-connector {
             width: 1px; flex: 1; min-height: 16px; margin-top: 0.4rem;
             background: linear-gradient(to bottom, var(--card-border), transparent);
         }
         .step:last-child .step-connector { display: none; }
-        .step-content { padding-top: 0.6rem; }
+        .step-content { padding-top: 0.6rem; flex: 1; min-width: 0; }
         .step-label { font-size: 1rem; font-weight: 400; margin-bottom: 0.2rem; transition: color 0.3s ease; }
         .step:hover .step-label { color: var(--secondary); }
         .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; line-height: 1.5; }
-        .step-highlight .step-dot { background: rgba(82,171,152,0.15); border-color: var(--secondary); }
+        .step-highlight .step-dot { background: rgba(82,171,152,0.15); border-color: var(--secondary); color: var(--secondary); }
         .step-highlight .step-label { color: var(--secondary); font-weight: 500; }
 
         .bonus-section { margin-top: 2rem; text-align: center; }
@@ -171,78 +178,80 @@
         <h1>Share your love for breathing</h1>
         <p class="sub">and unlock lifetime Pro.</p>
 
-        <!-- Eligibility Checker — directly under header -->
-        <div class="checker">
-            <!-- Step 1 -->
-            <form id="check-form">
-                <select id="platform" class="form-control" required>
-                    <option value="">Platform</option>
-                    <option value="instagram">Instagram</option>
-                    <option value="tiktok">TikTok</option>
-                    <option value="x">X / Twitter</option>
-                    <option value="youtube">YouTube</option>
-                    <option value="onlyfans">OnlyFans</option>
-                </select>
-                <input type="text" id="handle" class="form-control" placeholder="@yourhandle" required>
-                <button type="submit" class="btn">Check Eligibility</button>
-            </form>
-
-            <!-- Loading -->
-            <div class="state loading" id="loading">
-                <div class="spinner"></div>
-                <p>Checking your profile...</p>
-            </div>
-
-            <!-- Approved -->
-            <div class="state result approved" id="approved">
-                <div class="result-icon">✓</div>
-                <div class="result-title">You qualify.</div>
-                <div class="result-sub" id="followers-line"></div>
-                <form id="claim-form">
-                    <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
-                    <label class="giveaway-toggle">
-                        <input type="checkbox" id="wants-giveaways">
-                        <span>🎁 I'd also like giveaway codes for my audience & friends (10× 2-month access)</span>
-                    </label>
-                    <button type="submit" class="btn">Send me the details</button>
-                </form>
-                <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — everything you need is on the way.</div>
-            </div>
-
-            <!-- Rejected -->
-            <div class="state result rejected" id="rejected">
-                <div class="result-icon">—</div>
-                <div class="result-title">Not yet.</div>
-                <div class="result-sub" id="reject-line"></div>
-                <button class="btn-ghost" id="retry-btn">Try another handle</button>
-            </div>
-
-            <!-- Error -->
-            <div class="state result rejected" id="error-state">
-                <div class="result-icon">!</div>
-                <div class="result-title">Couldn't check.</div>
-                <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
-                <button class="btn-ghost" id="error-retry">Try again</button>
-            </div>
-        </div>
-
-        <!-- Playful Journey -->
+        <!-- Downward Steps Flow -->
         <div class="journey">
-            <div class="journey-title">Your journey</div>
-
             <div class="step">
                 <div class="step-line">
-                    <div class="step-dot">🔍</div>
+                    <div class="step-dot">01</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-label">Verify</div>
+                    <div class="step-desc" style="margin-bottom: 1.2rem;">Connect your primary platform to check your reach.</div>
+                    
+                    <!-- Eligibility Checker -->
+                    <div class="checker" style="text-align: center; padding: 1.5rem;">
+                        <!-- Step 1 -->
+                        <form id="check-form">
+                            <select id="platform" class="form-control" required>
+                                <option value="">Platform</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="x">X / Twitter</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="onlyfans">OnlyFans</option>
+                            </select>
+                            <input type="text" id="handle" class="form-control" placeholder="@yourhandle" required>
+                            <button type="submit" class="btn">Check Eligibility</button>
+                        </form>
+
+                        <!-- Loading -->
+                        <div class="state loading" id="loading">
+                            <div class="loading-orb-container">
+                                <div class="loading-orb"></div>
+                            </div>
+                            <p id="loading-breathe-text" style="color: var(--secondary); font-weight: 400; font-size: 1.2rem; transition: opacity 0.5s ease; margin-bottom: 0.2rem;">Inhale...</p>
+                            <p>Take a deep breath while we check your profile.</p>
+                        </div>
+
+                        <!-- Approved -->
+                        <div class="state result approved" id="approved">
+                            <div class="result-icon">✓</div>
+                            <div class="result-title">You qualify.</div>
+                            <div class="result-sub" id="followers-line"></div>
+                            <form id="claim-form">
+                                <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
+                                <label class="giveaway-toggle">
+                                    <input type="checkbox" id="wants-giveaways">
+                                    <span>Include giveaway codes for my audience & friends (10× 2-month access)</span>
+                                </label>
+                                <button type="submit" class="btn">Send me the details</button>
+                            </form>
+                            <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — everything you need is on the way.</div>
+                        </div>
+
+                        <!-- Rejected -->
+                        <div class="state result rejected" id="rejected">
+                            <div class="result-icon">—</div>
+                            <div class="result-title">Not yet.</div>
+                            <div class="result-sub" id="reject-line"></div>
+                            <button class="btn-ghost" id="retry-btn">Try another handle</button>
+                        </div>
+
+                        <!-- Error -->
+                        <div class="state result rejected" id="error-state">
+                            <div class="result-icon">!</div>
+                            <div class="result-title">Couldn't check.</div>
+                            <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
+                            <button class="btn-ghost" id="error-retry">Try again</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="step">
                 <div class="step-line">
-                    <div class="step-dot">🫁</div>
+                    <div class="step-dot">02</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
@@ -252,28 +261,28 @@
 
             <div class="step">
                 <div class="step-line">
-                    <div class="step-dot">✨</div>
+                    <div class="step-dot">03</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-label">Create value, your way</div>
-                    <div class="step-desc">Share your experience however feels natural — a post, story, review, real.</div>
+                    <div class="step-desc">Share your experience however feels natural — a post, story, review, reel.</div>
                 </div>
             </div>
 
             <div class="step">
                 <div class="step-line">
-                    <div class="step-dot">🎁</div>
+                    <div class="step-dot">04</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
-                    <div class="step-label" style="color: var(--text-muted); font-weight: 300; font-size: 0.85rem; opacity: 0.7;">Optional: Giveaways for your audience & friends (2-months access codes)</div>
+                    <div class="step-label" style="color: var(--text-muted); font-weight: 300; font-size: 0.85rem; opacity: 0.7;">Optional: Giveaways for your audience & friends (2-month access codes)</div>
                 </div>
             </div>
 
             <div class="step step-highlight">
                 <div class="step-line">
-                    <div class="step-dot">🏆</div>
+                    <div class="step-dot">05</div>
                 </div>
                 <div class="step-content">
                     <div class="step-label">Share the results with us and Unlock Lifetime Pro</div>
@@ -281,7 +290,7 @@
             </div>
         </div>
 
-        <p style="text-align: center; color: var(--text-muted); font-weight: 300; font-size: 0.95rem; margin-top: 2rem; font-style: italic;">Breathing buddies for life ⚡</p>
+        <p style="text-align: center; color: var(--text-muted); font-weight: 300; font-size: 0.95rem; margin-top: 2rem; font-style: italic;">Breathing buddies for life.</p>
 
         <!-- FAQ -->
         <div class="faq">
@@ -335,9 +344,34 @@
 
     <script>
     let savedHandle, savedPlatform
+    let breatheInterval;
+
+    function startBreathingText() {
+        const textEl = document.getElementById('loading-breathe-text');
+        textEl.textContent = 'Inhale...';
+        textEl.style.opacity = 0;
+        setTimeout(() => textEl.style.opacity = 1, 50);
+
+        let isInhale = true;
+        breatheInterval = setInterval(() => {
+            textEl.style.opacity = 0;
+            setTimeout(() => {
+                isInhale = !isInhale;
+                textEl.textContent = isInhale ? 'Inhale...' : 'Exhale...';
+                textEl.style.opacity = 1;
+            }, 500);
+        }, 4000);
+    }
+
+    function stopBreathingText() {
+        clearInterval(breatheInterval);
+    }
 
     const states = ['check-form','loading','approved','rejected','error-state']
     function show(id) {
+        if(id === 'loading') startBreathingText();
+        else stopBreathingText();
+
         states.forEach(s => {
             const el = document.getElementById(s)
             el.style.display = 'none'

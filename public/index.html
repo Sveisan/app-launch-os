@@ -6,6 +6,12 @@
     <title>Breathe Collection | Nine Breathing Techniques. One Discipline.</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        @property --glow-color {
+            syntax: '<color>';
+            inherits: true;
+            initial-value: #4A90E2;
+        }
+
         :root {
             --bg: #000000;
             --primary: #2C7873;
@@ -42,7 +48,7 @@
             border-radius: 50%;
             box-shadow: 0 0 60px var(--glow-color, #52AB98), inset 0 0 20px rgba(255,255,255,0.2);
             animation: breathe 8s ease-in-out infinite;
-            transition: all 1s ease;
+            transition: --glow-color 0.8s ease-in-out, all 1s ease;
         }
         @keyframes breathe {
             0%, 100% { transform: scale(1); opacity: 0.8; }
@@ -186,7 +192,7 @@
     <section class="hero">
         <div class="orb-container"><div class="orb" id="hero-orb"></div></div>
         <h1>
-            <span id="header-word" style="transition: all 0.4s ease; display: inline-block;">Focus</span>
+            <span id="header-word" style="transition: all 0.4s ease-in-out; display: inline-block;">Focus</span>
         </h1>
         <p class="subtitle" style="margin-bottom: 1rem;">with</p>
         <p class="subtitle" style="font-size: clamp(1.4rem, 3vw, 2rem); color: var(--text-main); font-weight: 400; margin-bottom: 1rem;">Breathing Techniques</p>
@@ -419,12 +425,13 @@
         headerWord.style.opacity = 0;
         headerWord.style.transform = 'translateY(10px)';
         
+        const next = words[currentWordIndex];
+        heroOrb.style.setProperty('--glow-color', next.color);
+        
         setTimeout(() => {
-            const next = words[currentWordIndex];
             headerWord.textContent = next.text;
             headerWord.style.color = next.color;
             headerWord.style.textShadow = `0 0 25px ${next.color}`;
-            heroOrb.style.setProperty('--glow-color', next.color);
             headerWord.style.opacity = 1;
             headerWord.style.transform = 'translateY(0)';
         }, 400);
