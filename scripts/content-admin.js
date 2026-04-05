@@ -39,6 +39,33 @@ async function main() {
     process.exit(0);
   }
   
+  if (cmd === 'generate-all') {
+    const existing = await pool.query('SELECT slug FROM content');
+    const existingSlugs = existing.rows.map(r => r.slug);
+    
+    const remaining = QUEUE.filter(t => !existingSlugs.includes(t.slug));
+    console.log(`Found ${remaining.length} topics left to generate and publish.`);
+    
+    for (const [i, topic] of remaining.entries()) {
+      console.log(`[${i+1}/${remaining.length}] Building and publishing: ${topic.slug}...`);
+      const success = await generateContent(topic);
+      if (success) {
+        await pool.query('UPDATE content SET published = TRUE, updated_at = NOW() WHERE slug = $1', [topic.slug]);
+        console.log(`  -> Successfully published ${topic.slug}`);
+      } else {
+        console.error(`  -> FAILED to generate ${topic.slug}`);
+      }
+      
+      if (i < remaining.length - 1) {
+        console.log('  -> Waiting 25 seconds to respect Anthropic AI rate limits...');
+        await new Promise(resolve => setTimeout(resolve, 25000));
+      }
+    }
+    console.log('BATCH COMPLETE! All remaining articles are live.');
+    process.exit(0);
+  }
+
+  
   if (cmd === 'preview') {
     if (!arg) {
       console.error('Provide a slug');
