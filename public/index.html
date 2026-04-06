@@ -186,6 +186,18 @@
             .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
             footer a { margin: 0 0.5rem; }
         }
+
+        .content-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; opacity: 0; transition: opacity 0.4s ease; }
+        .content-modal.active { pointer-events: auto; opacity: 1; }
+        .content-modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .content-modal-sheet { position: relative; width: 100%; max-width: 800px; margin: 0 auto; height: 90vh; background: #050505; border-top-left-radius: 24px; border-top-right-radius: 24px; border: 1px solid var(--card-border); border-bottom: none; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+        .content-modal.active .content-modal-sheet { transform: translateY(0); }
+        .content-modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 12px auto; }
+        .content-modal-close { position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.05); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.3s; }
+        .content-modal-close:hover { background: rgba(255,255,255,0.15); }
+        .content-modal-body { flex: 1; overflow-y: auto; padding: 0 1.5rem 4rem 1.5rem; scroll-behavior: smooth; }
+        .content-modal-loader { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; margin: 4rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -198,7 +210,7 @@
         <p class="subtitle" style="font-size: clamp(1.4rem, 3vw, 2rem); color: var(--text-main); font-weight: 400; margin-bottom: 1rem;">Breathing Techniques</p>
         <p class="subtitle" style="margin-bottom: 0.5rem;">Including yours (custom).</p>
         <p class="subtitle" style="margin-bottom: 3rem;">In one app.</p>
-        <a href="#" class="btn-primary">Download on the App Store</a>
+        <a href="https://apps.apple.com/app/breathe-collection/id6760255541" class="btn-primary" target="_blank" rel="noopener noreferrer">Download on the App Store</a>
     </section>
 
     <section class="collection-section">
@@ -209,7 +221,7 @@
 
         <div class="collection-viewer">
             <!-- Wim Hof -->
-            <div class="technique-item" style="--glow-color: #00D1FF;">
+            <a href="/breathing/wim-hof" class="technique-item" style="--glow-color: #00D1FF; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -219,12 +231,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Wim Hof</div>
                     <div class="technique-tag">Energize</div>
-                    <div class="technique-duration">≈ 11:15 min</div>
-                </div>
+                    <div class="technique-duration">≈ 11:15 min</div></a>
             </div>
 
             <!-- SEAL -->
-            <div class="technique-item" style="--glow-color: #52AB98;">
+            <a href="/breathing/navy-seal-tactical-breathing" class="technique-item" style="--glow-color: #52AB98; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -234,12 +245,11 @@
                 <div class="technique-info">
                     <div class="technique-name">SEAL</div>
                     <div class="technique-tag">Control</div>
-                    <div class="technique-duration">≈ 12:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 12:45 min</div></a>
             </div>
 
             <!-- Sleep -->
-            <div class="technique-item" style="--glow-color: #A18BFF;">
+            <a href="/breathing/sleep-breathing" class="technique-item" style="--glow-color: #A18BFF; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -249,12 +259,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Sleep</div>
                     <div class="technique-tag">Good Night</div>
-                    <div class="technique-duration">≈ 6:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 6:45 min</div></a>
             </div>
 
             <!-- Calm -->
-            <div class="technique-item" style="--glow-color: #FF5C5C;">
+            <a href="/breathing/coherent-breathing" class="technique-item" style="--glow-color: #FF5C5C; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -264,12 +273,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Calm</div>
                     <div class="technique-tag">Coherence</div>
-                    <div class="technique-duration">≈ 6:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 6:45 min</div></a>
             </div>
 
             <!-- Release -->
-            <div class="technique-item" style="--glow-color: #FFB366;">
+            <a href="/breathing/4-7-8-breathing" class="technique-item" style="--glow-color: #FFB366; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -279,12 +287,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Release</div>
                     <div class="technique-tag">Let Go</div>
-                    <div class="technique-duration">≈ 6:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 6:45 min</div></a>
             </div>
 
             <!-- Huberman -->
-            <div class="technique-item" style="--glow-color: #4BD663;">
+            <a href="/breathing/huberman-physiological-sigh" class="technique-item" style="--glow-color: #4BD663; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -294,12 +301,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Huberman</div>
                     <div class="technique-tag">Quick Reset</div>
-                    <div class="technique-duration">≈ 6:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 6:45 min</div></a>
             </div>
 
             <!-- Box -->
-            <div class="technique-item" style="--glow-color: #4A90E2;">
+            <a href="/breathing/box-breathing" class="technique-item" style="--glow-color: #4A90E2; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -309,12 +315,11 @@
                 <div class="technique-info">
                     <div class="technique-name">Box</div>
                     <div class="technique-tag">Sharp Focus</div>
-                    <div class="technique-duration">≈ 12:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 12:45 min</div></a>
             </div>
 
             <!-- Belly -->
-            <div class="technique-item" style="--glow-color: #1ABC9C;">
+            <a href="/breathing/diaphragmatic-breathing" class="technique-item" style="--glow-color: #1ABC9C; text-decoration: none;">
                 <div class="orb-wrapper">
                     <div class="orb-aura"></div>
                     <div class="orb-glass">
@@ -324,8 +329,7 @@
                 <div class="technique-info">
                     <div class="technique-name">Belly</div>
                     <div class="technique-tag">Ground</div>
-                    <div class="technique-duration">≈ 6:45 min</div>
-                </div>
+                    <div class="technique-duration">≈ 6:45 min</div></a>
             </div>
         </div>
     </section>
@@ -357,7 +361,7 @@
     <div style="text-align: center; margin-top: -4rem; margin-bottom: 8rem; padding: 0 1.5rem;">
         <p style="color: var(--text-muted); font-size: 1.1rem; font-weight: 300;">
             Curious about the science behind these techniques? 
-            <a href="/breathing/box-breathing" style="color: var(--secondary); text-decoration: none; margin-left: 0.5rem; border-bottom: 1px dotted var(--secondary);">Read the research &rarr;</a>
+            <a href="/library" style="color: var(--secondary); text-decoration: none; margin-left: 0.5rem; border-bottom: 1px dotted var(--secondary);">Explore the Library &rarr;</a>
         </p>
     </div>
 
@@ -394,7 +398,7 @@
 
     <footer>
         <div class="footer-links">
-            <a href="/breathing/box-breathing">Research</a>
+            <a href="/library">Research Library</a>
             <a href="/breathe/support">Support</a>
             <a href="/breathe/feedback">Feedback</a>
             <a href="/breathe/terms">Terms of Service</a>
@@ -402,6 +406,17 @@
         </div>
         <p>&copy; Breathe Collection. All rights reserved.</p>
     </footer>
+
+    <div id="content-modal" class="content-modal">
+        <div class="content-modal-overlay"></div>
+        <div class="content-modal-sheet">
+            <div class="content-modal-handle"></div>
+            <button class="content-modal-close">&times;</button>
+            <div class="content-modal-body" id="content-modal-body">
+                <div class="content-modal-loader"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
     // 1. Dynamic Hero Word Cycle
@@ -453,16 +468,22 @@
     // 2b. Drag-to-scroll for desktop
     const viewer = document.querySelector('.collection-viewer');
     let isDown = false, startX, scrollLeft;
+    window.isDragging = false;
     viewer.addEventListener('mousedown', e => {
         isDown = true; viewer.style.cursor = 'grabbing';
         startX = e.pageX - viewer.offsetLeft;
         scrollLeft = viewer.scrollLeft;
     });
     viewer.addEventListener('mouseleave', () => { isDown = false; viewer.style.cursor = 'grab'; });
-    viewer.addEventListener('mouseup', () => { isDown = false; viewer.style.cursor = 'grab'; });
+    viewer.addEventListener('mouseup', () => { 
+        isDown = false; 
+        viewer.style.cursor = 'grab'; 
+        setTimeout(() => window.isDragging = false, 50);
+    });
     viewer.addEventListener('mousemove', e => {
         if (!isDown) return;
         e.preventDefault();
+        window.isDragging = true;
         const x = e.pageX - viewer.offsetLeft;
         viewer.scrollLeft = scrollLeft - (x - startX) * 1.5;
     });
@@ -494,6 +515,49 @@
             msg.style.color = 'var(--accent)'
         }
     })
+
+    // 4. Modal Interception
+    const modal = document.getElementById('content-modal');
+    const modalOverlay = modal.querySelector('.content-modal-overlay');
+    const closeBtn = modal.querySelector('.content-modal-close');
+    const modalBody = document.getElementById('content-modal-body');
+    
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => { modalBody.innerHTML = '<div class="content-modal-loader"></div>'; }, 400);
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', closeModal);
+    
+    document.querySelectorAll('a.technique-item').forEach(link => {
+        link.addEventListener('click', async (e) => {
+            if (window.isDragging) { e.preventDefault(); return; }
+            if (e.shiftKey || e.ctrlKey || e.metaKey || e.button !== 0) return;
+            e.preventDefault();
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            try {
+                const response = await fetch(link.href);
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                const content = doc.querySelector('main') || doc.querySelector('article') || doc.querySelector('.content-container') || doc.body;
+                if (content && content.innerHTML) {
+                    modalBody.innerHTML = content.innerHTML;
+                    modalBody.scrollTop = 0;
+                } else {
+                    window.location.href = link.href;
+                }
+            } catch (err) {
+                window.location.href = link.href;
+            }
+        });
+    });
     </script>
 </body>
 </html>

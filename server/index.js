@@ -12,6 +12,7 @@ app.use('/api/feedback', require('./routes/feedback'))
 
 app.use('/breathing', require('./routes/content'))
 app.get('/sitemap.xml', require('./routes/content').sitemap)
+app.use('/library', require('./routes/library'))
 
 app.use((err, req, res, next) => {
   console.error(err)
