@@ -1,4 +1,4 @@
-const { esc } = require('./content');
+const esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 function renderLibraryPage(articles) {
   const techniques = articles.filter(a => a.type === 'technique');
