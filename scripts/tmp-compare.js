@@ -1,4 +1,4 @@
-const { pool } = require('./server/db/index');
+const { pool } = require('../server/db/index');
 
 async function compare() {
     try {
