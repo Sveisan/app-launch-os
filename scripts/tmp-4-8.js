@@ -55,22 +55,33 @@ const contentJson = {
 const meta_title = "4-8 Breathing Technique: Extended Exhalation for Immediate Release";
 const meta_description = "Learn the 4-8 breathing technique, a 1:2 ratio prolonged exhalation method scientifically proven to stimulate the vagus nerve and release tension.";
 
+const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": meta_title,
+    "description": meta_description,
+    "author": {
+        "@type": "Organization",
+        "name": "Breathe Collection"
+    }
+};
+
 async function inject() {
     try {
         const check = await pool.query('SELECT slug FROM content WHERE slug = $1', [slug]);
         if (check.rows.length > 0) {
             await pool.query(
                 `UPDATE content 
-                 SET title = $1, meta_title = $2, meta_description = $3, content_json = $4
-                 WHERE slug = $5`,
-                [title, meta_title, meta_description, contentJson, slug]
+                 SET title = $1, meta_title = $2, meta_description = $3, content_json = $4, schema_json = $5
+                 WHERE slug = $6`,
+                [title, meta_title, meta_description, contentJson, schemaJson, slug]
             );
             console.log("Updated existing 4-8 row.");
         } else {
             await pool.query(
-                `INSERT INTO content (slug, type, title, meta_title, meta_description, content_json, published)
-                 VALUES ($1, 'technique', $2, $3, $4, $5, true)`,
-                [slug, title, meta_title, meta_description, contentJson]
+                `INSERT INTO content (slug, type, title, meta_title, meta_description, content_json, schema_json, published)
+                 VALUES ($1, 'technique', $2, $3, $4, $5, $6, true)`,
+                [slug, title, meta_title, meta_description, contentJson, schemaJson]
             );
             console.log("Inserted new 4-8 row.");
         }
