@@ -550,11 +550,9 @@
                 try {
                     const iDoc = iframe.contentDocument || iframe.contentWindow.document;
                     
-                    // Inject a style to hide scrollbar, footer, and CTA inside the iframe
+                    // Inject a style to hide footer and CTA inside the iframe
                     const style = iDoc.createElement('style');
                     style.innerHTML = `
-                        body::-webkit-scrollbar { display: none; }
-                        body { -ms-overflow-style: none; scrollbar-width: none; }
                         .cta-section, footer { display: none !important; }
                     `;
                     iDoc.head.appendChild(style);

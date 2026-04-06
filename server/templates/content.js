@@ -117,7 +117,11 @@ function getBaseHead(title, metaTitle, metaDescription, canonicalUrl, schemaJson
         footer { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.9rem; }
         footer a { color: var(--secondary); text-decoration: none; margin: 0 1rem; transition: color 0.3s ease; }
         footer a:hover { color: var(--text-main); }
-        .footer-links { margin-bottom: 2rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
     </style>
 </head>
 <body>
