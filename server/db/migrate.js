@@ -71,6 +71,13 @@ async function migrate() {
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS outreach_draft TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS scout_logged BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS fit_feedback TEXT;
+
+    -- System Logs for Scout Agent
+    CREATE TABLE IF NOT EXISTS scout_logs (
+      id SERIAL PRIMARY KEY,
+      message TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `)
   console.log('Migration complete')
   await pool.end()

@@ -26,16 +26,16 @@ class ScoutAgent {
    * Main execution loop
    */
   async run() {
-    console.log('--- Scout Agent Activation (Sherlock/Stark with Real Data) ---');
+    await this.sysLog('--- Scout Agent Activation (Phase 3 Trace) ---');
     console.log('Checking configuration...');
     
     if (!this.apifyToken) {
-      console.error('Scout Aborted: APIFY_API_TOKEN is missing in environment.');
+      await this.sysLog('Aborted: APIFY_API_TOKEN is missing.');
       return;
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('Scout Aborted: ANTHROPIC_API_KEY is missing in environment.');
+      await this.sysLog('Aborted: ANTHROPIC_API_KEY is missing.');
       return;
     }
 
@@ -43,56 +43,56 @@ class ScoutAgent {
       // 0. Schema Integrity Check
       console.log('Scout: Checking Database schema integrity...');
       const schemaCheck = await pool.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
+        SELECT column_name FROM information_schema.columns 
         WHERE table_name = 'contacts' AND column_name = 'scout_logged'
       `);
       
       if (schemaCheck.rows.length === 0) {
-        console.error('CRITICAL: contacts table is missing scout_logged column. Did you run the migration?');
-        // Force log a diagnostic failure
+        await this.sysLog('CRITICAL: contacts table is missing scout_logged column.');
         return;
       }
-      console.log('Scout: Schema verified. Database is ready.');
-
-      // 0b. Diagnostic forced log (Confirming DB works)
-      await this.logToDatabase({
-        handle: 'scout_diagnostic',
-        platform: 'System',
-        followers: 0,
-        niche: 'Connectivity Test',
-        post_url: 'https://breathecollection.app',
-      }, { finalScore: 1.0 }, 'Diagnostic: If you see this, the Scout -> Database pipeline is 100% operational.');
 
       // 1. Fetch Memory (Past Decisions)
       const memory = await this.getFitMemory();
-      console.log(`Scout: Retrieved ${memory.approved.length} approved and ${memory.rejected.length} rejected profiles for context.`);
+      await this.sysLog(`Retrieved memory: ${memory.approved.length} approved, ${memory.rejected.length} rejected profiles.`);
 
       // 2. Search TikTok & Instagram
       const rawLeads = await this.fetchSocialLeads();
-      console.log(`Scout: Found ${rawLeads.length} raw potential signals.`);
+      await this.sysLog(`Fetched ${rawLeads.length} raw leads from Apify.`);
 
       for (const lead of rawLeads) {
+        await this.sysLog(`Sherlock: Evaluating lead @${lead.handle}...`);
+        
         // 3. Sherlock Filter (Memory-Aware Scoring)
         const scoreData = await this.calculateSherlockScore(lead, memory);
-        console.log(`Scout Debug: @${lead.handle} scored ${scoreData.finalScore}`);
+        await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
         
         if (scoreData.finalScore >= 0.4) {
-          console.log(`Scout: High signal detected for @${lead.handle} (Score: ${scoreData.finalScore})`);
+          await this.sysLog(`High Signal: Drafting Tony Stark message for @${lead.handle}...`);
           
           // 4. Tony Stark Drafter (Context-Aware Drafting)
           const draft = await this.generateStarkDraft(lead, scoreData, memory);
           
           // 5. Log to DB
           await this.logToDatabase(lead, scoreData, draft);
+          await this.sysLog(`SUCCESS: Logged @${lead.handle} to database leads list.`);
         } else {
-          console.log(`Scout: Lead @${lead.handle} filtered out (Score too low: ${scoreData.finalScore})`);
+          await this.sysLog(`Excluded @${lead.handle} (Score ${scoreData.finalScore} too low).`);
         }
       }
       
-      console.log('--- Scout Agent Sleep Mode ---');
+      await this.sysLog('--- Scout Agent returning to Sleep Mode ---');
     } catch (err) {
-      console.error('Scout Execution Error:', err);
+      await this.sysLog(`EXECUTION ERROR: ${err.message}`);
+    }
+  }
+
+  async sysLog(message) {
+    try {
+      console.log(`[ScoutLog] ${message}`);
+      await pool.query('INSERT INTO scout_logs (message) VALUES ($1)', [message]);
+    } catch (err) {
+      console.error('SysLog failure:', err);
     }
   }
 

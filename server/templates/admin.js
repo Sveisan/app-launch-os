@@ -151,6 +151,18 @@ function renderAdminDashboard(stats) {
             `}
         </div>
 
+        <h2 class="section-title" style="margin-top: 3rem;">Mission Log (Live Trace)</h2>
+        <div class="card" style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; font-family: 'Courier New', monospace; font-size: 0.8rem;">
+            ${stats.systemLogs.length > 0 ? stats.systemLogs.map(log => `
+                <div style="margin-bottom: 0.5rem; display: flex; gap: 1rem;">
+                    <span style="color: var(--text-muted); min-width: 80px;">${new Date(log.created_at).toLocaleTimeString()}</span>
+                    <span style="color: var(--secondary);">${esc(log.message)}</span>
+                </div>
+            `).join('') : `
+                <div style="color: var(--text-muted);">Initializing logs...</div>
+            `}
+        </div>
+
         <footer style="margin-top: 4rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; padding-bottom: 2rem;">
             &sdot; Breathe Collection Admin &sdot; Confidential &sdot;
         </footer>

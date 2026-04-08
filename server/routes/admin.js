@@ -73,13 +73,22 @@ router.get('/', async (req, res) => {
             LIMIT 10
         `);
 
+        // 7. System Logs
+        const logsRes = await pool.query(`
+            SELECT message, created_at 
+            FROM scout_logs 
+            ORDER BY created_at DESC 
+            LIMIT 10
+        `);
+
         const stats = {
             isDbReady,
             scoutLeads: scoutRes.rows[0].count,
             waitlistTotal: waitlistRes.rows[0].count,
             creatorApps: creatorRes.rows[0].count,
             codesLeft: codesRes.rows[0].count,
-            latestLeads: leadsRes.rows[0] ? leadsRes.rows : []
+            latestLeads: leadsRes.rows[0] ? leadsRes.rows : [],
+            systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
         const html = renderAdminDashboard(stats);
