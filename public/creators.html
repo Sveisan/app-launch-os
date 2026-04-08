@@ -4,6 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Breathe Collection | Creator Program</title>
+    <meta name="description" content="Join the Breathe Collection Creator Program. Share your love for breathing, unlock lifetime Pro access, and run giveaways for your audience.">
+    <meta name="keywords" content="breathwork creator, wellness influencer, breathing app giveaway, creator program, lifetime pro access">
+    <link rel="canonical" href="https://breathecollection.app/creators.html">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://breathecollection.app/creators.html">
+    <meta property="og:title" content="Breathe Collection | Creator Program">
+    <meta property="og:description" content="Share your love for breathing and unlock lifetime Pro access. Join our creator community today.">
+    <meta property="og:image" content="https://breathecollection.app/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://breathecollection.app/creators.html">
+    <meta property="twitter:title" content="Breathe Collection | Creator Program">
+    <meta property="twitter:description" content="Share your love for breathing and unlock lifetime Pro access. Join our creator community today.">
+    <meta property="twitter:image" content="https://breathecollection.app/assets/og-image.png">
+
+    <!-- Structured Data (FAQ) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{
+        "@type": "Question",
+        "name": "How many followers do I need?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "500+ followers are required to be eligible for the program."
+        }
+      }, {
+        "@type": "Question",
+        "name": "What counts as a \"post\"?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Anything genuine — a story, reel, TikTok, tweet, YouTube mention, a live breathing showcase, etc."
+        }
+      }, {
+        "@type": "Question",
+        "name": "How long do I have to post?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "There's no hard deadline. Use your free trial, and post whenever it feels right."
+        }
+      }, {
+        "@type": "Question",
+        "name": "What happens after I post?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Reply to your welcome email with the link. We verify and send your lifetime Pro code in short time."
+        }
+      }]
+    }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -126,9 +180,42 @@
         .step-content { padding-top: 0.6rem; flex: 1; min-width: 0; }
         .step-label { font-size: 1rem; font-weight: 400; margin-bottom: 0.2rem; transition: color 0.3s ease; }
         .step:hover .step-label { color: var(--secondary); }
-        .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; line-height: 1.5; }
-        .step-highlight .step-dot { background: rgba(82,171,152,0.15); border-color: var(--secondary); color: var(--secondary); }
-        .step-highlight .step-label { color: var(--secondary); font-weight: 500; }
+        .step-desc { color: var(--text-muted); font-size: 0.85rem; font-weight: 300; line-height: 1.5; margin-bottom: 1rem; }
+
+        /* Step States */
+        .step .step-body { 
+            max-height: 0; opacity: 0; overflow: hidden; 
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(10px);
+        }
+        .step.active .step-body { 
+            max-height: 1000px; opacity: 1; 
+            transform: translateY(0);
+            padding-top: 0.5rem;
+        }
+        .step.active .step-dot { 
+            background: rgba(82, 171, 152, 0.15); 
+            border-color: var(--secondary); 
+            color: var(--secondary);
+            box-shadow: 0 0 15px rgba(82, 171, 152, 0.3);
+        }
+        .step.active .step-label { color: var(--secondary); font-weight: 500; }
+        
+        .step.completed .step-dot { 
+            background: var(--secondary); 
+            border-color: var(--secondary); 
+            color: var(--bg);
+        }
+        .step.completed .step-dot::after { content: '✓'; font-weight: 600; }
+        .step.completed .step-dot { font-size: 0; } /* Hide number when completed */
+        .step.completed .step-label { color: var(--text-muted); opacity: 0.8; }
+        .step.completed .step-body { max-height: 0; opacity: 0; pointer-events: none; }
+
+        .checker-inline { 
+            background: var(--card-bg); border: 1px solid var(--card-border); 
+            border-radius: 12px; padding: 1.25rem; margin-top: 0.5rem;
+            text-align: center;
+        }
 
         .bonus-section { margin-top: 2rem; text-align: center; }
         .bonus-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 0.6rem; }
@@ -180,86 +267,82 @@
 
         <!-- Downward Steps Flow -->
         <div class="journey">
-            <div class="step">
+            <!-- Step 1: Verify -->
+            <div class="step active" id="step-1">
                 <div class="step-line">
                     <div class="step-dot">01</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
                     <div class="step-label">Verify</div>
-                    <div class="step-desc" style="margin-bottom: 1.2rem;">Connect your primary platform to check your reach.</div>
-                    
-                    <!-- Eligibility Checker -->
-                    <div class="checker" style="text-align: center; padding: 1.5rem;">
-                        <!-- Step 1 -->
-                        <form id="check-form">
-                            <select id="platform" class="form-control" required>
-                                <option value="">Platform</option>
-                                <option value="instagram">Instagram</option>
-                                <option value="tiktok">TikTok</option>
-                                <option value="x">X / Twitter</option>
-                                <option value="youtube">YouTube</option>
-                                <option value="onlyfans">OnlyFans</option>
-                            </select>
-                            <input type="text" id="handle" class="form-control" placeholder="@yourhandle" required>
-                            <button type="submit" class="btn">Check Eligibility</button>
-                        </form>
-
-                        <!-- Loading -->
-                        <div class="state loading" id="loading">
-                            <div class="loading-orb-container">
-                                <div class="loading-orb"></div>
-                            </div>
-                            <p id="loading-breathe-text" style="color: var(--secondary); font-weight: 400; font-size: 1.2rem; transition: opacity 0.5s ease; margin-bottom: 0.2rem;">Inhale...</p>
-                            <p>Take a deep breath while we check your profile.</p>
-                        </div>
-
-                        <!-- Approved -->
-                        <div class="state result approved" id="approved">
-                            <div class="result-icon">✓</div>
-                            <div class="result-title">You qualify.</div>
-                            <div class="result-sub" id="followers-line"></div>
-                            <form id="claim-form">
-                                <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
-                                <label class="giveaway-toggle">
-                                    <input type="checkbox" id="wants-giveaways">
-                                    <span>Include giveaway codes for my audience & friends (10× 2-month access)</span>
-                                </label>
-                                <button type="submit" class="btn">Send me the details</button>
+                    <div class="step-desc">Connect your primary platform to check your reach.</div>
+                    <div class="step-body">
+                        <div class="checker-inline">
+                            <form id="check-form">
+                                <select id="platform" class="form-control" required>
+                                    <option value="">Platform</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="x">X / Twitter</option>
+                                    <option value="youtube">YouTube</option>
+                                    <option value="onlyfans">OnlyFans</option>
+                                </select>
+                                <input type="text" id="handle" class="form-control" placeholder="@yourhandle" required>
+                                <button type="submit" class="btn">Check Eligibility</button>
                             </form>
-                            <div class="success-msg" id="claim-done" style="display:none">Done. Check your email — everything you need is on the way.</div>
-                        </div>
 
-                        <!-- Rejected -->
-                        <div class="state result rejected" id="rejected">
-                            <div class="result-icon">—</div>
-                            <div class="result-title">Not yet.</div>
-                            <div class="result-sub" id="reject-line"></div>
-                            <button class="btn-ghost" id="retry-btn">Try another handle</button>
-                        </div>
+                            <!-- Loading Overlay -->
+                            <div class="state loading" id="loading">
+                                <div class="loading-orb-container">
+                                    <div class="loading-orb"></div>
+                                </div>
+                                <p id="loading-breathe-text" style="color: var(--secondary); font-weight: 400; font-size: 1.2rem; transition: opacity 0.5s ease; margin-bottom: 0.2rem;">Inhale...</p>
+                                <p>Checking your profile...</p>
+                            </div>
 
-                        <!-- Error -->
-                        <div class="state result rejected" id="error-state">
-                            <div class="result-icon">!</div>
-                            <div class="result-title">Couldn't check.</div>
-                            <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
-                            <button class="btn-ghost" id="error-retry">Try again</button>
+                            <!-- Rejected -->
+                            <div class="state result rejected" id="rejected">
+                                <div class="result-icon">—</div>
+                                <div class="result-title">Not yet.</div>
+                                <div class="result-sub" id="reject-line"></div>
+                                <button class="btn-ghost" id="retry-btn">Try another handle</button>
+                            </div>
+
+                            <!-- Error -->
+                            <div class="state result rejected" id="error-state">
+                                <div class="result-icon">!</div>
+                                <div class="result-title">Couldn't check.</div>
+                                <div class="result-sub" id="error-line">Make sure your profile is public and try again.</div>
+                                <button class="btn-ghost" id="error-retry">Try again</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="step">
+            <!-- Step 2: Reward -->
+            <div class="step" id="step-2">
                 <div class="step-line">
                     <div class="step-dot">02</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
-                    <div class="step-label">Get a 1-month free to try</div>
+                    <div class="step-label">Get 1 month free</div>
+                    <div class="step-desc" id="followers-line-step2">Verified. We'll send your trial code immediately.</div>
+                    <div class="step-body">
+                        <div class="checker-inline">
+                            <form id="claim-form">
+                                <input type="email" id="claim-email" class="form-control" placeholder="your@email.com" required>
+                                <button type="submit" class="btn">Send me the details</button>
+                            </form>
+                            <div class="success-msg" id="claim-done" style="display:none">Done. Check your email.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="step">
+            <!-- Step 3: Create -->
+            <div class="step" id="step-3">
                 <div class="step-line">
                     <div class="step-dot">03</div>
                     <div class="step-connector"></div>
@@ -267,25 +350,44 @@
                 <div class="step-content">
                     <div class="step-label">Create value, your way</div>
                     <div class="step-desc">Share your experience however feels natural — a post, story, review, reel.</div>
+                    <div class="step-body">
+                        <button class="btn" id="step3-next">Next: Optional Gifts</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="step">
+            <!-- Step 4: Optional -->
+            <div class="step" id="step-4">
                 <div class="step-line">
                     <div class="step-dot">04</div>
                     <div class="step-connector"></div>
                 </div>
                 <div class="step-content">
-                    <div class="step-label" style="color: var(--text-muted); font-weight: 300; font-size: 0.85rem; opacity: 0.7;">Optional: Giveaways for your audience & friends (2-month access codes)</div>
+                    <div class="step-label" style="opacity: 0.7;">Optional: Gift access to your friends</div>
+                    <div class="step-body">
+                        <div class="checker-inline">
+                            <form id="gift-form">
+                                <label class="giveaway-toggle">
+                                    <input type="checkbox" id="wants-giveaways-step4" checked>
+                                    <span>Include giveaway codes for my audience (10× 2-month access)</span>
+                                </label>
+                                <button type="submit" class="btn">Add gift codes to my request</button>
+                            </form>
+                            <div class="success-msg" id="gift-done" style="display:none">Gift codes added. Check your email shortly.</div>
+                            <button class="btn-ghost" id="skip-gift" style="margin-top: 1rem;">I'll skip for now</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="step step-highlight">
+            <!-- Step 5: Unlock -->
+            <div class="step step-highlight" id="step-5">
                 <div class="step-line">
                     <div class="step-dot">05</div>
                 </div>
                 <div class="step-content">
-                    <div class="step-label">Share the results with us and Unlock Lifetime Pro</div>
+                    <div class="step-label">Unlock Lifetime Pro</div>
+                    <div class="step-desc">Share the results with us and we'll upgrade your account forever.</div>
                 </div>
             </div>
         </div>
@@ -367,27 +469,49 @@
         clearInterval(breatheInterval);
     }
 
-    const states = ['check-form','loading','approved','rejected','error-state']
-    function show(id) {
+    function goToStep(n) {
+        document.querySelectorAll('.step').forEach((s, i) => {
+            s.classList.remove('active');
+            if (i + 1 < n) s.classList.add('completed');
+            else s.classList.remove('completed');
+            
+            if (i + 1 === n) s.classList.add('active');
+        });
+        
+        // Scroll to active step on mobile
+        if (window.innerWidth < 600) {
+            const activeStep = document.getElementById(`step-${n}`);
+            if (activeStep) {
+                setTimeout(() => {
+                    activeStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 600);
+            }
+        }
+    }
+
+    function showState(id) {
         if(id === 'loading') startBreathingText();
         else stopBreathingText();
 
+        const states = ['check-form','loading','rejected','error-state'];
         states.forEach(s => {
-            const el = document.getElementById(s)
-            el.style.display = 'none'
-        })
-        const target = document.getElementById(id)
-        target.style.display = id === 'loading' ? 'flex' : (id === 'check-form' ? 'block' : 'block')
+            const el = document.getElementById(s);
+            if (el) el.style.display = 'none';
+        });
+        const target = document.getElementById(id);
+        if (target) {
+            target.style.display = id === 'loading' ? 'flex' : 'block';
+        }
     }
 
-    document.getElementById('retry-btn').onclick = () => show('check-form')
-    document.getElementById('error-retry').onclick = () => show('check-form')
+    document.getElementById('retry-btn').onclick = () => showState('check-form')
+    document.getElementById('error-retry').onclick = () => showState('check-form')
 
     document.getElementById('check-form').addEventListener('submit', async e => {
         e.preventDefault()
         savedPlatform = document.getElementById('platform').value
         savedHandle = document.getElementById('handle').value.trim()
-        show('loading')
+        showState('loading')
 
         try {
             const res = await fetch('/api/check-eligibility', {
@@ -399,32 +523,34 @@
 
             if (!res.ok) {
                 document.getElementById('error-line').textContent = data.error || 'Make sure your profile is public and try again.'
-                show('error-state')
+                showState('error-state')
                 return
             }
 
             if (data.eligible) {
-                document.getElementById('followers-line').textContent = data.followers
+                const followersText = data.followers
                     ? `${data.followers.toLocaleString()} followers verified.`
-                    : ''
-                document.getElementById('claim-form').style.display = 'block'
-                document.getElementById('claim-done').style.display = 'none'
-                show('approved')
+                    : 'Verified.'
+                document.getElementById('followers-line-step2').textContent = followersText;
+                
+                // Transition to Step 2
+                setTimeout(() => {
+                    goToStep(2);
+                }, 800);
             } else {
                 const count = data.followers?.toLocaleString() ?? '0'
                 document.getElementById('reject-line').textContent = `${count} followers on ${savedPlatform}. Come back when you hit 500.`
-                show('rejected')
+                showState('rejected')
             }
         } catch {
             document.getElementById('error-line').textContent = 'Something went wrong. Try again.'
-            show('error-state')
+            showState('error-state')
         }
     })
 
     document.getElementById('claim-form').addEventListener('submit', async e => {
         e.preventDefault()
         const email = document.getElementById('claim-email').value.trim()
-        const wantsGiveaways = document.getElementById('wants-giveaways').checked
         const btn = e.target.querySelector('button')
         btn.disabled = true
         btn.textContent = 'Sending...'
@@ -433,13 +559,54 @@
             await fetch('/api/check-eligibility', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ handle: savedHandle, platform: savedPlatform, email, wantsGiveaways: false })
+            })
+            
+            document.getElementById('claim-form').style.display = 'none'
+            document.getElementById('claim-done').style.display = 'block'
+            
+            // Transition to Step 3
+            setTimeout(() => {
+                goToStep(3);
+            }, 1000);
+        } catch {
+            btn.disabled = false
+            btn.textContent = 'Send me the details'
+        }
+    })
+
+    document.getElementById('step3-next').onclick = () => goToStep(4);
+
+    document.getElementById('gift-form').addEventListener('submit', async e => {
+        e.preventDefault()
+        const wantsGiveaways = document.getElementById('wants-giveaways-step4').checked
+        const btn = e.target.querySelector('button')
+        btn.disabled = true
+        btn.textContent = 'Updating...'
+
+        try {
+            const email = document.getElementById('claim-email').value.trim()
+            await fetch('/api/check-eligibility', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ handle: savedHandle, platform: savedPlatform, email, wantsGiveaways })
             })
-        } catch {}
-
-        document.getElementById('claim-form').style.display = 'none'
-        document.getElementById('claim-done').style.display = 'block'
+            
+            document.getElementById('gift-form').style.display = 'none'
+            document.getElementById('gift-done').style.display = 'block'
+            document.getElementById('skip-gift').style.display = 'none'
+            
+            // Transition to Step 5
+            setTimeout(() => {
+                goToStep(5);
+            }, 1500);
+        } catch {
+            btn.disabled = false
+            btn.textContent = 'Add gift codes to my request'
+        }
     })
+
+    document.getElementById('skip-gift').onclick = () => goToStep(5);
 
     // FAQ accordion
     document.querySelectorAll('.faq-item').forEach(item => {

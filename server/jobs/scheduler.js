@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { generateContent } = require('./content-generator');
+const { scoutAgentRun } = require('./scout');
 const { pool } = require('../db/index');
 const QUEUE = require('./topic-queue');
 
@@ -22,4 +23,14 @@ cron.schedule('0 9 * * 1', async () => {
     }
 });
 
-console.log('Content scheduler initialized.');
+// Scout Agent Profile: Every hour
+cron.schedule('0 * * * *', async () => {
+    console.log('Scout Agent waking up for hourly sweep...');
+    try {
+        await scoutAgentRun();
+    } catch (err) {
+        console.error('Scout Agent Error:', err);
+    }
+});
+
+console.log('Content scheduler initialized. Scout Agent active.');

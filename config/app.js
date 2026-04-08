@@ -3,7 +3,7 @@ require('dotenv').config()
 module.exports = {
   appName: 'Breathe Collection',
   supportEmail: 'support@breathecollection.app',
-  fromEmail: 'noreply@breathecollection.app',
+  fromEmail: 'support@breathecollection.app',
   resend: {
     apiKey: process.env.RESEND_API_KEY,
   },

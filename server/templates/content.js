@@ -195,17 +195,18 @@ function renderTechniquePage(row) {
         <div class="tagline">Technique</div>
         <h1>${esc(row.title)}</h1>
         <p class="intro-text">${esc(data.intro)}</p>
+        ${data.appreciation_note ? `<p style="font-size: 0.9rem; color: var(--secondary); font-style: italic; max-width: 600px; margin-top: -1rem; margin-bottom: 2rem; opacity: 0.8;">${esc(data.appreciation_note)}</p>` : ''}
     </header>
     
     <div class="sticky-nav">
-        <a href="#how-to">How to do it</a>
+        ${data.how_to ? '<a href="#how-to">How to do it</a>' : ''}
         ${data.research && data.research.length ? '<a href="#research">The Research</a>' : ''}
         ${data.use_cases && data.use_cases.length ? '<a href="#when-to-use">When to use it</a>' : ''}
         ${data.faqs && data.faqs.length ? '<a href="#faqs">FAQs</a>' : ''}
     </div>
     
+    ${data.how_to ? `
     <section id="how-to">
-        ${data.how_to ? `
         <h2>How to do it</h2>
         <p><strong>Pattern:</strong> ${esc(data.how_to.pattern)}</p>
         ${data.how_to.duration_minutes ? `<p><strong>Duration:</strong> ${esc(data.how_to.duration_minutes)} minutes</p>` : ''}
@@ -220,8 +221,8 @@ function renderTechniquePage(row) {
             ${data.how_to.tips.map(tip => `<li style="margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 300;">${esc(tip)}</li>`).join('')}
         </ul>
         ` : ''}
-        ` : ''}
     </section>
+    ` : ''}
     `;
     
     if (data.research && data.research.length > 0) {
@@ -286,16 +287,20 @@ function renderUseCasePage(row) {
     
     <div class="sticky-nav">
         ${data.mechanism ? '<a href="#mechanism">How it works</a>' : ''}
+        ${data.research && data.research.length ? '<a href="#research">The Research</a>' : ''}
         ${data.related_techniques && data.related_techniques.length ? '<a href="#techniques">Techniques</a>' : ''}
         ${data.faqs && data.faqs.length ? '<a href="#faqs">FAQs</a>' : ''}
     </div>
     
-    ${data.mechanism || (data.research && data.research.length) ? `
+    ${data.mechanism ? `
     <section id="mechanism">
-        ${data.mechanism ? `<h2>How it works</h2><p>${esc(data.mechanism)}</p>` : ''}
-        
-        ${data.research && data.research.length ? `
-        <div style="margin-top:2rem;">
+        <h2>How it works</h2><p>${esc(data.mechanism)}</p>
+    </section>
+    ` : ''}
+
+    ${data.research && data.research.length ? `
+    <section id="research">
+        <h2>The Research</h2>
         ${data.research.map(study => `
         <div class="card">
             <h3 class="card-title">${esc(study.title)}</h3>
@@ -304,8 +309,6 @@ function renderUseCasePage(row) {
             ${study.url ? `<a href="${esc(study.url)}" target="_blank" class="card-link" rel="nofollow noopener">Read on PubMed &rarr;</a>` : ''}
         </div>
         `).join('')}
-        </div>
-        ` : ''}
     </section>
     ` : ''}
     `;

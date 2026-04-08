@@ -116,38 +116,45 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
   }
 
   try {
+    const appleRedeemUrl = codeStr 
+      ? `https://apps.apple.com/redeem?ctx=offercodes&id=6760255541&code=${codeStr}`
+      : null
+
     await sendEmail({
       to: email,
       subject: "You're in — Breathe Collection",
       text: `Hi ${handle},
 
-You're approved. Here's how it works.
+You're approved. This is how we'll get you started.
 
-STEP 1 — Try it (1 month free)
-${codeStr ? `Your trial code is below. Download Breathe Collection on the App Store and redeem it.\nCode: ${codeStr}` : `Your trial code is being generated and is on the way. Download Breathe Collection on the App Store to get ready.`}
+STEP 1 — Activate 1-Month Free Access
+${appleRedeemUrl 
+  ? `Click the link below to automatically redeem your trial in the App Store:\n${appleRedeemUrl}\n\n(If the link doesn't open, you can manually enter this code in the App Store: ${codeStr})` 
+  : `Your unique trial code is being generated and will be sent in a follow-up email shortly.`}
 
-STEP 2 — Post and get lifetime
-Once you've posted your giveaway, reply to this email with the link. We'll send your lifetime Pro code${wantsGiveaways ? ' + 10 giveaway codes (2-month access) for your audience' : ''} the same day.
+STEP 2 — Get Lifetime Pro
+Once you have tried the app and posted your giveaway content, simply reply to this email with the link to your post. 
 
----
-
-CAPTION TEMPLATE (for when you're ready)
-
-Been using this breathing app for a while now. No ads, no sleep stories, no bloat — just 9 techniques (Wim Hof, Box, Huberman and more) with haptic feedback so you can do it eyes-closed.
-
-Giving away [X] lifetime Pro codes in the comments. Drop a 🌬️ to enter. I'll pick winners in 48h.
-
-[link in bio]
+We will send your permanent Lifetime Pro code${wantsGiveaways ? ' + 10 viewer giveaway codes' : ''} within 24 hours of receiving your link.
 
 ---
 
-WHAT TO SHOW
-A screen recording of a session, or just you talking to camera. Either works.
+CAPTION TEMPLATE (Optional)
+
+"I've been using this breathing app for a while. No ads, no sleep stories, no bloat — just 9 clean techniques (Wim Hof, Box, Huberman and more) with haptic feedback so you can keep your eyes closed.
+
+I'm giving away [X] lifetime Pro codes in the comments. Drop a 🌬️ to enter. I'll pick winners in 48h.
+
+[Link in bio]"
 
 ---
 
-Reply to this email with your post link when you're ready.
+HOW TO SHOW THE APP
+A simple screen recording of a session or a quick "talk to camera" works perfectly. We want it to feel authentic to you.
 
+Reply here when you're ready.
+
+Eirik
 Breathe Collection`,
     })
   } catch (err) {

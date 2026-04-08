@@ -64,6 +64,13 @@ async function migrate() {
     -- followers TEXT is kept for backwards compatibility; new code writes to followers_count + auto_approved
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS followers_count INTEGER;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS auto_approved BOOLEAN DEFAULT FALSE;
+
+    -- Scout Agent Fields
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS fit_score DECIMAL(3,2);
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS engagement_rate DECIMAL(5,2);
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS outreach_draft TEXT;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS scout_logged BOOLEAN DEFAULT FALSE;
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS fit_feedback TEXT;
   `)
   console.log('Migration complete')
   await pool.end()
