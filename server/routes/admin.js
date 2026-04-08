@@ -4,7 +4,18 @@ const { pool } = require('../db/index');
 const { renderAdminDashboard } = require('../templates/admin');
 const { scoutAgentRun } = require('../jobs/scout');
 
-router.post('/repair', async (req, res) => {
+// Simple Access Key Middleware
+const SECRET_KEY = 'breathe88';
+const checkAuth = (req, res, next) => {
+    const key = req.query.auth || req.body.auth;
+    if (key === SECRET_KEY) {
+        next();
+    } else {
+        res.status(404).send('Not Found');
+    }
+};
+
+router.post('/repair', checkAuth, async (req, res) => {
     try {
         console.log('Manual DB Repair Triggered...');
         
@@ -34,7 +45,7 @@ router.post('/repair', async (req, res) => {
     }
 });
 
-router.post('/trigger', async (req, res) => {
+router.post('/trigger', checkAuth, async (req, res) => {
     try {
         console.log('Manual Scout Trigger received. Launching background process...');
         
@@ -54,7 +65,7 @@ router.post('/trigger', async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', checkAuth, async (req, res) => {
     try {
         // 1. Health Check (Checks for both columns and log table)
         const healthCheck = await pool.query(`

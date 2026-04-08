@@ -9,7 +9,7 @@ app.use('/api/apply', require('./routes/creator'))
 app.use('/api/waitlist', require('./routes/waitlist'))
 app.use('/api/check-eligibility', require('./routes/eligibility'))
 app.use('/api/feedback', require('./routes/feedback'))
-app.use('/scout-list', require('./routes/admin'))
+app.use('/mission-control-x89', require('./routes/admin'))
 
 app.use('/breathing', require('./routes/content'))
 app.get('/sitemap.xml', require('./routes/content').sitemap)

@@ -7,6 +7,7 @@ function renderAdminDashboard(stats) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Admin Control | Breathe Collection</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -177,7 +178,7 @@ function renderAdminDashboard(stats) {
                 repairBtn.disabled = true;
                 repairBtn.textContent = 'Repairing DB...';
                 try {
-                    const res = await fetch('/scout-list/repair', { method: 'POST' });
+                    const res = await fetch('/mission-control-x89/repair?auth=breathe88', { method: 'POST' });
                     const data = await res.json();
                     if (data.success) {
                         window.location.reload();
@@ -200,7 +201,7 @@ function renderAdminDashboard(stats) {
             btn.style.opacity = '0.5';
             
             try {
-                const res = await fetch('/scout-list/trigger', { method: 'POST' });
+                const res = await fetch('/mission-control-x89/trigger?auth=breathe88', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     alert('Scout has been sent into the field! Give it 60 seconds to find signals, then refresh this page.');
