@@ -178,12 +178,12 @@ class ScoutAgent {
    * Sherlock Logic: Finding signal in noise with behavioral memory
    */
   async calculateSherlockScore(lead, memory) {
-    // Quantitative Baseline
-    const followerScore = (lead.followers >= 5000 && lead.followers <= 100000) ? 1.0 : 0.2;
-    const erScore = Math.min(lead.engagement_rate / 6.0, 1.0);
+    // Quantitative Baseline - Relaxed for testing (500+ followers)
+    const followerScore = (lead.followers >= 500) ? 1.0 : 0.1;
+    const erScore = Math.min((lead.engagement_rate || 0) / 6.0, 1.0);
     const lowerBio = (lead.bio || "").toLowerCase();
     const nicheMatches = this.hashtags.filter(h => lowerBio.includes(h.toLowerCase())).length;
-    const nicheScore = Math.min(nicheMatches / 3.0, 1.0);
+    const nicheScore = Math.min(nicheMatches / 1.0, 1.0); // Easier keyword match
 
     // Qualitative Adjustment via Memory
     const memoryContext = `
