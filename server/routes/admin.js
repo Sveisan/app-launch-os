@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db/index');
 const { renderAdminDashboard } = require('../templates/admin');
+const { scoutAgentRun } = require('../jobs/scout');
+
+router.post('/trigger', async (req, res) => {
+    try {
+        console.log('Manual Scout Trigger received...');
+        await scoutAgentRun();
+        res.json({ success: true, message: 'Scout has returned from the field.' });
+    } catch (err) {
+        console.error('Trigger Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 router.get('/', async (req, res) => {
     try {

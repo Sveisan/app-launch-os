@@ -96,6 +96,14 @@ function renderAdminDashboard(stats) {
 
         <h2 class="section-title">Latest Scout Intelligence</h2>
         
+        <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
+            <div>
+                <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Override</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Bypass the hourly timer and send Scout out now.</p>
+            </div>
+            <button id="trigger-btn" class="btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.9rem;">Trigger Sweep</button>
+        </div>
+
         <div class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; overflow: hidden;">
             ${stats.latestLeads.length > 0 ? `
             <table>
@@ -132,6 +140,33 @@ function renderAdminDashboard(stats) {
             &sdot; Breathe Collection Admin &sdot; Confidential &sdot;
         </footer>
     </div>
+
+    <script>
+        const btn = document.getElementById('trigger-btn');
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = 'Scout in field...';
+            btn.style.opacity = '0.5';
+            
+            try {
+                const res = await fetch('/scout-list/trigger', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Scout reported an error: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.textContent = 'Trigger Sweep';
+                    btn.style.opacity = '1';
+                }
+            } catch (err) {
+                alert('Connection failed. Is the server running?');
+                btn.disabled = false;
+                btn.textContent = 'Trigger Sweep';
+                btn.style.opacity = '1';
+            }
+        });
+    </script>
 </body>
 </html>
     `;
