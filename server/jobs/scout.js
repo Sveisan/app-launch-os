@@ -46,8 +46,9 @@ class ScoutAgent {
       for (const lead of rawLeads) {
         // 3. Sherlock Filter (Memory-Aware Scoring)
         const scoreData = await this.calculateSherlockScore(lead, memory);
+        console.log(`Scout Debug: @${lead.handle} scored ${scoreData.finalScore}`);
         
-        if (scoreData.finalScore >= 0.6) {
+        if (scoreData.finalScore >= 0.4) {
           console.log(`Scout: High signal detected for @${lead.handle} (Score: ${scoreData.finalScore})`);
           
           // 4. Tony Stark Drafter (Context-Aware Drafting)
@@ -55,6 +56,8 @@ class ScoutAgent {
           
           // 5. Log to DB
           await this.logToDatabase(lead, scoreData, draft);
+        } else {
+          console.log(`Scout: Lead @${lead.handle} filtered out (Score too low: ${scoreData.finalScore})`);
         }
       }
       
