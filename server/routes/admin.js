@@ -7,6 +7,8 @@ const { scoutAgentRun } = require('../jobs/scout');
 router.post('/repair', async (req, res) => {
     try {
         console.log('Manual DB Repair Triggered...');
+        
+        // 1. Repair Contacts
         await pool.query(`
             ALTER TABLE contacts 
             ADD COLUMN IF NOT EXISTS fit_score DECIMAL,
@@ -15,7 +17,17 @@ router.post('/repair', async (req, res) => {
             ADD COLUMN IF NOT EXISTS scout_logged BOOLEAN DEFAULT FALSE,
             ADD COLUMN IF NOT EXISTS fit_feedback TEXT
         `);
-        res.json({ success: true, message: 'Database schema repaired successfully.' });
+
+        // 2. Repair Logs Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS scout_logs (
+                id SERIAL PRIMARY KEY,
+                message TEXT NOT NULL,
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `);
+
+        res.json({ success: true, message: 'Database schema and log tables repaired.' });
     } catch (err) {
         console.error('Repair Error:', err);
         res.status(500).json({ success: false, error: err.message });
@@ -44,13 +56,15 @@ router.post('/trigger', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        // 1. Health Check
+        // 1. Health Check (Checks for both columns and log table)
         const healthCheck = await pool.query(`
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'contacts' AND column_name = 'scout_logged'
+            SELECT table_name FROM information_schema.tables WHERE table_name = 'scout_logs'
         `);
-        const isDbReady = healthCheck.rows.length > 0;
+        const colCheck = await pool.query(`
+            SELECT column_name FROM information_schema.columns WHERE table_name = 'contacts' AND column_name = 'scout_logged'
+        `);
+        
+        const isDbReady = healthCheck.rows.length > 0 && colCheck.rows.length > 0;
 
         // 2. Total Scout Leads
         const scoutRes = await pool.query("SELECT COUNT(*) FROM contacts WHERE scout_logged = TRUE");
