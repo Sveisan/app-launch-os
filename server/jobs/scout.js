@@ -18,7 +18,11 @@ const apifyClient = new ApifyClient({
 class ScoutAgent {
   constructor() {
     this.apifyToken = process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN;
-    this.hashtags = ['breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 'biohacking', 'sleephacks', 'huberman'];
+    this.hashtags = [
+      'breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 
+      'biohacking', 'sleephacks', 'huberman', 'wellness', 'yoga', 'meditation', 
+      'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery'
+    ];
     this.budgetLimit = 10.0; // $10/day hard cap
   }
 
@@ -181,9 +185,11 @@ class ScoutAgent {
     // Quantitative Baseline - Relaxed for testing (500+ followers)
     const followerScore = (lead.followers >= 500) ? 1.0 : 0.1;
     const erScore = Math.min((lead.engagement_rate || 0) / 6.0, 1.0);
-    const lowerBio = (lead.bio || "").toLowerCase();
-    const nicheMatches = this.hashtags.filter(h => lowerBio.includes(h.toLowerCase())).length;
-    const nicheScore = Math.min(nicheMatches / 1.0, 1.0); // Easier keyword match
+    
+    // Multi-dimensional Search: Bio + Post Captions
+    const fullContext = `${lead.bio} ${lead.post_caption || ""}`.toLowerCase();
+    const nicheMatches = this.hashtags.filter(h => fullContext.includes(h.toLowerCase())).length;
+    const nicheScore = Math.min(nicheMatches / 1.0, 1.0); // 1.0 score if even 1 keyword matches
 
     // Qualitative Adjustment via Memory
     const memoryContext = `
@@ -204,7 +210,11 @@ Followers: ${lead.followers}
 MEMORY CONTEXT:
 ${memoryContext}
 
-TASK: Return a single number (e.g. 0.85). Focus on niche alignment and audience quality over raw follower count. Focus on patterns in the Memory Context.`;
+TASK: Return a single number (e.g. 0.85). 
+- 1.0 = Perfect Breathwork/Biohacking match.
+- 0.7-0.8 = High-quality Yoga, Meditation, or Wellness professional.
+- 0.5 = General Health/Fitness creator with good aesthetic.
+Avoid low scores for high-quality wellness creators even if they don't use clinical breathwork terms.`;
 
     let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2);
     
@@ -242,10 +252,18 @@ Niche: ${lead.niche}
 Sherlock Score: ${scoreData.finalScore}/1.0
 ${memoryDraftContext}
 
-TASK: Draft a personal outreach DM (< 280 chars). No sales fluff. Pure value and research focus. 
-Offer a free Pro code as a gift. Use the established brand tone.
+EVALUATION CRITERIA:
+- Niche Fit: Does their content align with wellness, biohacking, or high-performance living?
+- Aesthetic: Does their brand feel "Quiet Luxury" and premium?
 
-ONLY output the message.`;
+Respond in JSON format:
+{
+  "score_adjustment": number (-0.2 to +0.2),
+  "reasoning": "string",
+  "draft": "A short, premium outreach message from Sveisan/Breathe Collection."
+}
+
+Keep the draft visionary, direct, and slightly exclusive.`;
 
     try {
       const response = await anthropic.messages.create({
@@ -253,7 +271,8 @@ ONLY output the message.`;
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }]
       });
-      return response.content[0].text.trim();
+      const result = JSON.parse(response.content[0].text);
+      return result.draft;
     } catch (err) {
       return 'Draft failed to generate.';
     }
