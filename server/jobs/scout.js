@@ -1,9 +1,14 @@
+const { ApifyClient } = require('apify-client');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { pool } = require('../db/index');
 require('dotenv').config();
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+const apifyClient = new ApifyClient({
+  token: process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN,
 });
 
 /**
@@ -21,7 +26,7 @@ class ScoutAgent {
    * Main execution loop
    */
   async run() {
-    console.log('--- Scout Agent Activation (Sherlock/Stark with Memory) ---');
+    console.log('--- Scout Agent Activation (Sherlock/Stark with Real Data) ---');
     console.log('Checking configuration...');
     
     if (!this.apifyToken) {
@@ -71,20 +76,60 @@ class ScoutAgent {
    * Fetches data from Apify actors
    */
   async fetchSocialLeads() {
-    // Note: User must configure Actor IDs on Apify for this to be fully dynamic.
-    // This returns the expected structure for the Sherlock filter.
-    return [
-      {
-        handle: 'breath_master_99',
-        platform: 'TikTok',
-        followers: 12000,
-        engagement_rate: 4.5,
-        niche: 'Breathwork, Biohacking',
-        bio: 'Optimizing human performance through carbon dioxide tolerance. #wimhof',
-        latest_post_topic: 'The physiological sigh for instant calm',
-        post_url: 'https://tiktok.com/...'
-      }
-    ];
+    const leads = [];
+    const hashtag = this.hashtags[Math.floor(Math.random() * this.hashtags.length)];
+    console.log(`Scout: Sweeping social fields for #${hashtag}...`);
+
+    try {
+      // TikTok Sweep (clockworks/tiktok-scraper)
+      console.log('Scout: Querying TikTok signals...');
+      const ttRun = await apifyClient.actor("clockworks/tiktok-scraper").call({
+        hashtags: [hashtag],
+        resultsPerPage: 5,
+        shouldDownloadVideos: false,
+        shouldDownloadCovers: false
+      });
+      const { items: ttItems } = await apifyClient.dataset(ttRun.defaultDatasetId).listItems();
+      
+      ttItems.forEach(item => {
+        if (item.author) {
+          leads.push({
+            handle: item.author.uniqueId,
+            platform: 'TikTok',
+            followers: item.author.stats?.followerCount || 0,
+            engagement_rate: ((item.stats?.diggCount + item.stats?.commentCount) / item.author.stats?.followerCount * 100) || 0,
+            niche: hashtag,
+            bio: item.author.signature || "",
+            post_url: `https://www.tiktok.com/@${item.author.uniqueId}/video/${item.id}`
+          });
+        }
+      });
+
+      // Instagram Sweep (apify/instagram-hashtag-scraper)
+      console.log('Scout: Querying Instagram signals...');
+      const igRun = await apifyClient.actor("apify/instagram-hashtag-scraper").call({
+        hashtags: [hashtag],
+        resultsLimit: 5
+      });
+      const { items: igItems } = await apifyClient.dataset(igRun.defaultDatasetId).listItems();
+
+      igItems.forEach(item => {
+        leads.push({
+          handle: item.ownerUsername || item.ownerId,
+          platform: 'Instagram',
+          followers: 0, // Profile scraper needed for real count, using 0 as placeholder
+          engagement_rate: (item.likesCount / 100) || 0,
+          niche: hashtag,
+          bio: item.caption || "",
+          post_url: item.url
+        });
+      });
+
+    } catch (err) {
+      console.error('Scout Scraper Error:', err.message);
+    }
+
+    return leads;
   }
 
   /**
