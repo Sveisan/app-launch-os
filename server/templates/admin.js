@@ -197,14 +197,18 @@ function renderAdminDashboard(stats) {
 
         btn.addEventListener('click', async () => {
             btn.disabled = true;
-            btn.textContent = 'Scout in field...';
+            btn.textContent = 'Scouting Fields...';
             btn.style.opacity = '0.5';
             
             try {
                 const res = await fetch('/mission-control-x89/trigger?auth=breathe88', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    alert('Scout has been sent into the field! Give it 60 seconds to find signals, then refresh this page.');
+                    const status = document.createElement('div');
+                    status.style.cssText = 'color: var(--secondary); font-size: 0.8rem; margin-top: 1rem; text-align: center; animation: fadeIn 0.5s ease;';
+                    status.innerHTML = '✔ Scout is in the field. Findings will appear in the Mission Log below shortly.';
+                    btn.parentNode.parentNode.appendChild(status);
+                    setTimeout(() => status.remove(), 5000);
                     btn.disabled = false;
                     btn.textContent = 'Trigger Sweep';
                     btn.style.opacity = '1';
