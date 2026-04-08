@@ -12,7 +12,7 @@ const anthropic = new Anthropic({
  */
 class ScoutAgent {
   constructor() {
-    this.apifyToken = process.env.APIFY_TOKEN;
+    this.apifyToken = process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN;
     this.hashtags = ['breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 'biohacking', 'sleephacks', 'huberman'];
     this.budgetLimit = 10.0; // $10/day hard cap
   }
@@ -22,9 +22,15 @@ class ScoutAgent {
    */
   async run() {
     console.log('--- Scout Agent Activation (Sherlock/Stark with Memory) ---');
+    console.log('Checking configuration...');
     
     if (!this.apifyToken) {
-      console.error('Scout Error: APIFY_TOKEN is missing. Aborting.');
+      console.error('Scout Aborted: APIFY_API_TOKEN is missing in environment.');
+      return;
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('Scout Aborted: ANTHROPIC_API_KEY is missing in environment.');
       return;
     }
 
