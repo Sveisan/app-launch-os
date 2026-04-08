@@ -6,11 +6,20 @@ const { scoutAgentRun } = require('../jobs/scout');
 
 router.post('/trigger', async (req, res) => {
     try {
-        console.log('Manual Scout Trigger received...');
-        await scoutAgentRun();
-        res.json({ success: true, message: 'Scout has returned from the field.' });
+        console.log('Manual Scout Trigger received. Launching background process...');
+        
+        // 1. Respond immediately to avoid timeout
+        res.json({ success: true, message: 'Scout has been sent into the field. Refresh in 60s.' });
+
+        // 2. Run the agent in the background
+        scoutAgentRun().then(() => {
+            console.log('Background Scout Sweep completed successfully.');
+        }).catch(err => {
+            console.error('Background Scout Sweep failed:', err);
+        });
+        
     } catch (err) {
-        console.error('Trigger Error:', err);
+        console.error('Trigger Route Error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

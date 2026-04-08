@@ -40,6 +40,30 @@ class ScoutAgent {
     }
 
     try {
+      // 0. Schema Integrity Check
+      console.log('Scout: Checking Database schema integrity...');
+      const schemaCheck = await pool.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'contacts' AND column_name = 'scout_logged'
+      `);
+      
+      if (schemaCheck.rows.length === 0) {
+        console.error('CRITICAL: contacts table is missing scout_logged column. Did you run the migration?');
+        // Force log a diagnostic failure
+        return;
+      }
+      console.log('Scout: Schema verified. Database is ready.');
+
+      // 0b. Diagnostic forced log (Confirming DB works)
+      await this.logToDatabase({
+        handle: 'scout_diagnostic',
+        platform: 'System',
+        followers: 0,
+        niche: 'Connectivity Test',
+        post_url: 'https://breathecollection.app',
+      }, { finalScore: 1.0 }, 'Diagnostic: If you see this, the Scout -> Database pipeline is 100% operational.');
+
       // 1. Fetch Memory (Past Decisions)
       const memory = await this.getFitMemory();
       console.log(`Scout: Retrieved ${memory.approved.length} approved and ${memory.rejected.length} rejected profiles for context.`);

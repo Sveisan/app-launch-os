@@ -152,7 +152,10 @@ function renderAdminDashboard(stats) {
                 const res = await fetch('/scout-list/trigger', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    window.location.reload();
+                    alert('Scout has been sent into the field! Give it 60 seconds to find signals, then refresh this page.');
+                    btn.disabled = false;
+                    btn.textContent = 'Trigger Sweep';
+                    btn.style.opacity = '1';
                 } else {
                     alert('Scout reported an error: ' + (data.error || 'Unknown error'));
                     btn.disabled = false;
