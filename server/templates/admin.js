@@ -75,6 +75,21 @@ function renderAdminDashboard(stats) {
             <h1>Control Panel</h1>
         </header>
 
+        ${!stats.isDbReady ? `
+        <div style="background: rgba(224, 123, 57, 0.1); border: 1px solid var(--accent); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h3 style="color: var(--accent); font-weight: 500; margin-bottom: 0.2rem;">Database Schema Outdated</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">The Scout Agent columns are missing from your production database. This is why findings are not appearing.</p>
+            </div>
+            <button id="repair-btn" class="btn-primary" style="background: var(--accent); color: white; padding: 0.6rem 1.2rem; font-size: 0.8rem;">Repair Scout Database</button>
+        </div>
+        ` : `
+        <div style="background: rgba(82, 171, 152, 0.05); border: 1px solid rgba(82, 171, 152, 0.2); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; font-size: 0.8rem; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
+            <span style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span>
+            System Health: Database Schema Verified & Connected
+        </div>
+        `}
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">${stats.scoutLeads}</div>
@@ -143,6 +158,30 @@ function renderAdminDashboard(stats) {
 
     <script>
         const btn = document.getElementById('trigger-btn');
+        const repairBtn = document.getElementById('repair-btn');
+
+        if (repairBtn) {
+            repairBtn.addEventListener('click', async () => {
+                repairBtn.disabled = true;
+                repairBtn.textContent = 'Repairing DB...';
+                try {
+                    const res = await fetch('/scout-list/repair', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Repair failed: ' + data.error);
+                        repairBtn.disabled = false;
+                        repairBtn.textContent = 'Repair Scout Database';
+                    }
+                } catch (err) {
+                    alert('Connection failed.');
+                    repairBtn.disabled = false;
+                    repairBtn.textContent = 'Repair Scout Database';
+                }
+            });
+        }
+
         btn.addEventListener('click', async () => {
             btn.disabled = true;
             btn.textContent = 'Scout in field...';
