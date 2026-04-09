@@ -71,8 +71,8 @@ class ScoutAgent {
         const scoreData = await this.calculateSherlockScore(lead, memory);
         await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
         
-        if (scoreData.finalScore >= 0.4) {
-          await this.sysLog(`High Signal: Drafting Tony Stark message for @${lead.handle}...`);
+        if (scoreData.finalScore >= 0.2) {
+          await this.sysLog(`Entry Signal detected: Drafting Tony Stark message for @${lead.handle}...`);
           
           // 4. Tony Stark Drafter (Context-Aware Drafting)
           const draft = await this.generateStarkDraft(lead, scoreData, memory);
@@ -128,6 +128,7 @@ class ScoutAgent {
             engagement_rate: ((item.stats?.diggCount + item.stats?.commentCount) / item.author.stats?.followerCount * 100) || 0,
             niche: hashtag,
             bio: item.author.signature || "",
+            post_caption: item.desc || "", // Correctly mapping TikTok description
             post_url: `https://www.tiktok.com/@${item.author.uniqueId}/video/${item.id}`
           });
         }
@@ -145,10 +146,11 @@ class ScoutAgent {
         leads.push({
           handle: item.ownerUsername || item.ownerId,
           platform: 'Instagram',
-          followers: 0, // Profile scraper needed for real count, using 0 as placeholder
+          followers: 0, // Profile scraper needed for real count
           engagement_rate: (item.likesCount / 100) || 0,
           niche: hashtag,
-          bio: item.caption || "",
+          bio: "", 
+          post_caption: item.caption || "", // Correctly mapping IG caption
           post_url: item.url
         });
       });
