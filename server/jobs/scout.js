@@ -306,7 +306,9 @@ Keep the draft visionary, direct, and slightly exclusive.`;
           fit_score = EXCLUDED.fit_score,
           engagement_rate = EXCLUDED.engagement_rate,
           outreach_draft = EXCLUDED.outreach_draft,
-          followers_count = EXCLUDED.followers_count`,
+          followers_count = EXCLUDED.followers_count,
+          scout_logged = TRUE,
+          created_at = NOW()`,
         [
           lead.handle,
           lead.platform,
