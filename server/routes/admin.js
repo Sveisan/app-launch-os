@@ -29,16 +29,15 @@ router.post('/repair', checkAuth, async (req, res) => {
             ADD COLUMN IF NOT EXISTS fit_feedback TEXT
         `);
 
-        // 2. Repair Logs Table
+        // 3. Force Sync existing high-score leads (The "Rescue" Operation)
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS scout_logs (
-                id SERIAL PRIMARY KEY,
-                message TEXT NOT NULL,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            )
+            UPDATE contacts 
+            SET scout_logged = TRUE 
+            WHERE fit_score IS NOT NULL 
+            AND scout_logged = FALSE
         `);
 
-        res.json({ success: true, message: 'Database schema and log tables repaired.' });
+        res.json({ success: true, message: 'Database repaired and existing leads synchronized.' });
     } catch (err) {
         console.error('Repair Error:', err);
         res.status(500).json({ success: false, error: err.message });
