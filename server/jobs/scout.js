@@ -21,7 +21,9 @@ class ScoutAgent {
     this.hashtags = [
       'breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 
       'biohacking', 'sleephacks', 'huberman', 'wellness', 'yoga', 'meditation', 
-      'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery'
+      'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery',
+      'anxietyrelief', 'burnout', 'insomnia', 'panicattack', 'mentalhealth', 
+      'stressmanagement', 'productivityhacks', 'focus', 'flowstate', 'peakperformance'
     ];
     this.budgetLimit = 10.0; // $10/day hard cap
   }
@@ -105,58 +107,66 @@ class ScoutAgent {
    */
   async fetchSocialLeads() {
     const leads = [];
-    const hashtag = this.hashtags[Math.floor(Math.random() * this.hashtags.length)];
-    console.log(`Scout: Sweeping social fields for #${hashtag}...`);
+    const selectedHashtags = [];
+    
+    // Pick 2 unique random hashtags
+    while(selectedHashtags.length < 2) {
+      const h = this.hashtags[Math.floor(Math.random() * this.hashtags.length)];
+      if (!selectedHashtags.includes(h)) selectedHashtags.push(h);
+    }
 
-    try {
-      // TikTok Sweep (clockworks/tiktok-scraper)
-      console.log('Scout: Querying TikTok signals...');
-      const ttRun = await apifyClient.actor("clockworks/tiktok-scraper").call({
-        hashtags: [hashtag],
-        resultsPerPage: 5,
-        shouldDownloadVideos: false,
-        shouldDownloadCovers: false
-      });
-      const { items: ttItems } = await apifyClient.dataset(ttRun.defaultDatasetId).listItems();
-      
-      ttItems.forEach(item => {
-        if (item.author) {
-          leads.push({
-            handle: item.author.uniqueId,
-            platform: 'TikTok',
-            followers: item.author.stats?.followerCount || 0,
-            engagement_rate: ((item.stats?.diggCount + item.stats?.commentCount) / item.author.stats?.followerCount * 100) || 0,
-            niche: hashtag,
-            bio: item.author.signature || "",
-            post_caption: item.desc || "", // Correctly mapping TikTok description
-            post_url: `https://www.tiktok.com/@${item.author.uniqueId}/video/${item.id}`
+    for (const hashtag of selectedHashtags) {
+        console.log(`Scout: Sweeping social fields for #${hashtag}...`);
+        await this.sysLog(`Sweeping #${hashtag}...`);
+
+        try {
+          // TikTok Sweep (clockworks/tiktok-scraper)
+          const ttRun = await apifyClient.actor("clockworks/tiktok-scraper").call({
+            hashtags: [hashtag],
+            resultsPerPage: 5,
+            shouldDownloadVideos: false,
+            shouldDownloadCovers: false
           });
+          const { items: ttItems } = await apifyClient.dataset(ttRun.defaultDatasetId).listItems();
+          
+          ttItems.forEach(item => {
+            if (item.author) {
+              leads.push({
+                handle: item.author.uniqueId,
+                platform: 'TikTok',
+                followers: item.author.stats?.followerCount || 0,
+                engagement_rate: ((item.stats?.diggCount + item.stats?.commentCount) / item.author.stats?.followerCount * 100) || 0,
+                niche: hashtag,
+                bio: item.author.signature || "",
+                post_caption: item.desc || "",
+                post_url: `https://www.tiktok.com/@${item.author.uniqueId}/video/${item.id}`
+              });
+            }
+          });
+
+          // Instagram Sweep (apify/instagram-hashtag-scraper)
+          const igRun = await apifyClient.actor("apify/instagram-hashtag-scraper").call({
+            hashtags: [hashtag],
+            resultsLimit: 5
+          });
+          const { items: igItems } = await apifyClient.dataset(igRun.defaultDatasetId).listItems();
+
+          igItems.forEach(item => {
+            leads.push({
+              handle: item.ownerUsername || item.ownerId,
+              platform: 'Instagram',
+              followers: 0,
+              engagement_rate: (item.likesCount / 100) || 0,
+              niche: hashtag,
+              bio: "", 
+              post_caption: item.caption || "",
+              post_url: item.url
+            });
+          });
+
+        } catch (err) {
+          console.error(`Scout Scraper Error for #${hashtag}:`, err.message);
         }
-      });
-
-      // Instagram Sweep (apify/instagram-hashtag-scraper)
-      console.log('Scout: Querying Instagram signals...');
-      const igRun = await apifyClient.actor("apify/instagram-hashtag-scraper").call({
-        hashtags: [hashtag],
-        resultsLimit: 5
-      });
-      const { items: igItems } = await apifyClient.dataset(igRun.defaultDatasetId).listItems();
-
-      igItems.forEach(item => {
-        leads.push({
-          handle: item.ownerUsername || item.ownerId,
-          platform: 'Instagram',
-          followers: 0, // Profile scraper needed for real count
-          engagement_rate: (item.likesCount / 100) || 0,
-          niche: hashtag,
-          bio: "", 
-          post_caption: item.caption || "", // Correctly mapping IG caption
-          post_url: item.url
-        });
-      });
-
-    } catch (err) {
-      console.error('Scout Scraper Error:', err.message);
     }
 
     return leads;
@@ -214,9 +224,10 @@ ${memoryContext}
 
 TASK: Return a single number (e.g. 0.85). 
 - 1.0 = Perfect Breathwork/Biohacking match.
-- 0.7-0.8 = High-quality Yoga, Meditation, or Wellness professional.
+- 0.8-0.9 = High-quality Wellness/Yoga creator.
+- 0.7 = Creator discussing SYMPTOMS (Anxiety, Stress, Burnout, Sleep issues, Lack of Focus).
 - 0.5 = General Health/Fitness creator with good aesthetic.
-Avoid low scores for high-quality wellness creators even if they don't use clinical breathwork terms.`;
+Prioritize creators who mention pain points (stress, tired, focus, panic) even if they don't know the breathwork solution yet.`;
 
     let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2);
     
