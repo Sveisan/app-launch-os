@@ -123,4 +123,17 @@ router.get('/', checkAuth, async (req, res) => {
     }
 });
 
+router.get('/debug', checkAuth, async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM contacts ORDER BY created_at DESC LIMIT 50");
+        res.json({ 
+            success: true, 
+            count: result.rowCount,
+            data: result.rows 
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;

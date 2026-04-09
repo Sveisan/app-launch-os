@@ -164,9 +164,9 @@ function renderAdminDashboard(stats) {
             `}
         </div>
 
-        <footer style="margin-top: 4rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; padding-bottom: 2rem;">
-            &sdot; Breathe Collection Admin &sdot; Confidential &sdot;
-        </footer>
+        <footer style="margin-top: 4rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">
+    &middot; Breathe Collection Admin &middot; Confidential &middot; <a href="/mission-control-x89/debug?auth=breathe88" style="color: inherit; text-decoration: underline;">Debug Source</a> &middot;
+</footer>
     </div>
 
     <script>
