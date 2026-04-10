@@ -79,9 +79,8 @@ class ScoutAgent {
           // 4. Tony Stark Drafter (Context-Aware Drafting)
           const draft = await this.generateStarkDraft(lead, scoreData, memory);
           
-          // 5. Log to DB
+          // 5. Log to DB (Honest Logging: Logic moved inside)
           await this.logToDatabase(lead, scoreData, draft);
-          await this.sysLog(`SUCCESS: Logged @${lead.handle} to database leads list.`);
         } else {
           await this.sysLog(`Excluded @${lead.handle} (Score ${scoreData.finalScore} too low).`);
         }
@@ -292,27 +291,29 @@ Keep the draft visionary, direct, and slightly exclusive.`;
   }
 
   /**
-   * Persistent Logging
+   * Persistent Logging (Honest & Schema-Aligned)
    */
   async logToDatabase(lead, scoreData, draft) {
     try {
       await pool.query(
         `INSERT INTO contacts (
-          handle, platform, followers_count, niche, reason, 
+          handle, platform, followers, followers_count, niche, reason, 
           status, post_url, fit_score, engagement_rate, 
-          outreach_draft, scout_logged
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)
+          outreach_draft, scout_logged, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE, NOW())
         ON CONFLICT (handle) DO UPDATE SET
           fit_score = EXCLUDED.fit_score,
           engagement_rate = EXCLUDED.engagement_rate,
           outreach_draft = EXCLUDED.outreach_draft,
+          followers = EXCLUDED.followers,
           followers_count = EXCLUDED.followers_count,
           scout_logged = TRUE,
           created_at = NOW()`,
         [
           lead.handle,
           lead.platform,
-          lead.followers,
+          String(lead.followers), // Mapping to 'followers' (string)
+          parseInt(lead.followers), // Mapping to 'followers_count' (number)
           lead.niche,
           `High Sherlock Score: ${scoreData.finalScore}`,
           'draft', 
@@ -322,8 +323,10 @@ Keep the draft visionary, direct, and slightly exclusive.`;
           draft
         ]
       );
+      await this.sysLog(`SUCCESS: Fully Logged @${lead.handle} to database leads list.`);
     } catch (err) {
       console.error('DB Logging Error:', err);
+      await this.sysLog(`LOGGING ERROR FOR @${lead.handle}: ${err.message}`);
     }
   }
 }
