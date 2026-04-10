@@ -123,6 +123,24 @@ router.get('/', checkAuth, async (req, res) => {
     }
 });
 
+router.post('/test-seed', checkAuth, async (req, res) => {
+    try {
+        console.log('Test Seed Triggered...');
+        const testHandle = `scout_test_${Math.floor(Math.random() * 1000)}`;
+        await pool.query(`
+            INSERT INTO contacts (
+                handle, platform, followers_count, niche, reason, 
+                status, post_url, fit_score, scout_logged, created_at
+            ) VALUES ($1, 'Instagram', 1500, 'Test', 'Diagnostic Mock Run', 'draft', 'http://test.com', 0.95, TRUE, NOW())
+            ON CONFLICT (handle) DO UPDATE SET scout_logged = TRUE, created_at = NOW()
+        `, [testHandle]);
+        
+        res.json({ success: true, message: `Mock lead @${testHandle} generated.` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 router.get('/debug', checkAuth, async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM contacts ORDER BY created_at DESC LIMIT 50");
