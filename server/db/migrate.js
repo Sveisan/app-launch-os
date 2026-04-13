@@ -71,6 +71,10 @@ async function migrate() {
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS outreach_draft TEXT;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS scout_logged BOOLEAN DEFAULT FALSE;
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS fit_feedback TEXT;
+    
+    -- Kanban / Pipeline Status
+    -- discovery (default), researching, approved, outreach_sent, rejected
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS pipeline_status TEXT DEFAULT 'discovery';
 
     -- System Logs for Scout Agent
     CREATE TABLE IF NOT EXISTS scout_logs (
@@ -78,6 +82,52 @@ async function migrate() {
       message TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    -- Scout Keywords for Multi-language Search
+    CREATE TABLE IF NOT EXISTS scout_keywords (
+      id SERIAL PRIMARY KEY,
+      keyword TEXT UNIQUE NOT NULL,
+      language TEXT NOT NULL,
+      is_hashtag BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Seed initial keywords if empty
+    INSERT INTO scout_keywords (keyword, language, is_hashtag)
+    VALUES 
+      ('breathwork', 'en', TRUE), ('breathing', 'en', TRUE), ('wimhof', 'en', TRUE), 
+      ('boxbreathing', 'en', TRUE), ('physiologicalsigh', 'en', TRUE), ('biohacking', 'en', TRUE),
+      ('sleephacks', 'en', TRUE), ('huberman', 'en', TRUE), ('wellness', 'en', TRUE), 
+      ('yoga', 'en', TRUE), ('meditation', 'en', TRUE), ('mindfulness', 'en', TRUE),
+      ('healthylifestyle', 'en', TRUE), ('stressrelief', 'en', TRUE), ('recovery', 'en', TRUE),
+      ('anxietyrelief', 'en', TRUE), ('burnout', 'en', TRUE), ('insomnia', 'en', TRUE),
+      ('panicattack', 'en', TRUE), ('mentalhealth', 'en', TRUE), ('stressmanagement', 'en', TRUE),
+      ('productivityhacks', 'en', TRUE), ('focus', 'en', TRUE), ('flowstate', 'en', TRUE),
+      ('peakperformance', 'en', TRUE),
+      ('pust', 'no', TRUE), ('pusteteknikk', 'no', TRUE), ('pustearbeid', 'no', TRUE),
+      ('stressmestring', 'no', TRUE), ('søvnhack', 'no', TRUE), ('biohackingnorge', 'no', TRUE),
+      ('mentalhelse', 'no', TRUE), ('roisjela', 'no', TRUE), ('velvære', 'no', TRUE),
+      ('respiracion', 'es', TRUE), ('meditacion', 'es', TRUE), ('bienestar', 'es', TRUE),
+      ('biohacking', 'es', TRUE), ('saludmental', 'es', TRUE), ('estres', 'es', TRUE),
+      ('ansiedad', 'es', TRUE), ('recuperacion', 'es', TRUE),
+      ('respiracao', 'pt', TRUE), ('meditacao', 'pt', TRUE), ('bemestar', 'pt', TRUE),
+      ('biohacking', 'pt', TRUE), ('saudemental', 'pt', TRUE), ('estresse', 'pt', TRUE),
+      ('ansiedade', 'pt', TRUE), ('recuperacao', 'pt', TRUE)
+    ON CONFLICT (keyword) DO NOTHING;
+
+    -- Add unique constraint for Scout Agent storage
+    DO $$ 
+    BEGIN 
+      -- First, clean up any existing duplicates to allow constraint creation
+      DELETE FROM contacts a USING contacts b
+      WHERE a.id < b.id 
+      AND a.handle = b.handle 
+      AND a.platform = b.platform;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'contacts_handle_platform_unique') THEN
+        ALTER TABLE contacts ADD CONSTRAINT contacts_handle_platform_unique UNIQUE (handle, platform);
+      END IF;
+    END $$;
   `)
   console.log('Migration complete')
   await pool.end()

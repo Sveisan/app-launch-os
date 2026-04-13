@@ -65,8 +65,14 @@ function renderAdminDashboard(stats) {
         
         .empty-state { text-align: center; padding: 4rem; color: var(--text-muted); font-weight: 300; }
         
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        
+        .kanban-card { transition: transform 0.2s, background 0.2s; cursor: grab; }
+        .kanban-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.05) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .kanban-card:active { cursor: grabbing; }
+        .drag-over { background: rgba(82, 171, 152, 0.1) !important; border-color: var(--secondary) !important; }
     </style>
 </head>
 <body>
@@ -110,51 +116,156 @@ function renderAdminDashboard(stats) {
             </div>
         </div>
 
-        <h2 class="section-title">Latest Scout Intelligence</h2>
+        <h2 class="section-title">Video Studio (TikTok Pipeline)</h2>
+        <div class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 3rem;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="font-weight: 400; font-size: 1.2rem; margin-bottom: 0.5rem;">Automated Batch Production</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px;">Generate 6 research-backed TikTok videos (9:16) with Ultra-Glass aesthetics and Liam voiceover. Total production time is ~3-4 minutes.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="clearCacheBtn" class="btn" style="background: transparent; border: 1px solid var(--card-border); opacity: 0.6;">Clear Cache</button>
+                    <button id="generateVideosBtn" class="btn-primary" style="background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; cursor: pointer;">● Generate 6 TikTok Videos</button>
+                </div>
+            </div>
+
+            <div id="videoProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                <!-- Filled via JS -->
+                <div class="empty-state" style="grid-column: 1/-1; padding: 2rem; border: 1px dashed var(--card-border); border-radius: 12px;">No active production. Click generate to start.</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Influencer Pipeline</h2>
         
         <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
             <div>
                 <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Override</h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Bypass the hourly timer and send Scout out now.</p>
             </div>
-        <div class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; overflow: hidden;">
-            ${stats.latestLeads.length > 0 ? `
-            <table>
-                <div class="manual-trigger" style="padding: 1.5rem; border-bottom: 1px solid var(--card-border);">
-                    <div class="trigger-info" style="margin-bottom: 1rem;">
-                        <strong style="display: block; margin-bottom: 0.2rem;">Manual Override</strong>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Bypass the hourly timer and send Scout out now.</p>
+            <div>
+                <button id="triggerSweep" class="btn" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.6rem 1.5rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer;">Trigger Sweep</button>
+                <button id="testMission" class="btn" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid #2ed573; margin-left: 10px; border-radius: 8px; cursor: pointer;">Run Test Mission</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Filters:</span>
+            
+            <select id="platformFilter" onchange="applyFilters()" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--card-border); border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.85rem; outline: none; cursor: pointer;">
+                <option value="all">All Platforms</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+            </select>
+
+            <select id="langFilter" onchange="applyFilters()" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--card-border); border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.85rem; outline: none; cursor: pointer;">
+                <option value="all">All Languages</option>
+                <option value="en">English (Global)</option>
+                <option value="no">Nordic (NO)</option>
+                <option value="es">Spanish/Port</option>
+            </select>
+        </div>
+
+        <div class="kanban-board" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem;">
+            ${['discovery', 'researching', 'approved', 'outreach_sent', 'rejected'].map(status => {
+                const title = {
+                    'discovery': 'Discovery',
+                    'researching': 'Researching',
+                    'approved': 'Approved',
+                    'outreach_sent': 'Outreach Sent',
+                    'rejected': 'Archive'
+                }[status];
+                
+                const leads = stats.pipelineStatus[status] || [];
+                
+                return `
+                <div class="kanban-column" ondrop="drop(event, '${status}')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" style="flex: 0 0 320px; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 800px; transition: all 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="font-weight: 500; font-size: 1rem; text-transform: capitalize;">${title}</h4>
+                        <span class="col-count" style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">${leads.length}</span>
                     </div>
-                    <button id="triggerSweep" class="btn" style="padding: 0.6rem 1.5rem; font-size: 0.9rem;">Trigger Sweep</button>
-                    <button id="testMission" class="btn" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; background: rgba(46, 213, 115, 0.1); color: var(--accent-success); border: 1px solid var(--accent-success); margin-left: 10px;">Run Test Mission</button>
+                    
+                    <div class="kanban-cards" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;" data-status="${status}">
+                        ${leads.length === 0 ? `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; pointer-events: none;">Empty</div>` : leads.map(lead => {
+                            
+                            // Determine prev and next columns
+                            const cols = ['discovery', 'researching', 'approved', 'outreach_sent'];
+                            const idx = cols.indexOf(status);
+                            const prevStatus = idx > 0 ? cols[idx - 1] : null;
+                            const nextStatus = idx >= 0 && idx < cols.length - 1 ? cols[idx + 1] : null;
+                            
+                            // Determine language
+                            const noTags = ['pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge'];
+                            const esTags = ['respiracion', 'meditacion', 'bienestar', 'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse', 'saludmental'];
+                            const nicheLower = (lead.niche || '').toLowerCase();
+                            let lang = 'en';
+                            if (noTags.includes(nicheLower)) lang = 'no';
+                            else if (esTags.includes(nicheLower)) lang = 'es';
+
+                            return `
+                            <!-- Card -->
+                            <div class="kanban-card" draggable="true" ondragstart="drag(event, ${lead.id})" data-id="${lead.id}" data-platform="${esc(lead.platform)}" data-lang="${lang}" data-lead="${encodeURIComponent(JSON.stringify(lead))}" onclick="openModal(this.getAttribute('data-lead'))" style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                    <span class="score score-high">${esc(lead.fit_score)}</span>
+                                    <div class="kanban-actions" style="display: flex; gap: 0.5rem; margin-top: -5px; padding-bottom: 5px;">
+                                        ${status !== 'rejected' ? `<button onclick="updateStatus(${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.5); cursor:pointer; font-size: 1.2rem; line-height: 1;">✕</button>` : ''}
+                                        ${prevStatus ? `<button onclick="updateStatus(${lead.id}, '${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: var(--secondary); cursor:pointer; font-size: 1.2rem; line-height: 1;">←</button>` : ''}
+                                        ${nextStatus ? `<button onclick="updateStatus(${lead.id}, '${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: var(--secondary); cursor:pointer; font-size: 1.2rem; line-height: 1;">→</button>` : ''}
+                                    </div>
+                                </div>
+                                <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white;">@${esc(lead.handle)}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.2rem;">${esc(lead.platform)} &middot; ${esc(lead.niche)}</div>
+                            </div>
+                            `
+                        }).join('')}
+                    </div>
                 </div>
-                <thead>
-                    <tr>
-                        <th>Creator</th>
-                        <th>Score</th>
-                        <th>Niche</th>
-                        <th>Draft Message</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${stats.latestLeads.map(lead => `
-                    <tr>
-                        <td>
-                            <a href="${esc(lead.post_url)}" target="_blank" class="handle">@${esc(lead.handle)}</a>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">${esc(lead.platform)}</div>
-                        </td>
-                        <td>
-                            <span class="score score-high">${esc(lead.fit_score)}</span>
-                        </td>
-                        <td style="color: var(--text-muted); font-size: 0.85rem;">${esc(lead.niche)}</td>
-                        <td class="draft-text">${esc(lead.outreach_draft)}</td>
-                    </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            ` : `
-            <div class="empty-state">No signals intercepted yet. Scout is in the field...</div>
-            `}
+                `;
+            }).join('')}
+        </div>
+
+        <!-- Details Modal -->
+        <div id="leadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 20px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 2.5rem; position: relative;">
+                <button onclick="closeModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 50%; color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background 0.2s;">&times;</button>
+                
+                <div style="display: flex; gap: 1.5rem; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--card-border);">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                        <span id="modalScore" class="score score-high" style="font-size: 1.5rem; padding: 0.6rem 1.2rem; background: rgba(82, 171, 152, 0.1); border: 1px solid var(--secondary); color: var(--secondary);"></span>
+                        <a id="modalLink" href="#" target="_blank" style="color: var(--secondary); font-size: 0.8rem; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.05); padding: 0.3rem 0.6rem; border-radius: 6px;">
+                            Profile ↗
+                        </a>
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 id="modalHandle" style="font-weight: 400; font-size: 1.8rem; margin: 0 0 0.5rem 0; color: white;"></h2>
+                        <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--card-border); width: fit-content;">
+                            <span id="modalPlatform" style="color: var(--accent); font-weight: 500;"></span>
+                            <span style="border-left: 1px solid var(--card-border); padding-left: 1rem;"><strong id="modalFollowers" style="color: white; font-weight: 500;"></strong> followers</span>
+                            <span style="border-left: 1px solid var(--card-border); padding-left: 1rem;"><strong id="modalER" style="color: white; font-weight: 500;"></strong>% ER</span>
+                        </div>
+                        <p id="modalBio" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-muted); margin: 0;"></p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div style="background: rgba(82, 171, 152, 0.05); border: 1px solid rgba(82, 171, 152, 0.2); padding: 1.5rem; border-radius: 12px;">
+                        <h4 style="font-weight: 500; color: var(--secondary); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Scout Reason</h4>
+                        <p id="modalFeedback" style="font-size: 0.95rem; line-height: 1.5; color: white; margin: 0;"></p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border); padding: 1.5rem; border-radius: 12px;">
+                        <h4 style="font-weight: 500; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Found Keyword</h4>
+                        <p id="modalNiche" style="font-size: 0.95rem; line-height: 1.5; color: white; margin: 0;"></p>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+                    <div style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--card-border); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-weight: 500; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">AI Outreach Draft</h4>
+                        <button onclick="copyDraft()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s;">Copy to Clipboard</button>
+                    </div>
+                    <div style="position: relative;">
+                        <textarea id="modalDraft" style="width: 100%; height: 200px; background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 1rem; line-height: 1.6; padding: 1.5rem; resize: vertical; outline: none;" readonly></textarea>
+                    </div>
+                </div>
         </div>
 
         <h2 class="section-title" style="margin-top: 3rem;">Mission Log (Live Trace)</h2>
@@ -175,7 +286,7 @@ function renderAdminDashboard(stats) {
     </div>
 
     <script>
-        const btn = document.getElementById('trigger-btn');
+        const btn = document.getElementById('triggerSweep');
         const repairBtn = document.getElementById('repair-btn');
 
         if (repairBtn) {
@@ -229,6 +340,120 @@ function renderAdminDashboard(stats) {
                 btn.textContent = 'Trigger Sweep';
                 btn.style.opacity = '1';
             }
+        });
+
+        // Kanban Interactive Functions
+        const modal = document.getElementById('leadModal');
+        
+        function openModal(leadStr) {
+            const lead = JSON.parse(decodeURIComponent(leadStr));
+            document.getElementById('modalScore').textContent = lead.fit_score;
+            document.getElementById('modalHandle').textContent = '@' + lead.handle;
+            
+            // Build fallback URL if post_url is missing
+            let profileUrl = lead.post_url;
+            if (!profileUrl) {
+                const cleanHandle = lead.handle.replace('@', '');
+                profileUrl = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
+                    ? 'https://tiktok.com/@' + cleanHandle 
+                    : 'https://instagram.com/' + cleanHandle;
+            }
+            document.getElementById('modalLink').href = profileUrl;
+            
+            document.getElementById('modalFollowers').textContent = (lead.followers_count || lead.followers || 0).toLocaleString();
+            document.getElementById('modalER').textContent = (lead.engagement_rate || 0).toFixed(1);
+            document.getElementById('modalNiche').textContent = '#' + (lead.niche || 'unknown');
+            document.getElementById('modalPlatform').textContent = lead.platform;
+            
+            const contentFound = lead.bio || lead.post_caption;
+            if (contentFound) {
+                document.getElementById('modalBio').textContent = contentFound;
+                document.getElementById('modalBio').style.fontStyle = 'normal';
+                document.getElementById('modalBio').style.color = 'var(--text-muted)';
+            } else {
+                document.getElementById('modalBio').textContent = '⚠️ Profile summary not stored for this older lead. Please use the "Profile ↗" button above to evaluate them manually.';
+                document.getElementById('modalBio').style.fontStyle = 'italic';
+                document.getElementById('modalBio').style.color = 'rgba(255,255,255,0.4)';
+            }
+            
+            document.getElementById('modalDraft').value = lead.outreach_draft || 'No draft generated.';
+            document.getElementById('modalFeedback').textContent = lead.reason || lead.fit_feedback || 'No specific feedback provided by Scout.';
+            modal.style.display = 'flex';
+        }
+        
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        
+        function copyDraft() {
+            const copyText = document.getElementById('modalDraft');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        async function updateStatus(id, newStatus, event) {
+            if (event) event.stopPropagation();
+            try {
+                const res = await fetch('/mission-control-x89/update-status?auth=breathe88', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload(); 
+                } else {
+                    alert('Error updating status: ' + data.error);
+                }
+            } catch(e) {
+                alert('Update failed.');
+            }
+        }
+        
+        // --- Drag and Drop Logic --- //
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            ev.currentTarget.classList.remove('drag-over');
+        }
+
+        function drag(ev, id) {
+            ev.dataTransfer.setData("text/plain", id);
+            // Optional: Set a drag image or opacity
+            ev.target.style.opacity = '0.5';
+        }
+
+        async function drop(ev, newStatus) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            const id = ev.dataTransfer.getData("text/plain");
+            if(id) {
+               await updateStatus(id, newStatus, null);
+            }
+            // Reset opacity via reload
+        }
+        document.addEventListener('dragend', (ev) => {
+             if (ev.target.classList && ev.target.classList.contains('kanban-card')) {
+                 ev.target.style.opacity = '1';
+             }
+        });
+
         // Test Mission
         document.getElementById('testMission').addEventListener('click', async () => {
             const btn = document.getElementById('testMission');
@@ -253,6 +478,122 @@ function renderAdminDashboard(stats) {
                 btn.style.opacity = '1';
             }
         });
+
+        // Video Studio Logic
+        const videoBtn = document.getElementById('generateVideosBtn');
+        const clearBtn = document.getElementById('clearCacheBtn');
+        const progressGrid = document.getElementById('videoProgressGrid');
+        let pollingInterval = null;
+
+        const techniques = ['box', 'huberman', 'seal', 'sleep', 'calm', '4-7-8'];
+        const techLabels = {
+            'box': 'Box Breathing',
+            'huberman': 'Huberman Sigh',
+            'seal': 'SEAL Tactical',
+            'sleep': 'Sleep Protocol',
+            'calm': 'Coherent/HRV',
+            '4-7-8': '4-7-8 Relax'
+        };
+
+        function renderProgress(job) {
+            progressGrid.innerHTML = techniques.map(tech => {
+                const phase = job.progress[tech] || 'Queued';
+                let statusColor = 'var(--text-muted)';
+                let isDone = phase === 'Done';
+                let isError = phase.startsWith('Error');
+                
+                if (isDone) statusColor = 'var(--secondary)';
+                if (isError) statusColor = '#ff4757';
+                if (!isDone && !isError && phase !== 'Queued') statusColor = 'var(--primary)';
+
+                return \`
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 1.2rem; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500;">\${techLabels[tech]}</div>
+                            <div style="font-size: 0.75rem; color: \${statusColor}; margin-top: 2px;">\${phase}</div>
+                        </div>
+                        \${isDone ? \`
+                            <a href="/api/video-studio/download/\${tech}.mp4?auth=breathe88" class="handle" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">↓ Download</a>
+                        \` : ''}
+                    </div>
+                \`;
+            }).join('');
+        }
+
+        async function pollStatus(jobId) {
+            const res = await fetch(\`/api/video-studio/status/\${jobId}?auth=breathe88\`);
+            const job = await res.json();
+            renderProgress(job);
+
+            if (job.status === 'completed' || job.status === 'error') {
+                clearInterval(pollingInterval);
+                videoBtn.disabled = false;
+                videoBtn.textContent = '● Generate 6 TikTok Videos';
+                videoBtn.style.opacity = '1';
+            }
+        }
+
+        videoBtn.addEventListener('click', async () => {
+            if (!confirm('Start video production? This will consume Claude and ElevenLabs credits.')) return;
+            
+            videoBtn.disabled = true;
+            videoBtn.textContent = 'Initializing Batch...';
+            videoBtn.style.opacity = '0.5';
+
+            try {
+                const res = await fetch('/api/video-studio/generate?auth=breathe88', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    pollingInterval = setInterval(() => pollStatus(data.jobId), 2000);
+                    pollStatus(data.jobId);
+                } else {
+                    alert('Failed to start: ' + data.error);
+                    videoBtn.disabled = false;
+                }
+            } catch (err) {
+                alert('Connection failed');
+                videoBtn.disabled = false;
+            }
+        });
+
+        clearBtn.addEventListener('click', async () => {
+            if (!confirm('Clear all generated videos?')) return;
+            const res = await fetch('/api/video-studio/clear-cache?auth=breathe88', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Cache cleared.');
+                location.reload();
+            }
+        });
+
+        // Filter Logic
+        function applyFilters() {
+            const platform = document.getElementById('platformFilter').value.toLowerCase();
+            const lang = document.getElementById('langFilter').value.toLowerCase();
+
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                const cards = col.querySelectorAll('.kanban-card');
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const cardPlatform = (card.getAttribute('data-platform') || '').toLowerCase();
+                    const cardLang = (card.getAttribute('data-lang') || '').toLowerCase();
+                    
+                    const matchPlatform = platform === 'all' || cardPlatform === platform;
+                    const matchLang = lang === 'all' || cardLang === lang;
+
+                    if (matchPlatform && matchLang) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                const countBadge = col.querySelector('.col-count');
+                if (countBadge) countBadge.textContent = visibleCount;
+            });
+        }
     </script>
 </body>
 </html>

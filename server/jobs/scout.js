@@ -1,6 +1,8 @@
 const { ApifyClient } = require('apify-client');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { pool } = require('../db/index');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const anthropic = new Anthropic({
@@ -18,14 +20,35 @@ const apifyClient = new ApifyClient({
 class ScoutAgent {
   constructor() {
     this.apifyToken = process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN;
-    this.hashtags = [
-      'breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 
-      'biohacking', 'sleephacks', 'huberman', 'wellness', 'yoga', 'meditation', 
-      'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery',
-      'anxietyrelief', 'burnout', 'insomnia', 'panicattack', 'mentalhealth', 
-      'stressmanagement', 'productivityhacks', 'focus', 'flowstate', 'peakperformance'
-    ];
+    this.hashtags = []; // Loaded from DB
     this.budgetLimit = 10.0; // $10/day hard cap
+  }
+
+  /**
+   * Loads search keywords from database with fallback
+   */
+  async loadKeywords() {
+    try {
+      const res = await pool.query('SELECT keyword FROM scout_keywords WHERE is_hashtag = TRUE');
+      if (res.rows.length > 0) {
+        this.hashtags = res.rows.map(r => r.keyword);
+        await this.sysLog(`Loaded ${this.hashtags.length} keywords from database.`);
+      } else {
+        throw new Error('Keywords table is empty');
+      }
+    } catch (err) {
+      await this.sysLog(`Keyword fetch failed, using fallback list. Error: ${err.message}`);
+      this.hashtags = [
+        'breathwork', 'breathing', 'wimhof', 'boxbreathing', 'physiologicalsigh', 
+        'biohacking', 'sleephacks', 'huberman', 'wellness', 'yoga', 'meditation', 
+        'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery',
+        'anxietyrelief', 'burnout', 'insomnia', 'panicattack', 'mentalhealth', 
+        'stressmanagement', 'productivityhacks', 'focus', 'flowstate', 'peakperformance',
+        'pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge',
+        'respiracion', 'meditacion', 'bienestar', 'biohacking', 'saludmental',
+        'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse'
+      ];
+    }
   }
 
   /**
@@ -45,42 +68,68 @@ class ScoutAgent {
       return;
     }
 
+    await this.loadKeywords();
+
     try {
-      // 0. Schema Integrity Check
-      console.log('Scout: Checking Database schema integrity...');
-      const schemaCheck = await pool.query(`
-        SELECT column_name FROM information_schema.columns 
-        WHERE table_name = 'contacts' AND column_name = 'scout_logged'
-      `);
-      
-      if (schemaCheck.rows.length === 0) {
-        await this.sysLog('CRITICAL: contacts table is missing scout_logged column.');
-        return;
+      // 0. Schema Integrity Check (Bypassable)
+      try {
+        console.log('Scout: Checking Database schema integrity...');
+        const schemaCheck = await pool.query(`
+          SELECT column_name FROM information_schema.columns 
+          WHERE table_name = 'contacts' AND column_name = 'scout_logged'
+        `);
+        
+        if (schemaCheck.rows.length === 0) {
+          await this.sysLog('CRITICAL: contacts table is missing scout_logged column.');
+        }
+      } catch (err) {
+        await this.sysLog(`Database Integrity Check failed (Bypassing): ${err.message}`);
       }
 
       // 1. Fetch Memory (Past Decisions)
-      const memory = await this.getFitMemory();
-      await this.sysLog(`Retrieved memory: ${memory.approved.length} approved, ${memory.rejected.length} rejected profiles.`);
+      let memory = { approved: [], rejected: [] };
+      try {
+        memory = await this.getFitMemory();
+        await this.sysLog(`Retrieved memory: ${memory.approved.length} approved, ${memory.rejected.length} rejected profiles.`);
+      } catch (err) {
+        await this.sysLog(`Memory retrieval failed (Using empty memory): ${err.message}`);
+      }
 
       // 2. Search TikTok & Instagram
       const rawLeads = await this.fetchSocialLeads();
       await this.sysLog(`Fetched ${rawLeads.length} raw leads from Apify.`);
+      
+      // DEBUG: Log raw leads to file
+      fs.writeFileSync(path.join(process.cwd(), 'docs/scout_raw_debug.json'), JSON.stringify(rawLeads, null, 2));
 
       for (const lead of rawLeads) {
         await this.sysLog(`Sherlock: Evaluating lead @${lead.handle}...`);
         
         // 3. Sherlock Filter (Memory-Aware Scoring)
-        const scoreData = await this.calculateSherlockScore(lead, memory);
-        await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
+        let scoreData;
+        try {
+          scoreData = await this.calculateSherlockScore(lead, memory);
+          await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
+        } catch (err) {
+          await this.sysLog(`Sherlock assessment failed for @${lead.handle}: ${err.message}`);
+          continue;
+        }
         
-        if (scoreData.finalScore >= 0.2) {
+        if (scoreData.finalScore >= 0.1) {
           await this.sysLog(`Entry Signal detected: Drafting Tony Stark message for @${lead.handle}...`);
           
           // 4. Tony Stark Drafter (Context-Aware Drafting)
-          const draft = await this.generateStarkDraft(lead, scoreData, memory);
+          let draft;
+          try {
+            draft = await this.generateStarkDraft(lead, scoreData, memory);
+          } catch (err) {
+            await this.sysLog(`Tony Stark drafting failed for @${lead.handle}: ${err.message}`);
+            draft = 'Draft failed to generate.';
+          }
           
-          // 5. Log to DB (Honest Logging: Logic moved inside)
+          // 5. Log to DB & Backup
           await this.logToDatabase(lead, scoreData, draft);
+          await this.logToBackup(lead, scoreData, draft);
         } else {
           await this.sysLog(`Excluded @${lead.handle} (Score ${scoreData.finalScore} too low).`);
         }
@@ -88,7 +137,26 @@ class ScoutAgent {
       
       await this.sysLog('--- Scout Agent returning to Sleep Mode ---');
     } catch (err) {
-      await this.sysLog(`EXECUTION ERROR: ${err.message}`);
+      await this.sysLog(`GLOBAL EXECUTION ERROR: ${err.message}`);
+    }
+  }
+
+  async logToBackup(lead, scoreData, draft) {
+    try {
+      const docsDir = path.join(process.cwd(), 'docs');
+      if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir);
+      
+      const filePath = path.join(docsDir, 'scout_finds.md');
+      const header = !fs.existsSync(filePath) 
+        ? "# 🔭 Scout Findings (Fallback Log)\n\n| Handle | Platform | Score | Niche | Draft |\n|---|---|---|---|---|\n" 
+        : "";
+      
+      const row = `| @${lead.handle} | ${lead.platform} | ${scoreData.finalScore} | ${lead.niche} | ${draft.replace(/\n/g, '<br>')} |\n`;
+      
+      fs.appendFileSync(filePath, header + row);
+      console.log(`[Backup] Logged @${lead.handle} to docs/scout_finds.md`);
+    } catch (err) {
+      console.error('Backup Logging Failed:', err.message);
     }
   }
 
@@ -119,26 +187,36 @@ class ScoutAgent {
         await this.sysLog(`Sweeping #${hashtag}...`);
 
         try {
-          // TikTok Sweep (clockworks/tiktok-scraper)
+          // TikTok Sweep (clockworks/tiktok-scraper verified to work)
           const ttRun = await apifyClient.actor("clockworks/tiktok-scraper").call({
             hashtags: [hashtag],
-            resultsPerPage: 5,
+            resultsPerPage: 20, // Increased results
             shouldDownloadVideos: false,
             shouldDownloadCovers: false
           });
           const { items: ttItems } = await apifyClient.dataset(ttRun.defaultDatasetId).listItems();
           
+          if (ttItems.length === 0) {
+            await this.sysLog(`TikTok: No items found for #${hashtag}.`);
+          }
+
           ttItems.forEach(item => {
-            if (item.author) {
+            const author = item.authorMeta || item.author;
+            if (author) {
+              const handle = author.name || author.uniqueId;
+              const followers = author.fans || (author.stats && author.stats.followerCount) || 0;
+              const diggCount = item.diggCount || (item.stats && item.stats.diggCount) || 0;
+              const commentCount = item.commentCount || (item.stats && item.stats.commentCount) || 0;
+              
               leads.push({
-                handle: item.author.uniqueId,
+                handle: handle,
                 platform: 'TikTok',
-                followers: item.author.stats?.followerCount || 0,
-                engagement_rate: ((item.stats?.diggCount + item.stats?.commentCount) / item.author.stats?.followerCount * 100) || 0,
+                followers: followers,
+                engagement_rate: followers > 0 ? ((diggCount + commentCount) / followers * 100) : 0,
                 niche: hashtag,
-                bio: item.author.signature || "",
-                post_caption: item.desc || "",
-                post_url: `https://www.tiktok.com/@${item.author.uniqueId}/video/${item.id}`
+                bio: author.signature || "",
+                post_caption: item.text || item.desc || "",
+                post_url: item.webVideoUrl || `https://www.tiktok.com/@${handle}/video/${item.id}`
               });
             }
           });
@@ -146,9 +224,13 @@ class ScoutAgent {
           // Instagram Sweep (apify/instagram-hashtag-scraper)
           const igRun = await apifyClient.actor("apify/instagram-hashtag-scraper").call({
             hashtags: [hashtag],
-            resultsLimit: 5
+            resultsLimit: 20 // Increased from 5
           });
           const { items: igItems } = await apifyClient.dataset(igRun.defaultDatasetId).listItems();
+
+          if (igItems.length === 0) {
+            await this.sysLog(`Instagram: No items found for #${hashtag}.`);
+          }
 
           igItems.forEach(item => {
             leads.push({
@@ -226,13 +308,17 @@ TASK: Return a single number (e.g. 0.85).
 - 0.8-0.9 = High-quality Wellness/Yoga creator.
 - 0.7 = Creator discussing SYMPTOMS (Anxiety, Stress, Burnout, Sleep issues, Lack of Focus).
 - 0.5 = General Health/Fitness creator with good aesthetic.
+
+IMPORTANT: The profile bio and content may be in English, Norwegian, Spanish, Portuguese, or other languages.
+- Keywords to look for: Pust/Respiracion/Respiracao (Breath), Stress/Estres/Estresse (Stress), Bienestar/Bem-estar (Wellness).
+Evaluate based on CORE INTENT and scientific/premium aesthetic, regardless of language.
 Prioritize creators who mention pain points (stress, tired, focus, panic) even if they don't know the breathwork solution yet.`;
 
     let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2);
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-3-7-sonnet-latest',
         max_tokens: 10,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -279,14 +365,21 @@ Keep the draft visionary, direct, and slightly exclusive.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20240620',
-        max_tokens: 300,
+        model: 'claude-3-7-sonnet-latest',
+        max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       });
-      const result = JSON.parse(response.content[0].text);
-      return result.draft;
+      
+      const content = response.content[0].text;
+      // Extract JSON if Claude wrapped it in markdown
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const cleanJson = jsonMatch ? jsonMatch[0] : content;
+      
+      const result = JSON.parse(cleanJson);
+      return result.draft || 'Draft generated but missing field.';
     } catch (err) {
-      return 'Draft failed to generate.';
+      console.error('Tony Stark Drafting Error:', err.message);
+      return `Draft failed: ${err.message}`;
     }
   }
 
@@ -299,28 +392,32 @@ Keep the draft visionary, direct, and slightly exclusive.`;
         `INSERT INTO contacts (
           handle, platform, followers, followers_count, niche, reason, 
           status, post_url, fit_score, engagement_rate, 
-          outreach_draft, scout_logged, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE, NOW())
-        ON CONFLICT (handle) DO UPDATE SET
+          outreach_draft, bio, post_caption, scout_logged, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE, NOW())
+        ON CONFLICT (handle, platform) DO UPDATE SET
           fit_score = EXCLUDED.fit_score,
           engagement_rate = EXCLUDED.engagement_rate,
           outreach_draft = EXCLUDED.outreach_draft,
           followers = EXCLUDED.followers,
           followers_count = EXCLUDED.followers_count,
+          bio = EXCLUDED.bio,
+          post_caption = EXCLUDED.post_caption,
           scout_logged = TRUE,
           created_at = NOW()`,
         [
           lead.handle,
           lead.platform,
           String(lead.followers), // Mapping to 'followers' (string)
-          parseInt(lead.followers), // Mapping to 'followers_count' (number)
+          parseInt(lead.followers) || 0, // Mapping to 'followers_count' (number)
           lead.niche,
           `High Sherlock Score: ${scoreData.finalScore}`,
           'draft', 
           lead.post_url,
           scoreData.finalScore,
           lead.engagement_rate,
-          draft
+          draft,
+          lead.bio || '',
+          lead.post_caption || ''
         ]
       );
       await this.sysLog(`SUCCESS: Fully Logged @${lead.handle} to database leads list.`);
@@ -336,4 +433,4 @@ const scoutAgentRun = async () => {
   await agent.run();
 };
 
-module.exports = { scoutAgentRun };
+module.exports = { ScoutAgent, scoutAgentRun };

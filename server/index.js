@@ -1,8 +1,10 @@
 const express = require('express')
 const path = require('path')
+const cookieParser = require('cookie-parser')
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../public')))
 
 app.use('/api/apply', require('./routes/creator'))
@@ -10,6 +12,8 @@ app.use('/api/waitlist', require('./routes/waitlist'))
 app.use('/api/check-eligibility', require('./routes/eligibility'))
 app.use('/api/feedback', require('./routes/feedback'))
 app.use('/mission-control-x89', require('./routes/admin'))
+app.use('/api/video-studio', require('./routes/video-studio'))
+
 
 app.use('/breathing', require('./routes/content'))
 app.get('/sitemap.xml', require('./routes/content').sitemap)

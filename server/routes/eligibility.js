@@ -122,37 +122,45 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
 
     await sendEmail({
       to: email,
-      subject: "You're in — Breathe Collection",
+      subject: "You're in: The mechanics of breath",
       text: `Hi ${handle},
 
-You're approved. This is how we'll get you started.
+Welcome to the Breathe Collection creator program. We’re glad to have you.
 
-STEP 1 — Activate 1-Month Free Access
+Below is everything you need to activate your access and transition from generic breathwork to physiological protocols.
+
+STEP 1 — Activate your access
 ${appleRedeemUrl 
-  ? `Click the link below to automatically redeem your trial in the App Store:\n${appleRedeemUrl}\n\n(If the link doesn't open, you can manually enter this code in the App Store: ${codeStr})` 
+  ? `Tap the link below to automatically redeem your trial in the App Store:\n${appleRedeemUrl}\n\n(If the link doesn't open, you can manually enter this code in the App Store: ${codeStr})` 
   : `Your unique trial code is being generated and will be sent in a follow-up email shortly.`}
 
-STEP 2 — Get Lifetime Pro
-Once you have tried the app and posted your giveaway content, simply reply to this email with the link to your post. 
+STEP 2 — The Experience
+Take a few days to test the protocols before you post. 
+- The Huberman Sigh: Best for rapid stress relief.
+- Wim Hof (Cyclic Hyperventilation): High-impact, highly visible for video content.
+- Haptic Guidance: Put your phone away and close your eyes. The haptics are designed to keep you centered without the screen glare—this is usually the "wow" moment for audiences.
 
-We will send your permanent Lifetime Pro code${wantsGiveaways ? ' + 10 viewer giveaway codes' : ''} within 24 hours of receiving your link.
+Scientific context for every technique is at breathecollection.app/creators. Use it to speak with authority.
 
----
+STEP 3 — Post and Reply
+Once you’ve shared your experience, reply to this email with the link. Within 24 hours, we’ll send:
+1. Your Lifetime Pro code (Permanent, subscription-free access).
+2. 10 viewer giveaway codes to drive engagement in your comments.
 
-CAPTION TEMPLATE (Optional)
+Caption starting point
+(Authenticity beats templates. Make this yours.)
 
-"I've been using this breathing app for a while. No ads, no sleep stories, no bloat — just 9 clean techniques (Wim Hof, Box, Huberman and more) with haptic feedback so you can keep your eyes closed.
+"I’ve been testing this breathing app and it’s genuinely different. No ads, no 'sleep stories,' no fluff. Just 9 precise protocols like Wim Hof, Box Breathing, and the Huberman sigh. It uses haptics so you can practice with your eyes closed—it feels like a legitimate tool for your nervous system.
 
-I'm giving away [X] lifetime Pro codes in the comments. Drop a 🌬️ to enter. I'll pick winners in 48h.
+A full Pro subscription is $29.99/year—less than half of what Calm or Headspace charge for a fraction of the utility.
 
+I’m giving away [X] lifetime Pro codes below. Drop a 🌬️ to enter — picking winners in 48h.
 [Link in bio]"
 
----
+What performs best
+A raw, "talk to camera" reaction or a screen recording of a live session usually outperforms a polished production. Authenticity is the point.
 
-HOW TO SHOW THE APP
-A simple screen recording of a session or a quick "talk to camera" works perfectly. We want it to feel authentic to you.
-
-Reply here when you're ready.
+Any questions, just reply here.
 
 Eirik
 Breathe Collection`,

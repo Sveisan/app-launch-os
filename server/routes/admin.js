@@ -4,13 +4,25 @@ const { pool } = require('../db/index');
 const { renderAdminDashboard } = require('../templates/admin');
 const { scoutAgentRun } = require('../jobs/scout');
 
-// Simple Access Key Middleware
-const SECRET_KEY = 'breathe88';
+// Hardened Access Key Middleware
 const checkAuth = (req, res, next) => {
-    const key = req.query.auth || req.body.auth;
-    if (key === SECRET_KEY) {
+    const secret = process.env.ADMIN_SECRET_KEY || 'breathe88';
+    
+    // Check cookie first, or query/body for initial login
+    const providedKey = req.cookies.admin_auth || req.query.auth || req.body.auth;
+    
+    if (providedKey === secret) {
+        // Set cookie if auth was provided via query/body
+        if (!req.cookies.admin_auth && providedKey) {
+            res.cookie('admin_auth', secret, { 
+                httpOnly: true, 
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+            });
+        }
         next();
     } else {
+        // Return 404 to hide the existence of the admin page from scanners
         res.status(404).send('Not Found');
     }
 };
@@ -88,14 +100,30 @@ router.get('/', checkAuth, async (req, res) => {
         // 5. Offer Codes Left
         const codesRes = await pool.query("SELECT COUNT(*) FROM offer_codes WHERE is_used = FALSE");
         
-        // 6. Latest 10 Leads
+        // 6. Leads grouped by pipeline_status
         const leadsRes = await pool.query(`
-            SELECT handle, platform, fit_score, niche, outreach_draft, post_url 
+            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption
             FROM contacts 
             WHERE scout_logged = TRUE 
             ORDER BY created_at DESC 
-            LIMIT 10
+            LIMIT 1000
         `);
+        
+        // Group leads
+        const pipelineStatus = {
+            discovery: [],
+            researching: [],
+            approved: [],
+            outreach_sent: [],
+            rejected: []
+        };
+        
+        leadsRes.rows.forEach(lead => {
+            const status = lead.pipeline_status || 'discovery';
+            if (pipelineStatus[status]) {
+                pipelineStatus[status].push(lead);
+            }
+        });
 
         // 7. System Logs
         const logsRes = await pool.query(`
@@ -111,7 +139,7 @@ router.get('/', checkAuth, async (req, res) => {
             waitlistTotal: waitlistRes.rows[0].count,
             creatorApps: creatorRes.rows[0].count,
             codesLeft: codesRes.rows[0].count,
-            latestLeads: leadsRes.rows[0] ? leadsRes.rows : [],
+            pipelineStatus,
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
@@ -150,6 +178,28 @@ router.get('/debug', checkAuth, async (req, res) => {
             data: result.rows 
         });
     } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/update-status', checkAuth, async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        const validStatuses = ['discovery', 'researching', 'approved', 'outreach_sent', 'rejected'];
+        
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, error: 'Invalid pipeline status' });
+        }
+        
+        await pool.query(`
+            UPDATE contacts 
+            SET pipeline_status = $1 
+            WHERE id = $2
+        `, [status, id]);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update Status Error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
