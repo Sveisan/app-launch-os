@@ -318,7 +318,7 @@ Prioritize creators who mention pain points (stress, tired, focus, panic) even i
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-7-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 10,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -365,7 +365,7 @@ Keep the draft visionary, direct, and slightly exclusive.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-7-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       });
