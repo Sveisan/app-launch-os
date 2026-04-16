@@ -22,6 +22,7 @@ class ScoutAgent {
     this.apifyToken = process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN;
     this.hashtags = []; // Loaded from DB
     this.budgetLimit = 10.0; // $10/day hard cap
+    this.deepMemoryPersona = ""; // Distilled from approvals/rejections
   }
 
   /**
@@ -69,6 +70,7 @@ class ScoutAgent {
     }
 
     await this.loadKeywords();
+    await this.refreshDeepMemory();
 
     try {
       // 0. Schema Integrity Check (Bypassable)
@@ -102,6 +104,7 @@ class ScoutAgent {
       // DEBUG: Log raw leads to file
       fs.writeFileSync(path.join(process.cwd(), 'docs/scout_raw_debug.json'), JSON.stringify(rawLeads, null, 2));
 
+      const topLeads = [];
       for (const lead of rawLeads) {
         await this.sysLog(`Sherlock: Evaluating lead @${lead.handle}...`);
         
@@ -110,12 +113,15 @@ class ScoutAgent {
         try {
           scoreData = await this.calculateSherlockScore(lead, memory);
           await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
+          if (scoreData.finalScore >= 0.7) {
+            topLeads.push({ ...lead, score: scoreData.finalScore });
+          }
         } catch (err) {
           await this.sysLog(`Sherlock assessment failed for @${lead.handle}: ${err.message}`);
           continue;
         }
         
-        if (scoreData.finalScore >= 0.1) {
+        if (scoreData.finalScore >= 0.6) {
           await this.sysLog(`Entry Signal detected: Drafting Tony Stark message for @${lead.handle}...`);
           
           // 4. Tony Stark Drafter (Context-Aware Drafting)
@@ -133,6 +139,15 @@ class ScoutAgent {
         } else {
           await this.sysLog(`Excluded @${lead.handle} (Score ${scoreData.finalScore} too low).`);
         }
+      }
+      
+      // 6. Keyword Evolution (Suggest new hashtags)
+      try {
+        if (topLeads.length > 0) {
+          await this.suggestNewKeywords(topLeads);
+        }
+      } catch (err) {
+        await this.sysLog(`Keyword suggestion failed: ${err.message}`);
       }
       
       await this.sysLog('--- Scout Agent returning to Sleep Mode ---');
@@ -255,14 +270,15 @@ class ScoutAgent {
 
   /**
    * Memory Retrieval: Fetching previous signals
+   * FIX: Now correctly uses 'pipeline_status' instead of legacy 'status'
    */
   async getFitMemory() {
     try {
       const approved = await pool.query(
-        "SELECT handle, niche, followers_count, fit_score FROM contacts WHERE status = 'approved' AND scout_logged = TRUE LIMIT 5"
+        "SELECT handle, niche, bio, post_caption, fit_score FROM contacts WHERE pipeline_status = 'approved' AND scout_logged = TRUE LIMIT 20"
       );
       const rejected = await pool.query(
-        "SELECT handle, niche, followers_count, fit_score FROM contacts WHERE status = 'rejected' AND scout_logged = TRUE LIMIT 5"
+        "SELECT handle, niche, bio, post_caption, fit_score FROM contacts WHERE pipeline_status = 'rejected' AND scout_logged = TRUE LIMIT 20"
       );
       return { approved: approved.rows, rejected: rejected.rows };
     } catch (err) {
@@ -272,12 +288,56 @@ class ScoutAgent {
   }
 
   /**
+   * Deep Memory: Distill approvals/rejections into a "Target Persona"
+   */
+  async refreshDeepMemory() {
+    try {
+      const { approved, rejected } = await this.getFitMemory();
+      
+      if (approved.length === 0 && rejected.length === 0) {
+        this.deepMemoryPersona = "Targeting high-quality wellness and performance creators with a 'Quiet Luxury' aesthetic.";
+        return;
+      }
+
+      const prompt = `Analyze these Approved vs Rejected influencer profiles for the brand "Breathe Collection".
+      
+APPROVED: ${approved.map(p => `@${p.handle} (${p.niche}): ${p.bio}`).join(' | ')}
+REJECTED: ${rejected.map(p => `@${p.handle} (${p.niche}): ${p.bio}`).join(' | ')}
+
+Based on these decisions, describe the "Ideal Lead Persona" for this brand in 2 sentences. 
+Focus on aesthetic, content style, and niche patterns.`;
+
+      const response = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-latest',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      this.deepMemoryPersona = response.content[0].text;
+      await this.sysLog(`Deep Memory Updated: ${this.deepMemoryPersona}`);
+
+      // Persist to DB
+      await pool.query(`
+        INSERT INTO scout_memory (persona_insight, approved_count, rejected_count, updated_at)
+        VALUES ($1, $2, $3, NOW())
+      `, [this.deepMemoryPersona, approved.length, rejected.length]);
+
+    } catch (err) {
+      await this.sysLog(`Deep Memory refresh failed: ${err.message}`);
+    }
+  }
+
+  /**
    * Sherlock Logic: Finding signal in noise with behavioral memory
    */
   async calculateSherlockScore(lead, memory) {
-    // Quantitative Baseline - Relaxed for testing (500+ followers)
-    const followerScore = (lead.followers >= 500) ? 1.0 : 0.1;
-    const erScore = Math.min((lead.engagement_rate || 0) / 6.0, 1.0);
+    // Quantitative Baseline - Proof of Reach (1500+ followers)
+    const followerScore = (lead.followers >= 1500) ? 1.0 : 0.0;
+    
+    // Engagement Quality (Min 1.5% for "proven" interaction)
+    const er = lead.engagement_rate || 0;
+    const erScore = Math.min(er / 6.0, 1.0);
+    const erPenalty = (er < 1.5) ? -0.5 : 0;
     
     // Multi-dimensional Search: Bio + Post Captions
     const fullContext = `${lead.bio} ${lead.post_caption || ""}`.toLowerCase();
@@ -303,18 +363,22 @@ Followers: ${lead.followers}
 MEMORY CONTEXT:
 ${memoryContext}
 
-TASK: Return a single number (e.g. 0.85). 
-- 1.0 = Perfect Breathwork/Biohacking match.
-- 0.8-0.9 = High-quality Wellness/Yoga creator.
-- 0.7 = Creator discussing SYMPTOMS (Anxiety, Stress, Burnout, Sleep issues, Lack of Focus).
-- 0.5 = General Health/Fitness creator with good aesthetic.
+DEEP INSIGHT (Your established preference):
+${this.deepMemoryPersona}
 
-IMPORTANT: The profile bio and content may be in English, Norwegian, Spanish, Portuguese, or other languages.
-- Keywords to look for: Pust/Respiracion/Respiracao (Breath), Stress/Estres/Estresse (Stress), Bienestar/Bem-estar (Wellness).
+TASK: Return a single number (e.g. 0.85). 
+- 1.0 = Perfect Breathwork/Biohacking match with premium, high-production aesthetics.
+- 0.8-0.9 = High-quality Wellness/Yoga creator with "Proven" content (consistent posting, high engagement).
+- 0.7 = Creator with 1500+ followers discussing SYMPTOMS (Anxiety, Stress, Burnout, Sleep issues).
+- < 0.5 = Generic or low-quality content, regardless of follower count.
+
+IMPORTANT: Prioritize accounts that match the DEEP INSIGHT persona. 
+Prioritize accounts that feel like they have a "Cinematic" or "Quiet Luxury" brand. If the content looks casual or low-effort, score it BELOW 0.6.
 Evaluate based on CORE INTENT and scientific/premium aesthetic, regardless of language.
 Prioritize creators who mention pain points (stress, tired, focus, panic) even if they don't know the breathwork solution yet.`;
 
-    let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2);
+    let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2) + erPenalty;
+    finalScore = Math.max(0, finalScore); // Ensure it doesn't go negative
     
     try {
       const response = await anthropic.messages.create({
@@ -424,6 +488,38 @@ Keep the draft visionary, direct, and slightly exclusive.`;
     } catch (err) {
       console.error('DB Logging Error:', err);
       await this.sysLog(`LOGGING ERROR FOR @${lead.handle}: ${err.message}`);
+    }
+  }
+  /**
+   * Keyword Evolution: Suggest new hashtags based on successful leads
+   */
+  async suggestNewKeywords(topLeads) {
+    try {
+      const prompt = `Analyze these high-quality leads for the brand "Breathe Collection" (Quiet Luxury, Biohacking).
+      
+LEADS: ${topLeads.map(l => `@${l.handle}: ${l.bio} (niche: ${l.niche})`).join(' | ')}
+
+Based on their bios and niche, suggest 3 highly specific NEW hashtags (without the #) that we should try searching for. 
+Format: Return only the keywords separated by commas.`;
+
+      const response = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-latest',
+        max_tokens: 50,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      const suggestions = response.content[0].text.split(',').map(s => s.trim().toLowerCase());
+      await this.sysLog(`Growth Opportunity: Suggested new hashtags: ${suggestions.join(', ')}`);
+
+      // Update the memory table with these suggestions
+      await pool.query(`
+        UPDATE scout_memory 
+        SET suggested_hashtags = $1 
+        WHERE id = (SELECT id FROM scout_memory ORDER BY updated_at DESC LIMIT 1)
+      `, [JSON.stringify(suggestions)]);
+
+    } catch (err) {
+      console.error('Keyword Suggestion Error:', err.message);
     }
   }
 }

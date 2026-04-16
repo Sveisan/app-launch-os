@@ -125,6 +125,17 @@ async function migrate() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    -- Deep Memory for Scout Agent
+    -- Stores distilled insights after analyzing approvals/rejections
+    CREATE TABLE IF NOT EXISTS scout_memory (
+      id SERIAL PRIMARY KEY,
+      persona_insight TEXT NOT NULL,
+      approved_count INTEGER DEFAULT 0,
+      rejected_count INTEGER DEFAULT 0,
+      suggested_hashtags TEXT, -- serialized array
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     -- Add unique constraint for Scout Agent storage
     DO $$ 
     BEGIN 
