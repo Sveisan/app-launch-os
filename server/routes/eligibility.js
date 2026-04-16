@@ -70,7 +70,14 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
     const isAutoApproved = followers === null
     await pool.query(
       `INSERT INTO contacts (name, email, handle, platform, followers, followers_count, auto_approved, niche, reason)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (handle, platform) DO UPDATE SET
+         email = EXCLUDED.email,
+         followers = EXCLUDED.followers,
+         followers_count = EXCLUDED.followers_count,
+         auto_approved = EXCLUDED.auto_approved,
+         reason = contacts.reason || ' | claimed'
+       `,
       ['', email, handle, platform,
        isAutoApproved ? 'auto-approved' : String(followers),  // legacy TEXT column
        isAutoApproved ? null : followers,                      // typed INTEGER column

@@ -229,7 +229,7 @@ class VideoGenerator {
             // Split line into multiple if it's too long
             const words = tech.sequence[seqIndex].split(' ');
             let line = '';
-            let yOffset = 250; // Positioned securely above the orb's max radius
+            let yOffset = 450; // Positioned securely below Instagram/TikTok top UI elements (music bar, profile)
             const lineHeight = 55;
             
             ctx.font = '300 48px Outfit';

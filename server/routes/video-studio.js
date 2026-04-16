@@ -3,20 +3,14 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs-extra');
 const videoGenerator = require('../jobs/video-generator');
+const { checkAuth } = require('../middleware/auth');
+
 
 // In-memory job state
 const JOBS = {};
 
-// Auth Key
-const SECRET_KEY = 'breathe88';
-const checkAuth = (req, res, next) => {
-    const key = req.query.auth || req.body.auth;
-    if (key === SECRET_KEY) {
-        next();
-    } else {
-        res.status(404).send('Not Found');
-    }
-};
+// Using centralized checkAuth middleware
+
 
 router.post('/generate', checkAuth, async (req, res) => {
     const jobId = 'batch-' + Date.now();

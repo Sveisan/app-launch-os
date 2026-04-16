@@ -114,6 +114,16 @@ async function migrate() {
       ('biohacking', 'pt', TRUE), ('saudemental', 'pt', TRUE), ('estresse', 'pt', TRUE),
       ('ansiedade', 'pt', TRUE), ('recuperacao', 'pt', TRUE)
     ON CONFLICT (keyword) DO NOTHING;
+    
+    -- Admin Users for Mission Control
+    -- Role can be 'owner' or 'freelancer'
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'freelancer',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
 
     -- Add unique constraint for Scout Agent storage
     DO $$ 

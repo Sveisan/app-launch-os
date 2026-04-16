@@ -1,6 +1,8 @@
 const esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-function renderAdminDashboard(stats) {
+function renderAdminDashboard(stats, userRole = 'owner') {
+    const isOwner = userRole === 'owner';
+
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +84,7 @@ function renderAdminDashboard(stats) {
             <h1>Control Panel</h1>
         </header>
 
-        ${!stats.isDbReady ? `
+        ${isOwner && !stats.isDbReady ? `
         <div style="background: rgba(224, 123, 57, 0.1); border: 1px solid var(--accent); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
             <div>
                 <h3 style="color: var(--accent); font-weight: 500; margin-bottom: 0.2rem;">Database Schema Outdated</h3>
@@ -123,10 +125,12 @@ function renderAdminDashboard(stats) {
                     <h3 style="font-weight: 400; font-size: 1.2rem; margin-bottom: 0.5rem;">Automated Batch Production</h3>
                     <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px;">Generate 6 research-backed TikTok videos (9:16) with Ultra-Glass aesthetics and Liam voiceover. Total production time is ~3-4 minutes.</p>
                 </div>
+                ${isOwner ? `
                 <div style="display: flex; gap: 10px;">
                     <button id="clearCacheBtn" class="btn" style="background: transparent; border: 1px solid var(--card-border); opacity: 0.6;">Clear Cache</button>
                     <button id="generateVideosBtn" class="btn-primary" style="background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; cursor: pointer;">● Generate 6 TikTok Videos</button>
                 </div>
+                ` : '<div style="font-size: 0.75rem; color: var(--accent); border: 1px solid var(--accent); padding: 0.5rem 1rem; border-radius: 8px;">Reader Access Only</div>'}
             </div>
 
             <div id="videoProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
@@ -137,6 +141,7 @@ function renderAdminDashboard(stats) {
 
         <h2 class="section-title">Influencer Pipeline</h2>
         
+        ${isOwner ? `
         <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
             <div>
                 <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Override</h3>
@@ -147,6 +152,7 @@ function renderAdminDashboard(stats) {
                 <button id="testMission" class="btn" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid #2ed573; margin-left: 10px; border-radius: 8px; cursor: pointer;">Run Test Mission</button>
             </div>
         </div>
+        ` : ''}
 
         <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
             <span style="font-size: 0.8rem; color: var(--text-muted);">Filters:</span>
@@ -268,6 +274,7 @@ function renderAdminDashboard(stats) {
                 </div>
         </div>
 
+        ${isOwner ? `
         <h2 class="section-title" style="margin-top: 3rem;">Mission Log (Live Trace)</h2>
         <div class="card" style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; font-family: 'Courier New', monospace; font-size: 0.8rem;">
             ${stats.systemLogs.length > 0 ? stats.systemLogs.map(log => `
@@ -279,15 +286,23 @@ function renderAdminDashboard(stats) {
                 <div style="color: var(--text-muted);">Initializing logs...</div>
             `}
         </div>
+        ` : ''}
 
         <footer style="margin-top: 4rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">
-    &middot; Breathe Collection Admin &middot; Confidential &middot; <a href="/mission-control-x89/debug?auth=breathe88" style="color: inherit; text-decoration: underline;">Debug Source</a> &middot;
+    &middot; Breathe Collection Admin &middot; Confidential &middot; <a href="#" onclick="logout()" style="color: var(--accent); text-decoration: underline;">Logout</a> &middot;
 </footer>
     </div>
 
     <script>
+        async function logout() {
+            if (!confirm('Logout?')) return;
+            const res = await fetch('/mission-control-x89/logout', { method: 'POST' });
+            if (res.ok) window.location.href = '/mission-control-x89/login';
+        }
+
         const btn = document.getElementById('triggerSweep');
         const repairBtn = document.getElementById('repair-btn');
+
 
         if (repairBtn) {
             repairBtn.addEventListener('click', async () => {
@@ -600,4 +615,106 @@ function renderAdminDashboard(stats) {
     `;
 }
 
-module.exports = { renderAdminDashboard };
+function renderLogin(error = null) {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Login | Mission Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --primary: #2C7873;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 3rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        header { text-align: center; margin-bottom: 2.5rem; }
+        h1 { font-size: 1.8rem; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: var(--primary); }
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-top: 1rem;
+        }
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+        .error { color: #ff4757; font-size: 0.8rem; text-align: center; margin-bottom: 1.5rem; background: rgba(255, 71, 87, 0.1); padding: 0.8rem; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <header>
+            <div class="subtitle">Breathe Collection</div>
+            <h1>Mission Control</h1>
+        </header>
+
+        ${error ? `<div class="error">${error}</div>` : ''}
+
+        <form action="/mission-control-x89/login" method="POST">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" required placeholder="name@domain.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit">Access Pipeline</button>
+        </form>
+    </div>
+</body>
+</html>
+    `;
+}
+
+module.exports = { renderAdminDashboard, renderLogin };
+

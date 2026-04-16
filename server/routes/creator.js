@@ -16,7 +16,14 @@ router.post('/', async (req, res) => {
   try {
     await pool.query(
       `INSERT INTO contacts (name, email, handle, platform, followers, niche, reason)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (handle, platform) DO UPDATE SET
+         name = EXCLUDED.name,
+         email = EXCLUDED.email,
+         followers = EXCLUDED.followers,
+         niche = EXCLUDED.niche,
+         reason = contacts.reason || ' | claimed via apply'
+       `,
       [name, email, handle, platform, followers, niche, reason]
     )
   } catch (err) {

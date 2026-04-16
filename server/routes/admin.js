@@ -1,33 +1,63 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db/index');
-const { renderAdminDashboard } = require('../templates/admin');
+const { renderAdminDashboard, renderLogin } = require('../templates/admin');
 const { scoutAgentRun } = require('../jobs/scout');
+const { comparePassword, generateToken, verifyToken } = require('../db/auth');
+const { checkAuth, ownerOnly } = require('../middleware/auth');
 
-// Hardened Access Key Middleware
-const checkAuth = (req, res, next) => {
-    const secret = process.env.ADMIN_SECRET_KEY || 'breathe88';
-    
-    // Check cookie first, or query/body for initial login
-    const providedKey = req.cookies.admin_auth || req.query.auth || req.body.auth;
-    
-    if (providedKey === secret) {
-        // Set cookie if auth was provided via query/body
-        if (!req.cookies.admin_auth && providedKey) {
-            res.cookie('admin_auth', secret, { 
-                httpOnly: true, 
+
+
+// Routes below this point are unprotected or handle their own auth
+
+
+
+router.get('/login', (req, res) => {
+    // If already logged in, go to dashboard
+    if (req.cookies && req.cookies.admin_jwt && verifyToken(req.cookies.admin_jwt)) {
+        return res.redirect('/mission-control-x89');
+    }
+    res.send(renderLogin());
+});
+
+router.post('/login', async (req, res) => {
+    try {
+        if (!req.body) {
+            throw new Error('No body received in POST /login. Is urlencoded middleware configured?');
+        }
+        
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.send(renderLogin('Email and password are required.'));
+        }
+
+        const result = await pool.query('SELECT * FROM admin_users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        if (user && await comparePassword(password, user.password_hash)) {
+            const token = generateToken(user);
+            res.cookie('admin_jwt', token, {
+                httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
             });
+            res.redirect('/mission-control-x89');
+        } else {
+            res.send(renderLogin('Invalid email or password'));
         }
-        next();
-    } else {
-        // Return 404 to hide the existence of the admin page from scanners
-        res.status(404).send('Not Found');
+    } catch (err) {
+        console.error('[CRITICAL] Login Route Error:', err);
+        res.status(500).send(renderLogin(`System error: ${err.message}. Please contact the owner.`));
     }
-};
+});
 
-router.post('/repair', checkAuth, async (req, res) => {
+router.post('/logout', (req, res) => {
+    res.clearCookie('admin_jwt');
+    res.json({ success: true });
+});
+
+router.post('/repair', checkAuth, ownerOnly, async (req, res) => {
     try {
         console.log('Manual DB Repair Triggered...');
         
@@ -56,7 +86,7 @@ router.post('/repair', checkAuth, async (req, res) => {
     }
 });
 
-router.post('/trigger', checkAuth, async (req, res) => {
+router.post('/trigger', checkAuth, ownerOnly, async (req, res) => {
     try {
         console.log('Manual Scout Trigger received. Launching background process...');
         
@@ -143,7 +173,7 @@ router.get('/', checkAuth, async (req, res) => {
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
-        const html = renderAdminDashboard(stats);
+        const html = renderAdminDashboard(stats, req.user.role);
         res.send(html);
     } catch (err) {
         console.error('Admin Dashboard Error:', err);
@@ -151,7 +181,7 @@ router.get('/', checkAuth, async (req, res) => {
     }
 });
 
-router.post('/test-seed', checkAuth, async (req, res) => {
+router.post('/test-seed', checkAuth, ownerOnly, async (req, res) => {
     try {
         console.log('Test Seed Triggered...');
         const testHandle = `scout_test_${Math.floor(Math.random() * 1000)}`;
