@@ -458,12 +458,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 
         function showCode(code) {
             const container = document.getElementById('promoContainer');
-            container.innerHTML = `
+            container.innerHTML = \`
                 <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent);">
-                    <code style="color: var(--accent); font-weight: 600; font-size: 1rem;">${code}</code>
-                    <button onclick="copyToClipboard('${code}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Copy</button>
+                    <code style="color: var(--accent); font-weight: 600; font-size: 1rem;">\${code}</code>
+                    <button onclick="copyToClipboard('\${code}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Copy</button>
                 </div>
-            `;
+            \`;
         }
 
         function copyToClipboard(text) {
