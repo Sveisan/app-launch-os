@@ -79,9 +79,14 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="subtitle">Breathe Collection Core</div>
-            <h1>Control Panel</h1>
+        <header style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div class="subtitle">Breathe Collection Core</div>
+                <h1>Control Panel</h1>
+            </div>
+            <a href="/mission-control-x89/manual" style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.3); padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+                Guide & Safety 📖
+            </a>
         </header>
 
         ${isOwner && !stats.isDbReady ? `
@@ -272,6 +277,17 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         <textarea id="modalDraft" style="width: 100%; height: 200px; background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 1rem; line-height: 1.6; padding: 1.5rem; resize: vertical; outline: none;" readonly></textarea>
                     </div>
                 </div>
+
+                <div id="promoSection" style="margin-top: 2rem; background: rgba(224, 123, 57, 0.05); border: 1px dashed rgba(224, 123, 57, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h4 style="font-weight: 500; color: var(--accent); font-size: 0.9rem; margin-bottom: 0.2rem;">Promo Code for Creator</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Generate a unique onboarding code for this lead.</p>
+                    </div>
+                    <div id="promoContainer">
+                        <button id="claimCodeBtn" onclick="claimCode()" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Claim Code</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         ${isOwner ? `
@@ -362,6 +378,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         
         function openModal(leadStr) {
             const lead = JSON.parse(decodeURIComponent(leadStr));
+            currentHandle = lead.handle;
             document.getElementById('modalScore').textContent = lead.fit_score;
             document.getElementById('modalHandle').textContent = '@' + lead.handle;
             
@@ -409,6 +426,49 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             const originalText = btn.textContent;
             btn.textContent = 'Copied!';
             setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        let currentHandle = '';
+
+        async function claimCode() {
+            const btn = document.getElementById('claimCodeBtn');
+            btn.disabled = true;
+            btn.textContent = 'Claiming...';
+            
+            try {
+                const res = await fetch('/mission-control-x89/claim-code?auth=breathe88', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ handle: currentHandle })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showCode(data.code);
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = 'Claim Code';
+                }
+            } catch (err) {
+                alert('Connection failed');
+                btn.disabled = false;
+                btn.textContent = 'Claim Code';
+            }
+        }
+
+        function showCode(code) {
+            const container = document.getElementById('promoContainer');
+            container.innerHTML = `
+                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent);">
+                    <code style="color: var(--accent); font-weight: 600; font-size: 1rem;">${code}</code>
+                    <button onclick="copyToClipboard('${code}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Copy</button>
+                </div>
+            `;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Code copied: ' + text);
         }
         
         modal.addEventListener('click', (e) => {
@@ -716,5 +776,125 @@ function renderLogin(error = null) {
     `;
 }
 
-module.exports = { renderAdminDashboard, renderLogin };
+function renderManual() {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Guide | Breathe Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --primary: #2C7873;
+            --secondary: #52AB98;
+            --accent: #E07B39;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.8;
+            padding: 4rem 2rem;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { margin-bottom: 4rem; }
+        .subtitle { color: var(--secondary); text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.8rem; margin-bottom: 1rem; }
+        h1 { font-size: 3rem; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 2rem; }
+        
+        .nav-back { display: inline-block; margin-bottom: 2rem; color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .nav-back:hover { color: white; }
+
+        section { margin-bottom: 4rem; }
+        h2 { font-size: 1.5rem; font-weight: 400; color: var(--secondary); margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem; }
+        p { margin-bottom: 1.5rem; font-weight: 300; color: rgba(255,255,255,0.8); }
+        
+        .box { background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 2rem; }
+        .box-title { color: var(--accent); font-weight: 500; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        
+        ul { list-style: none; margin-bottom: 1.5rem; }
+        li { position: relative; padding-left: 1.5rem; margin-bottom: 0.8rem; color: var(--text-muted); font-size: 0.95rem; }
+        li::before { content: "→"; position: absolute; left: 0; color: var(--secondary); }
+
+        .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-right: 0.5rem; }
+        .tag-do { background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid rgba(46, 213, 115, 0.3); }
+        .tag-dont { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/mission-control-x89" class="nav-back">← Back to Dashboard</a>
+        <header>
+            <div class="subtitle">Breathe Collection</div>
+            <h1>The Freelancer’s Guide to Influencer Selection</h1>
+            <p style="font-size: 1.2rem; color: var(--text-muted);">This manual defines our brand identity ("Quiet Luxury") and the strict selection criteria for the influencer pipeline.</p>
+        </header>
+
+        <section>
+            <h2>1. Our Visual Aesthetic</h2>
+            <div class="box">
+                <div class="box-title">"Quiet Luxury" defined</div>
+                <p>We do not use loud, cluttered, or aggressive marketing. Everything must feel expensive, minimalist, and emotionally grounded.</p>
+                <ul>
+                    <li><span class="tag tag-do">DO</span> Cinematic lighting and high production value.</li>
+                    <li><span class="tag tag-do">DO</span> Natural, neutral color palettes (G10 grading).</li>
+                    <li><span class="tag tag-dont">DON'T</span> Neon text, fast-cut memes, or "hype" energy.</li>
+                    <li><span class="tag tag-dont">DON'T</span> Cluttered or messy backgrounds (bedrooms, gyms with generic gear).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>2. Niche Alignment</h2>
+            <p>We are targeting high-performers, not just general fitness enthusiasts. Look for creators in these specific circles:</p>
+            <ul>
+                <li><strong>Biohackers</strong>: People measuring HRV, sleep cycles, and focus.</li>
+                <li><strong>Performance Yoga</strong>: Advanced practitioners focused on the science of movement.</li>
+                <li><strong>Mental Optimization</strong>: Founders, high-level executives, and "deep work" advocates.</li>
+                <li><strong>Protocol-driven</strong>: People who follow Huberman, Wim Hof, or Peter Attia methodologies.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>3. Safety & Avoid List</h2>
+            <div class="box" style="border-color: var(--accent);">
+                <div class="box-title" style="color: var(--accent);">⚠️ STRICT RULES</div>
+                <p>To protect our brand authority, we never contact the following profiles. The automated Scout blocks these by default, but you must ignore them if they bypass the filter:</p>
+                <ul>
+                    <li><strong>Authorities</strong>: Never contact Andrew Huberman, Wim Hof, or their official staff accounts.</li>
+                    <li><strong>Direct Competitors</strong>: Do not contact creators heavily sponsored by <strong>Calm</strong> or <strong>Headspace</strong>.</li>
+                    <li><strong>Medical Claims</strong>: Avoid creators making unauthorized medical claims about "curing" diseases.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>4. The Pipeline Stages</h2>
+            <ul>
+                <li><strong>Discovery</strong>: The raw list found by AI. Review these first.</li>
+                <li><strong>Researching</strong>: Move here if you are actively vetting their specific content.</li>
+                <li><strong>Approved</strong>: The creator fits our "Quiet Luxury" aesthetic perfectly.</li>
+                <li><strong>Outreach Sent</strong>: You have sent the initial DM/Email using the provided draft.</li>
+                <li><strong>Archive (Rejected)</strong>: Move here if they are a competitor or low quality.</li>
+            </ul>
+        </section>
+
+        <footer style="margin-top: 6rem; padding-top: 2rem; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.8rem; text-align: center;">
+            &copy; 2026 Breathe Collection &middot; Internal Documents Only
+        </footer>
+    </div>
+</body>
+</html>
+    `;
+}
+
+module.exports = { renderAdminDashboard, renderLogin, renderManual };
 

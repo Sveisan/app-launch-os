@@ -136,6 +136,31 @@ async function migrate() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    -- Blocklist for Scout Agent
+    -- Handles or keywords to NEVER contact (competitors, authorities)
+    CREATE TABLE IF NOT EXISTS scout_blocklist (
+      id SERIAL PRIMARY KEY,
+      target TEXT UNIQUE NOT NULL, -- handle or string
+      type TEXT DEFAULT 'handle', -- 'handle' or 'keyword'
+      reason TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Seed Blocklist with required Huberman and Wim Hof official handles
+    INSERT INTO scout_blocklist (target, type, reason)
+    VALUES 
+      ('hubermanlab', 'handle', 'Authority/Official Account'),
+      ('wimhof', 'handle', 'Authority/Official Account'),
+      ('dr_andrew_huberman', 'handle', 'Authority/Official Account'),
+      ('iceman_hof', 'handle', 'Authority/Official Account'),
+      ('headspace', 'handle', 'Direct Competitor'),
+      ('calm', 'handle', 'Direct Competitor')
+    ON CONFLICT (target) DO NOTHING;
+
+    -- Update offer_codes to track assignments
+    ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS assigned_to_handle TEXT;
+    ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
+
     -- Add unique constraint for Scout Agent storage
     DO $$ 
     BEGIN 

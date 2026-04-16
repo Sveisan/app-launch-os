@@ -111,6 +111,13 @@ class ScoutAgent {
         // 3. Sherlock Filter (Memory-Aware Scoring)
         let scoreData;
         try {
+          // Safety Check: Instantly skip if handle is in blocklist
+          const blockCheck = await pool.query('SELECT 1 FROM scout_blocklist WHERE target = $1', [lead.handle.replace('@', '')]);
+          if (blockCheck.rows.length > 0) {
+            await this.sysLog(`SAFETY: Skipping blocked handle @${lead.handle}.`);
+            continue;
+          }
+
           scoreData = await this.calculateSherlockScore(lead, memory);
           await this.sysLog(`Sherlock Score for @${lead.handle}: ${scoreData.finalScore}`);
           if (scoreData.finalScore >= 0.7) {

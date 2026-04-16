@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db/index');
-const { renderAdminDashboard, renderLogin } = require('../templates/admin');
+const { renderAdminDashboard, renderLogin, renderManual } = require('../templates/admin');
 const { scoutAgentRun } = require('../jobs/scout');
 const { comparePassword, generateToken, verifyToken } = require('../db/auth');
 const { checkAuth, ownerOnly } = require('../middleware/auth');
@@ -18,6 +18,10 @@ router.get('/login', (req, res) => {
         return res.redirect('/mission-control-x89');
     }
     res.send(renderLogin());
+});
+
+router.get('/manual', checkAuth, (req, res) => {
+    res.send(renderManual());
 });
 
 router.post('/login', async (req, res) => {
@@ -230,6 +234,41 @@ router.post('/update-status', checkAuth, async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Update Status Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/claim-code', checkAuth, async (req, res) => {
+    try {
+        const { handle } = req.body;
+        if (!handle) return res.status(400).json({ success: false, error: 'Handle is required' });
+
+        // 1. Check if handle already has a code
+        const existing = await pool.query('SELECT code FROM offer_codes WHERE assigned_to_handle = $1', [handle]);
+        if (existing.rows.length > 0) {
+            return res.json({ success: true, code: existing.rows[0].code, alreadyAssigned: true });
+        }
+
+        // 2. Find and claim a new code
+        const result = await pool.query(`
+            UPDATE offer_codes 
+            SET assigned_to_handle = $1, assigned_at = NOW() 
+            WHERE id = (
+                SELECT id FROM offer_codes 
+                WHERE is_used = FALSE AND assigned_to_handle IS NULL 
+                ORDER BY created_at ASC 
+                LIMIT 1
+            ) 
+            RETURNING code
+        `, [handle]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'No available promo codes found' });
+        }
+
+        res.json({ success: true, code: result.rows[0].code });
+    } catch (err) {
+        console.error('Claim Code Error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
