@@ -134,16 +134,15 @@ router.get('/', checkAuth, async (req, res) => {
         // 5. Offer Codes Left
         const codesRes = await pool.query("SELECT COUNT(*) FROM offer_codes WHERE is_used = FALSE");
         
-        // 6. Leads grouped by pipeline_status
+        // 6. Leads grouped by pipeline_status (Limited per column for performance)
         const leadsRes = await pool.query(`
             SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption
             FROM contacts 
             WHERE scout_logged = TRUE 
-            ORDER BY created_at DESC 
-            LIMIT 1000
+            ORDER BY fit_score DESC NULLS LAST, created_at DESC
         `);
         
-        // Group leads
+        // Group leads with a limit per category
         const pipelineStatus = {
             discovery: [],
             researching: [],
@@ -152,9 +151,10 @@ router.get('/', checkAuth, async (req, res) => {
             rejected: []
         };
         
+        const LIMIT_PER_COLUMN = 40;
         leadsRes.rows.forEach(lead => {
             const status = lead.pipeline_status || 'discovery';
-            if (pipelineStatus[status]) {
+            if (pipelineStatus[status] && pipelineStatus[status].length < LIMIT_PER_COLUMN) {
                 pipelineStatus[status].push(lead);
             }
         });

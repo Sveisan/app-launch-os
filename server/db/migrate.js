@@ -154,7 +154,8 @@ async function migrate() {
       ('dr_andrew_huberman', 'handle', 'Authority/Official Account'),
       ('iceman_hof', 'handle', 'Authority/Official Account'),
       ('headspace', 'handle', 'Direct Competitor'),
-      ('calm', 'handle', 'Direct Competitor')
+      ('calm', 'handle', 'Direct Competitor'),
+      ('coherence_breath', 'handle', 'Direct Competitor')
     ON CONFLICT (target) DO NOTHING;
 
     -- Update offer_codes to track assignments

@@ -189,14 +189,14 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 const leads = stats.pipelineStatus[status] || [];
                 
                 return `
-                <div class="kanban-column" ondrop="drop(event, '${status}')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" style="flex: 0 0 320px; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 800px; transition: all 0.2s;">
+                <div class="kanban-column" id="col-${status}" ondrop="drop(event, '${status}')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" style="flex: 0 0 320px; min-height: 60vh; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 85vh; transition: all 0.2s;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h4 style="font-weight: 500; font-size: 1rem; text-transform: capitalize;">${title}</h4>
                         <span class="col-count" style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">${leads.length}</span>
                     </div>
                     
                     <div class="kanban-cards" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;" data-status="${status}">
-                        ${leads.length === 0 ? `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; pointer-events: none;">Empty</div>` : leads.map(lead => {
+                        ${leads.length === 0 ? `<div class="empty-placeholder" style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; pointer-events: none;">Empty</div>` : leads.map(lead => {
                             
                             // Determine prev and next columns
                             const cols = ['discovery', 'researching', 'approved', 'outreach_sent'];
@@ -214,17 +214,34 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 
                             return `
                             <!-- Card -->
-                            <div class="kanban-card" draggable="true" ondragstart="drag(event, ${lead.id})" data-id="${lead.id}" data-platform="${esc(lead.platform)}" data-lang="${lang}" data-lead="${encodeURIComponent(JSON.stringify(lead))}" onclick="openModal(this.getAttribute('data-lead'))" style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                                    <span class="score score-high">${esc(lead.fit_score)}</span>
-                                    <div class="kanban-actions" style="display: flex; gap: 0.5rem; margin-top: -5px; padding-bottom: 5px;">
-                                        ${status !== 'rejected' ? `<button onclick="updateStatus(${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.5); cursor:pointer; font-size: 1.2rem; line-height: 1;">✕</button>` : ''}
-                                        ${prevStatus ? `<button onclick="updateStatus(${lead.id}, '${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: var(--secondary); cursor:pointer; font-size: 1.2rem; line-height: 1;">←</button>` : ''}
-                                        ${nextStatus ? `<button onclick="updateStatus(${lead.id}, '${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: var(--secondary); cursor:pointer; font-size: 1.2rem; line-height: 1;">→</button>` : ''}
+                            <div id="card-${lead.id}" class="kanban-card" 
+                                 onpointerdown="window.cardStartX = event.clientX; window.cardStartY = event.clientY"
+                                 onpointerup="if(Math.abs(event.clientX - (window.cardStartX||0)) < 5 && Math.abs(event.clientY - (window.cardStartY||0)) < 5) openModal(this.getAttribute('data-lead'))"
+                                 data-id="${lead.id}" data-platform="${esc(lead.platform)}" data-lang="${lang}" data-lead="${encodeURIComponent(JSON.stringify(lead))}" 
+                                 style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; -webkit-tap-highlight-color: transparent;">
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                        <div draggable="true" ondragstart="drag(event, ${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
+                                        <span class="score score-high" style="pointer-events: none;">${esc(lead.fit_score)}</span>
+                                    </div>
+                                    <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
+                                        ${status !== 'rejected' ? `<button draggable="false" onclick="event.stopPropagation(); updateStatus(${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>` : ''}
+                                        ${prevStatus ? `<button draggable="false" onclick="event.stopPropagation(); updateStatus(${lead.id}, '${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">←</button>` : ''}
+                                        ${nextStatus ? `<button draggable="false" onclick="event.stopPropagation(); updateStatus(${lead.id}, '${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">→</button>` : ''}
                                     </div>
                                 </div>
-                                <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white;">@${esc(lead.handle)}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.2rem;">${esc(lead.platform)} &middot; ${esc(lead.niche)}</div>
+                                
+                                <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white; pointer-events: none;">@${esc(lead.handle)}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.2rem; pointer-events: none;">${esc(lead.platform)} &middot; ${esc(lead.niche)}</div>
+                                
+                                <div style="padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: flex-end;">
+                                    <button draggable="false" onclick="event.stopPropagation(); openModal(this.closest('.kanban-card').getAttribute('data-lead'))" 
+                                            class="view-btn"
+                                            style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.2); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; pointer-events: auto;">
+                                        View Dossier →
+                                    </button>
+                                </div>
                             </div>
                             `
                         }).join('')}
@@ -342,41 +359,45 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             });
         }
 
-        btn.addEventListener('click', async () => {
-            btn.disabled = true;
-            btn.textContent = 'Scouting Fields...';
-            btn.style.opacity = '0.5';
-            
-            try {
-                const res = await fetch('/mission-control-x89/trigger?auth=breathe88', { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    const status = document.createElement('div');
-                    status.style.cssText = 'color: var(--secondary); font-size: 0.8rem; margin-top: 1rem; text-align: center; animation: fadeIn 0.5s ease;';
-                    status.innerHTML = '✔ Scout is in the field. Findings will appear in the Mission Log below shortly.';
-                    btn.parentNode.parentNode.appendChild(status);
-                    setTimeout(() => status.remove(), 5000);
-                    btn.disabled = false;
-                    btn.textContent = 'Trigger Sweep';
-                    btn.style.opacity = '1';
-                } else {
-                    alert('Scout reported an error: ' + (data.error || 'Unknown error'));
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                btn.disabled = true;
+                btn.textContent = 'Scouting Fields...';
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const res = await fetch('/mission-control-x89/trigger?auth=breathe88', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        const status = document.createElement('div');
+                        status.style.cssText = 'color: var(--secondary); font-size: 0.8rem; margin-top: 1rem; text-align: center; animation: fadeIn 0.5s ease;';
+                        status.innerHTML = '✔ Scout is in the field. Findings will appear in the Mission Log below shortly.';
+                        btn.parentNode.parentNode.appendChild(status);
+                        setTimeout(() => status.remove(), 5000);
+                        btn.disabled = false;
+                        btn.textContent = 'Trigger Sweep';
+                        btn.style.opacity = '1';
+                    } else {
+                        alert('Scout reported an error: ' + (data.error || 'Unknown error'));
+                        btn.disabled = false;
+                        btn.textContent = 'Trigger Sweep';
+                        btn.style.opacity = '1';
+                    }
+                } catch (err) {
+                    alert('Connection failed. Is the server running?');
                     btn.disabled = false;
                     btn.textContent = 'Trigger Sweep';
                     btn.style.opacity = '1';
                 }
-            } catch (err) {
-                alert('Connection failed. Is the server running?');
-                btn.disabled = false;
-                btn.textContent = 'Trigger Sweep';
-                btn.style.opacity = '1';
-            }
-        });
+            });
+        }
 
         // Kanban Interactive Functions
         const modal = document.getElementById('leadModal');
         
         function openModal(leadStr) {
+            const modal = document.getElementById('leadModal');
+            if (!modal) return;
             const lead = JSON.parse(decodeURIComponent(leadStr));
             currentHandle = lead.handle;
             document.getElementById('modalScore').textContent = lead.fit_score;
@@ -393,7 +414,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             document.getElementById('modalLink').href = profileUrl;
             
             document.getElementById('modalFollowers').textContent = (lead.followers_count || lead.followers || 0).toLocaleString();
-            document.getElementById('modalER').textContent = (lead.engagement_rate || 0).toFixed(1);
+            document.getElementById('modalER').textContent = Number(lead.engagement_rate || 0).toFixed(1);
             document.getElementById('modalNiche').textContent = '#' + (lead.niche || 'unknown');
             document.getElementById('modalPlatform').textContent = lead.platform;
             
@@ -410,7 +431,8 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             
             document.getElementById('modalDraft').value = lead.outreach_draft || 'No draft generated.';
             document.getElementById('modalFeedback').textContent = lead.reason || lead.fit_feedback || 'No specific feedback provided by Scout.';
-            modal.style.display = 'flex';
+            const modal = document.getElementById('leadModal');
+            if (modal) modal.style.display = 'flex';
         }
         
         function closeModal() {
@@ -458,12 +480,10 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 
         function showCode(code) {
             const container = document.getElementById('promoContainer');
-            container.innerHTML = \`
-                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent);">
-                    <code style="color: var(--accent); font-weight: 600; font-size: 1rem;">\${code}</code>
-                    <button onclick="copyToClipboard('\${code}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Copy</button>
-                </div>
-            \`;
+            container.innerHTML = '<div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent);">' +
+                '<code style="color: var(--accent); font-weight: 600; font-size: 1rem;">' + code + '</code>' +
+                '<button onclick="copyToClipboard(\\'' + code + '\\')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Copy</button>' +
+                '</div>';
         }
 
         function copyToClipboard(text) {
@@ -477,6 +497,48 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         
         async function updateStatus(id, newStatus, event) {
             if (event) event.stopPropagation();
+            if (!newStatus) return;
+            
+            const card = document.getElementById('card-' + id);
+            if (!card) return;
+
+            // Optimistic move
+            try {
+                const targetCol = document.querySelector('.kanban-cards[data-status="' + newStatus + '"]');
+                if (targetCol && card.parentElement !== targetCol) {
+                    const sourceCards = card.parentElement;
+                    const sourceContainer = sourceCards.closest('.kanban-column');
+                    const targetContainer = targetCol.closest('.kanban-column');
+                    
+                    // Update counts if moving between columns
+                    if (sourceContainer && targetContainer && sourceContainer !== targetContainer) {
+                        const sourceCount = sourceContainer.querySelector('.col-count');
+                        const targetCount = targetContainer.querySelector('.col-count');
+                        if (sourceCount) sourceCount.textContent = Math.max(0, parseInt(sourceCount.textContent) - 1);
+                        if (targetCount) targetCount.textContent = parseInt(targetCount.textContent) + 1;
+                        
+                        // Handle placeholders
+                        const emptyInTarget = targetCol.querySelector('.empty-placeholder');
+                        if (emptyInTarget) emptyInTarget.remove();
+                    }
+
+                    targetCol.appendChild(card);
+                    
+                    // Add placeholder back to source if empty
+                    if (sourceCards && sourceCards.querySelectorAll('.kanban-card').length === 0) {
+                         const emptyDiv = document.createElement('div');
+                         emptyDiv.className = 'empty-placeholder';
+                         emptyDiv.style.cssText = 'text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; pointer-events: none;';
+                         emptyDiv.textContent = 'Empty';
+                         sourceCards.appendChild(emptyDiv);
+                    }
+                    
+                    card.style.opacity = '0.5';
+                }
+            } catch (err) {
+                console.error('Seamless update failed:', err);
+            }
+
             try {
                 const res = await fetch('/mission-control-x89/update-status?auth=breathe88', {
                     method: 'POST',
@@ -485,16 +547,19 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    location.reload(); 
+                    card.style.opacity = '1';
                 } else {
-                    alert('Error updating status: ' + data.error);
+                    console.error('Server side update failed:', data.error);
+                    location.reload(); 
                 }
             } catch(e) {
-                alert('Update failed.');
+                console.error('Network failure:', e);
+                location.reload();
             }
         }
         
         // --- Drag and Drop Logic --- //
+        window.isDragging = false;
         function allowDrop(ev) {
             ev.preventDefault();
         }
@@ -510,7 +575,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 
         function drag(ev, id) {
             ev.dataTransfer.setData("text/plain", id);
-            // Optional: Set a drag image or opacity
             ev.target.style.opacity = '0.5';
         }
 
@@ -521,7 +585,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             if(id) {
                await updateStatus(id, newStatus, null);
             }
-            // Reset opacity via reload
         }
         document.addEventListener('dragend', (ev) => {
              if (ev.target.classList && ev.target.classList.contains('kanban-card')) {
@@ -530,29 +593,31 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         });
 
         // Test Mission
-        document.getElementById('testMission').addEventListener('click', async () => {
-            const btn = document.getElementById('testMission');
-            btn.textContent = 'Generating...';
-            btn.style.opacity = '0.5';
-            
-            try {
-                const res = await fetch('/mission-control-x89/test-seed?auth=breathe88', {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Mock Lead Generated! Refreshing dashboard...');
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+        const testBtn = document.getElementById('testMission');
+        if (testBtn) {
+            testBtn.addEventListener('click', async () => {
+                testBtn.textContent = 'Generating...';
+                testBtn.style.opacity = '0.5';
+                
+                try {
+                    const res = await fetch('/mission-control-x89/test-seed?auth=breathe88', {
+                        method: 'POST'
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('Mock Lead Generated! Refreshing dashboard...');
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                } catch (err) {
+                    alert('Test Failed: ' + err.message);
+                } finally {
+                    testBtn.textContent = 'Run Test Mission';
+                    testBtn.style.opacity = '1';
                 }
-            } catch (err) {
-                alert('Test Failed: ' + err.message);
-            } finally {
-                btn.textContent = 'Run Test Mission';
-                btn.style.opacity = '1';
-            }
-        });
+            });
+        }
 
         // Video Studio Logic
         const videoBtn = document.getElementById('generateVideosBtn');

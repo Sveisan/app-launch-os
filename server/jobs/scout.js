@@ -315,7 +315,7 @@ Based on these decisions, describe the "Ideal Lead Persona" for this brand in 2 
 Focus on aesthetic, content style, and niche patterns.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 150,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -389,7 +389,7 @@ Prioritize creators who mention pain points (stress, tired, focus, panic) even i
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 10,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -436,7 +436,7 @@ Keep the draft visionary, direct, and slightly exclusive.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -510,7 +510,7 @@ Based on their bios and niche, suggest 3 highly specific NEW hashtags (without t
 Format: Return only the keywords separated by commas.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 50,
         messages: [{ role: 'user', content: prompt }]
       });
