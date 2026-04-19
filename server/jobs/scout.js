@@ -157,6 +157,23 @@ class ScoutAgent {
         await this.sysLog(`Keyword suggestion failed: ${err.message}`);
       }
       
+      // 7. Auto-promote suggested keywords
+      try {
+        const promoted = await pool.query(`
+          INSERT INTO scout_keywords (keyword, language, is_hashtag)
+          SELECT keyword, 'en', TRUE
+          FROM scout_keyword_suggestions
+          WHERE suggestion_count >= 3
+          ON CONFLICT (keyword) DO NOTHING
+          RETURNING keyword
+        `);
+        if (promoted.rows.length > 0) {
+          await this.sysLog(`Auto-promoted keywords: ${promoted.rows.map(r => r.keyword).join(', ')}`);
+        }
+      } catch (err) {
+        await this.sysLog(`Auto-promotion failed: ${err.message}`);
+      }
+
       await this.sysLog('--- Scout Agent returning to Sleep Mode ---');
     } catch (err) {
       await this.sysLog(`GLOBAL EXECUTION ERROR: ${err.message}`);
@@ -196,13 +213,17 @@ class ScoutAgent {
    */
   async fetchSocialLeads() {
     const leads = [];
-    const selectedHashtags = [];
-    
-    // Pick 2 unique random hashtags
-    while(selectedHashtags.length < 2) {
-      const h = this.hashtags[Math.floor(Math.random() * this.hashtags.length)];
-      if (!selectedHashtags.includes(h)) selectedHashtags.push(h);
-    }
+
+    // Weighted round-robin: prioritise high-yield, least-recently-used keywords
+    const kwRes = await pool.query(`
+      SELECT keyword FROM scout_keywords
+      WHERE is_hashtag = TRUE
+      ORDER BY
+        yield_score DESC,           -- higher yield = picked more often
+        last_used_at ASC NULLS FIRST -- least recently used first
+      LIMIT 2
+    `);
+    const selectedHashtags = kwRes.rows.map(r => r.keyword);
 
     for (const hashtag of selectedHashtags) {
         console.log(`Scout: Sweeping social fields for #${hashtag}...`);
@@ -270,6 +291,15 @@ class ScoutAgent {
         } catch (err) {
           console.error(`Scout Scraper Error for #${hashtag}:`, err.message);
         }
+
+        // Count quality leads found for this hashtag to update yield
+        const yieldCount = leads.filter(l => l.niche === hashtag && (l.score || 0) >= 0.7).length;
+        const newYield = Math.min(0.5 + (yieldCount * 0.1), 1.0); // bump by 0.1 per quality lead, cap at 1.0
+        await pool.query(`
+          UPDATE scout_keywords
+          SET yield_score = (yield_score * 0.7 + $1 * 0.3), last_used_at = NOW()
+          WHERE keyword = $2
+        `, [newYield, hashtag]);
     }
 
     return leads;
@@ -312,10 +342,13 @@ APPROVED: ${approved.map(p => `@${p.handle} (${p.niche}): ${p.bio}`).join(' | ')
 REJECTED: ${rejected.map(p => `@${p.handle} (${p.niche}): ${p.bio}`).join(' | ')}
 
 Based on these decisions, describe the "Ideal Lead Persona" for this brand in 2 sentences. 
-Focus on aesthetic, content style, and niche patterns.`;
+Focus on aesthetic, content style, and niche patterns.
+Additionally: Ideal creators are evidence-led, not inspiration-led. They cite sources (Huberman, Wim Hof, sports science). 
+They do not post challenge content, streak countdowns, or trend reactions. 
+Penalise creators whose style resembles a wellness lifestyle brand. Reward creators whose style resembles a performance coach.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-6',
         max_tokens: 150,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -338,13 +371,20 @@ Focus on aesthetic, content style, and niche patterns.`;
    * Sherlock Logic: Finding signal in noise with behavioral memory
    */
   async calculateSherlockScore(lead, memory) {
-    // Quantitative Baseline - Proof of Reach (1500+ followers)
-    const followerScore = (lead.followers >= 1500) ? 1.0 : 0.0;
+    // Quantitative Baseline - Proof of Reach
+    let followerScore;
+    if (lead.platform === 'Instagram') {
+      followerScore = 0.5; // Neutral — IG follower count unavailable from hashtag scraper
+    } else {
+      followerScore = (lead.followers >= 1500) ? 1.0 : 0.0;
+    }
     
     // Engagement Quality (Min 1.5% for "proven" interaction)
     const er = lead.engagement_rate || 0;
     const erScore = Math.min(er / 6.0, 1.0);
-    const erPenalty = (er < 1.5) ? -0.5 : 0;
+    const erPenalty = (lead.platform === 'Instagram')
+      ? (er < 2.0 ? -0.5 : 0)   // IG: higher bar since no follower validation
+      : (er < 1.5 ? -0.5 : 0);
     
     // Multi-dimensional Search: Bio + Post Captions
     const fullContext = `${lead.bio} ${lead.post_caption || ""}`.toLowerCase();
@@ -373,15 +413,30 @@ ${memoryContext}
 DEEP INSIGHT (Your established preference):
 ${this.deepMemoryPersona}
 
-TASK: Return a single number (e.g. 0.85). 
-- 1.0 = Perfect Breathwork/Biohacking match with premium, high-production aesthetics.
-- 0.8-0.9 = High-quality Wellness/Yoga creator with "Proven" content (consistent posting, high engagement).
-- 0.7 = Creator with 1500+ followers discussing SYMPTOMS (Anxiety, Stress, Burnout, Sleep issues).
-- < 0.5 = Generic or low-quality content, regardless of follower count.
+TASK: Return a single number (0.0 to 1.0). 
+
+REWARD (score higher):
+- Mentions nervous system, Huberman, Wim Hof, cold exposure, CO2 tolerance, or breathwork science.
+- Minimalist content style — no on-screen text spam, no trend chasing.
+- Performance framing: athletes, military, biohackers, executives.
+- Evidence-led content — creator cites sources, not just shares feelings.
+- Audience follows for information, not entertainment.
+
+PENALISE (score lower):
+- Gamification aesthetics: challenge posts, streaks, "day X of Y" countdowns.
+- TikTok-style reaction or trend content.
+- Generic "self-care" or "wellness journey" framing.
+- Heavy filter usage, lifestyle influencer aesthetic unrelated to physiology.
+- Content style resembling Breathwrk, Calm, or Headspace — their audience has already decided gamified apps aren't for them.
+
+SCORING GUIDE:
+- 1.0 = Evidence-led breathwork/biohacking creator, premium/minimalist aesthetic.
+- 0.8-0.9 = High-quality nervous system / performance creator, proven engagement.
+- 0.7 = Creator discussing symptoms (anxiety, burnout, sleep, stress) with scientific framing.
+- < 0.5 = Generic wellness, lifestyle, or trend content regardless of follower count.
 
 IMPORTANT: Prioritize accounts that match the DEEP INSIGHT persona. 
-Prioritize accounts that feel like they have a "Cinematic" or "Quiet Luxury" brand. If the content looks casual or low-effort, score it BELOW 0.6.
-Evaluate based on CORE INTENT and scientific/premium aesthetic, regardless of language.
+Prioritize accounts that feel like they have a "Cinematic" or "Quiet Luxury" brand.
 Prioritize creators who mention pain points (stress, tired, focus, panic) even if they don't know the breathwork solution yet.`;
 
     let finalScore = (followerScore * 0.2) + (erScore * 0.3) + (nicheScore * 0.2) + erPenalty;
@@ -389,7 +444,7 @@ Prioritize creators who mention pain points (stress, tired, focus, panic) even i
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-6',
         max_tokens: 10,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -418,25 +473,24 @@ Your persona: Sherlock Holmes (logic) + Tony Stark (efficiency).
 INFLUENCER DATA:
 Handle: @${lead.handle} (${lead.platform})
 Niche: ${lead.niche}
+Caption: ${lead.post_caption || 'Not available'}
 Sherlock Score: ${scoreData.finalScore}/1.0
 ${memoryDraftContext}
 
-EVALUATION CRITERIA:
-- Niche Fit: Does their content align with wellness, biohacking, or high-performance living?
-- Aesthetic: Does their brand feel "Quiet Luxury" and premium?
+OUTREACH ANGLE — choose the best fit based on creator type:
+1. PHYSICAL PRACTICE creator (breath holds, box breathing, eyes-closed sessions):
+   → Lead with: screen-off + haptic guidance angle — "designed to be used eyes closed, guided by touch, no screen needed"
+2. REVIEWER / COMPARISON creator (reviews apps, compares protocols):
+   → Lead with: science-bundling angle — "9 validated protocols in one app — Wim Hof, box breathing, physiological sigh, CO2 tables"
+3. ANTI-GAMIFICATION creator (audience complains about Breathwrk / streak apps):
+   → Lead with: no-streak, no-gamification angle — "no streaks, no points, just the practice"
 
-Respond in JSON format:
-{
-  "score_adjustment": number (-0.2 to +0.2),
-  "reasoning": "string",
-  "draft": "A short, premium outreach message from Sveisan/Breathe Collection."
-}
-
-Keep the draft visionary, direct, and slightly exclusive.`;
+Match the angle to the creator's content. If unsure, default to angle 1.
+Keep the draft under 80 words. Direct, slightly exclusive, no emojis.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-6',
         max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -510,7 +564,7 @@ Based on their bios and niche, suggest 3 highly specific NEW hashtags (without t
 Format: Return only the keywords separated by commas.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-6',
         max_tokens: 50,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -518,13 +572,15 @@ Format: Return only the keywords separated by commas.`;
       const suggestions = response.content[0].text.split(',').map(s => s.trim().toLowerCase());
       await this.sysLog(`Growth Opportunity: Suggested new hashtags: ${suggestions.join(', ')}`);
 
-      // Update the memory table with these suggestions
-      await pool.query(`
-        UPDATE scout_memory 
-        SET suggested_hashtags = $1 
-        WHERE id = (SELECT id FROM scout_memory ORDER BY updated_at DESC LIMIT 1)
-      `, [JSON.stringify(suggestions)]);
-
+      for (const kw of suggestions) {
+        await pool.query(`
+          INSERT INTO scout_keyword_suggestions (keyword, suggestion_count, last_seen_at)
+          VALUES ($1, 1, NOW())
+          ON CONFLICT (keyword) DO UPDATE SET
+            suggestion_count = scout_keyword_suggestions.suggestion_count + 1,
+            last_seen_at = NOW()
+        `, [kw]);
+      }
     } catch (err) {
       console.error('Keyword Suggestion Error:', err.message);
     }

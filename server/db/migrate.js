@@ -90,7 +90,41 @@ async function migrate() {
       keyword TEXT UNIQUE NOT NULL,
       language TEXT NOT NULL,
       is_hashtag BOOLEAN DEFAULT TRUE,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      yield_score DECIMAL DEFAULT 0.5,
+      last_used_at TIMESTAMPTZ
+    );
+
+    -- Add tracking columns if they don't exist
+    ALTER TABLE scout_keywords ADD COLUMN IF NOT EXISTS yield_score DECIMAL DEFAULT 0.5;
+    ALTER TABLE scout_keywords ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ;
+
+    -- New keywords for tighter ICP targeting
+    DELETE FROM scout_keywords WHERE keyword IN (
+      'meditation', 'meditacion', 'mindfulness', 'wellness', 'bienestar',
+      'healthylifestyle', 'yoga'
+    );
+
+    INSERT INTO scout_keywords (keyword, language, is_hashtag) VALUES
+      ('panicattacks', 'en', TRUE),
+      ('sleepanxiety', 'en', TRUE),
+      ('hubermanlab', 'en', TRUE),
+      ('nervoussystem', 'en', TRUE),
+      ('nosebreathing', 'en', TRUE),
+      ('mouthbreathing', 'en', TRUE),
+      ('anxietyattack', 'en', TRUE),
+      ('stressresponse', 'en', TRUE),
+      ('coldplunge', 'en', TRUE),
+      ('nervoussystemregulation', 'en', TRUE)
+    ON CONFLICT (keyword) DO NOTHING;
+
+    -- Keyword Suggestions table for feedback loop
+    CREATE TABLE IF NOT EXISTS scout_keyword_suggestions (
+      id SERIAL PRIMARY KEY,
+      keyword TEXT UNIQUE NOT NULL,
+      suggestion_count INTEGER DEFAULT 1,
+      first_seen_at TIMESTAMPTZ DEFAULT NOW(),
+      last_seen_at TIMESTAMPTZ DEFAULT NOW()
     );
 
     -- Seed initial keywords if empty
@@ -98,18 +132,15 @@ async function migrate() {
     VALUES 
       ('breathwork', 'en', TRUE), ('breathing', 'en', TRUE), ('wimhof', 'en', TRUE), 
       ('boxbreathing', 'en', TRUE), ('physiologicalsigh', 'en', TRUE), ('biohacking', 'en', TRUE),
-      ('sleephacks', 'en', TRUE), ('huberman', 'en', TRUE), ('wellness', 'en', TRUE), 
-      ('yoga', 'en', TRUE), ('meditation', 'en', TRUE), ('mindfulness', 'en', TRUE),
-      ('healthylifestyle', 'en', TRUE), ('stressrelief', 'en', TRUE), ('recovery', 'en', TRUE),
-      ('anxietyrelief', 'en', TRUE), ('burnout', 'en', TRUE), ('insomnia', 'en', TRUE),
-      ('panicattack', 'en', TRUE), ('mentalhealth', 'en', TRUE), ('stressmanagement', 'en', TRUE),
-      ('productivityhacks', 'en', TRUE), ('focus', 'en', TRUE), ('flowstate', 'en', TRUE),
-      ('peakperformance', 'en', TRUE),
+      ('sleephacks', 'en', TRUE), ('huberman', 'en', TRUE), ('stressrelief', 'en', TRUE), 
+      ('recovery', 'en', TRUE), ('anxietyrelief', 'en', TRUE), ('burnout', 'en', TRUE), 
+      ('insomnia', 'en', TRUE), ('panicattack', 'en', TRUE), ('mentalhealth', 'en', TRUE), 
+      ('stressmanagement', 'en', TRUE), ('productivityhacks', 'en', TRUE), ('focus', 'en', TRUE), 
+      ('flowstate', 'en', TRUE), ('peakperformance', 'en', TRUE),
       ('pust', 'no', TRUE), ('pusteteknikk', 'no', TRUE), ('pustearbeid', 'no', TRUE),
       ('stressmestring', 'no', TRUE), ('søvnhack', 'no', TRUE), ('biohackingnorge', 'no', TRUE),
       ('mentalhelse', 'no', TRUE), ('roisjela', 'no', TRUE), ('velvære', 'no', TRUE),
-      ('respiracion', 'es', TRUE), ('meditacion', 'es', TRUE), ('bienestar', 'es', TRUE),
-      ('biohacking', 'es', TRUE), ('saludmental', 'es', TRUE), ('estres', 'es', TRUE),
+      ('respiracion', 'es', TRUE), ('saludmental', 'es', TRUE), ('estres', 'es', TRUE),
       ('ansiedad', 'es', TRUE), ('recuperacion', 'es', TRUE),
       ('respiracao', 'pt', TRUE), ('meditacao', 'pt', TRUE), ('bemestar', 'pt', TRUE),
       ('biohacking', 'pt', TRUE), ('saudemental', 'pt', TRUE), ('estresse', 'pt', TRUE),
