@@ -533,7 +533,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         }
 
         function showCode(code) {
-            const fullUrl = `https://breathecollection.app/creators?code=${code}`;
+            const fullUrl = \`https://breathecollection.app/creators?code=\${code}\`;
             const container = document.getElementById('promoContainer');
             container.innerHTML = '<div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent); overflow: hidden;">' +
                 '<code style="color: var(--accent); font-weight: 500; font-size: 0.85rem; word-break: break-all;">' + fullUrl + '</code>' +
