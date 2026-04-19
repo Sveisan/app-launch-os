@@ -31,8 +31,8 @@ const CAMPAIGNS = {
         ],
         context: 'Anxiety Reduction Focus'
     },
-    'edge': { 
-        name: 'The Edge', 
+    'edge': {
+        name: 'The Edge',
         sequence: [
             "Focus isn't forced. It's found.",
             "A few minutes of controlled breathing floods your brain with oxygen, clears the fog, and sharpens your focus.",
@@ -40,6 +40,192 @@ const CAMPAIGNS = {
             "Breathe it back."
         ],
         context: 'Cognitive Enhancement'
+    },
+
+    // --- Situational Moments ---
+    'morning-switch': {
+        name: 'The Switch',
+        sequence: [
+            "Your nervous system wakes up before you do.",
+            "In the first minutes of morning, cortisol spikes 50%.",
+            "Most people fight it. The ones who know — use it.",
+            "Three minutes of nasal breathing with a long exhale shifts you from reactive to intentional.",
+            "Set the tone before the world does.",
+            "Start with breath."
+        ],
+        context: 'Morning Activation'
+    },
+    'pre-meeting-close': {
+        name: 'The Close',
+        sequence: [
+            "Your best ideas don't show up when you're anxious.",
+            "Right before a high-stakes moment, adrenaline narrows your thinking.",
+            "Four counts in. Hold four. Out for eight. Twice.",
+            "Your prefrontal cortex comes back online. Your voice steadies.",
+            "Go in ready.",
+            "Breathe before you speak."
+        ],
+        context: 'Pre-Meeting Nerves'
+    },
+    'panic-override': {
+        name: 'The Override',
+        sequence: [
+            "Panic is a false alarm. Your body doesn't know that.",
+            "When anxiety hijacks your system, your breath leads the way out.",
+            "Slow your exhale longer than your inhale.",
+            "Activate your vagus nerve. Signal safety.",
+            "Panic has a ceiling. Your breath is the override code.",
+            "Exhale longer. Always."
+        ],
+        context: 'Panic Attack / Anxiety Spike'
+    },
+    'post-workout-return': {
+        name: 'The Return',
+        sequence: [
+            "You trained hard. Now let your body catch up.",
+            "After intense effort, your sympathetic nervous system is in overdrive.",
+            "Recovery isn't passive.",
+            "Slow nasal breathing drops heart rate faster than rest alone.",
+            "CO2 tolerance rebuilds. Lactate clears quicker.",
+            "The breath is the finish line. Breathe to recover."
+        ],
+        context: 'Post-Workout Recovery'
+    },
+    'slump-reset': {
+        name: 'The Reset',
+        sequence: [
+            "The afternoon slump isn't laziness. It's biology.",
+            "Circadian rhythms dip between 2 and 4pm.",
+            "Most people reach for caffeine.",
+            "Instead: 20 rapid nasal breaths, then hold.",
+            "CO2 drops. Oxygen floods your brain. Alertness snaps back.",
+            "No crash. No dependency. Reset. Don't caffeinate."
+        ],
+        context: '2pm Energy Slump'
+    },
+    'presleep-descent': {
+        name: 'The Descent',
+        sequence: [
+            "You can't think your way into sleep.",
+            "When you try to force it, cortisol rises.",
+            "But when you extend your exhale, your parasympathetic system takes over.",
+            "Heart rate drops. Muscles release. The mind stops looking for threats.",
+            "Four in. Eight out. Repeat until you're gone.",
+            "Let the exhale carry you."
+        ],
+        context: 'Pre-Sleep Wind-Down'
+    },
+    'anger-pause': {
+        name: 'The Pause',
+        sequence: [
+            "Anger is a physiological event. Not a personality trait.",
+            "When rage fires, your amygdala hijacks your prefrontal cortex.",
+            "You can't think clearly — blood has literally left that part of your brain.",
+            "A slow, controlled exhale re-routes it.",
+            "Six seconds out. The pause is the power.",
+            "Breathe before you react."
+        ],
+        context: 'Anger Reset'
+    },
+
+    // --- Myth-Busting ---
+    'mouth-breathing-default': {
+        name: 'The Default Nobody Talks About',
+        sequence: [
+            "If you breathe through your mouth, you're doing it wrong.",
+            "Mouth breathing bypasses your body's filtration, humidification, and nitric oxide system.",
+            "It keeps your nervous system in low-grade fight-or-flight.",
+            "Dental issues. Poor sleep. Lower oxygen delivery.",
+            "Nasal breathing isn't optional. It's the standard you were designed for.",
+            "Close your mouth. Start there."
+        ],
+        context: 'Mouth Breathing Myth'
+    },
+    'chest-belly-shallow': {
+        name: 'The Shallow Trap',
+        sequence: [
+            "Chest breathing is survival mode. Not living mode.",
+            "When you breathe into your chest, you activate the muscles of stress response.",
+            "Your body reads it as urgency.",
+            "Diaphragmatic breathing tells your nervous system the opposite — you're safe, resourced, in control.",
+            "Most people have never breathed correctly.",
+            "Breathe from your belly."
+        ],
+        context: 'Chest vs Belly Breathing'
+    },
+    'deep-breath-backfires': {
+        name: 'The Advice That Backfires',
+        sequence: [
+            "Taking a deep breath isn't always the answer.",
+            "Most people gasp in when anxious — making it worse.",
+            "Inhaling activates the sympathetic system.",
+            "Exhaling activates the parasympathetic.",
+            "The science is clear: it's the exhale that calms you.",
+            "A long, slow out-breath — not a big in-breath — is the reset. The exhale is the answer."
+        ],
+        context: '"Just Take a Deep Breath" Myth'
+    },
+    'overbreathing-epidemic': {
+        name: 'The Invisible Epidemic',
+        sequence: [
+            "You might be breathing too much. That's the problem.",
+            "Chronic overbreathing lowers CO2 tolerance, constricts blood vessels,",
+            "and reduces oxygen delivery to your tissues — despite breathing more.",
+            "The Bohr Effect.",
+            "More breaths doesn't mean more oxygen.",
+            "Breathing less, more efficiently, is what raises performance. Less breath. More oxygen."
+        ],
+        context: 'Overbreathing Myth'
+    },
+
+    // --- Audience-Specific ---
+    'athletes-advantage': {
+        name: 'The Unfair Advantage',
+        sequence: [
+            "The best athletes aren't just stronger. They breathe differently.",
+            "CO2 tolerance determines how long you can push before hitting your ceiling.",
+            "Elite performers train it deliberately.",
+            "Nasal breathing during low-intensity work raises that ceiling.",
+            "When race day comes, you don't gas out. You outlast.",
+            "Train your breath. Raise your ceiling."
+        ],
+        context: 'Athletes'
+    },
+    'executives-clarity': {
+        name: 'The Clarity Protocol',
+        sequence: [
+            "Decisions made under stress are rarely your best ones.",
+            "Under pressure, cortisol floods the prefrontal cortex and narrows thinking.",
+            "The executives who perform under sustained pressure have one thing in common:",
+            "they regulate their nervous system.",
+            "Three minutes before a critical decision changes your cognitive output.",
+            "The best decision starts with a breath."
+        ],
+        context: 'Executives / High-Performers'
+    },
+    'students-exam': {
+        name: 'The Exam Protocol',
+        sequence: [
+            "Your brain has everything it needs. Anxiety is hiding it.",
+            "Test anxiety isn't a knowledge problem. It's a nervous system problem.",
+            "Controlled breathing in the 5 minutes before an exam reduces cortisol and improves recall.",
+            "The information is there.",
+            "The breath clears the path to it.",
+            "Breathe before you think."
+        ],
+        context: 'Students'
+    },
+    'parents-reset': {
+        name: 'The 60-Second Reset',
+        sequence: [
+            "Parenting is one of the highest-stress roles that exists.",
+            "Dysregulation is contagious. When you're flooded, your kids feel it.",
+            "But co-regulation works both ways.",
+            "Sixty seconds of slow breathing lowers your stress markers visibly.",
+            "Your nervous system sets the tone in the room.",
+            "You reset first. Then everything else does. You go first."
+        ],
+        context: 'Parents'
     }
 };
 

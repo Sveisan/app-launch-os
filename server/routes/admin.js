@@ -136,7 +136,7 @@ router.get('/', checkAuth, async (req, res) => {
         
         // 6. Leads grouped by pipeline_status (Limited per column for performance)
         const leadsRes = await pool.query(`
-            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption
+            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes
             FROM contacts 
             WHERE scout_logged = TRUE 
             ORDER BY fit_score DESC NULLS LAST, created_at DESC
@@ -234,6 +234,19 @@ router.post('/update-status', checkAuth, async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Update Status Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+router.post('/save-notes', checkAuth, async (req, res) => {
+    try {
+        const { id, notes } = req.body;
+        if (!id) return res.status(400).json({ success: false, error: 'id required' });
+        
+        await pool.query('UPDATE contacts SET freelancer_notes = $1 WHERE id = $2', [notes || '', id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Save Notes Error:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

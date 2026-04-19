@@ -75,6 +75,7 @@ async function migrate() {
     -- Kanban / Pipeline Status
     -- discovery (default), researching, approved, outreach_sent, rejected
     ALTER TABLE contacts ADD COLUMN IF NOT EXISTS pipeline_status TEXT DEFAULT 'discovery';
+    ALTER TABLE contacts ADD COLUMN IF NOT EXISTS freelancer_notes TEXT;
 
     -- System Logs for Scout Agent
     CREATE TABLE IF NOT EXISTS scout_logs (

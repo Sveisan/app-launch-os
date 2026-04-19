@@ -274,6 +274,15 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     </div>
                 </div>
 
+                <div id="modalPostContext" style="background: rgba(44, 120, 115, 0.05); border: 1px solid rgba(44, 120, 115, 0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <h4 style="font-weight: 500; color: var(--secondary); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.8rem; letter-spacing: 0.05em;">Profile Context</h4>
+                    <p id="modalPostCaption" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main); margin-bottom: 1rem; white-space: pre-wrap;"></p>
+                    <div style="display: flex; gap: 0.8rem;">
+                        <a id="modalPostLink" href="#" target="_blank" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--card-border); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">View Post ↗</a>
+                        <a id="modalProfileLink" href="#" target="_blank" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--card-border); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">View Profile ↗</a>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div style="background: rgba(82, 171, 152, 0.05); border: 1px solid rgba(82, 171, 152, 0.2); padding: 1.5rem; border-radius: 12px;">
                         <h4 style="font-weight: 500; color: var(--secondary); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Scout Reason</h4>
@@ -291,7 +300,23 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         <button onclick="copyDraft()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s;">Copy to Clipboard</button>
                     </div>
                     <div style="position: relative;">
-                        <textarea id="modalDraft" style="width: 100%; height: 200px; background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 1rem; line-height: 1.6; padding: 1.5rem; resize: vertical; outline: none;" readonly></textarea>
+                        <textarea id="modalDraft" style="width: 100%; height: 200px; background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 1rem; line-height: 1.6; padding: 1.5rem; resize: vertical; outline: none;"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <h4 style="font-weight: 500; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">Freelancer Notes</h4>
+                    <textarea id="modalNotes" placeholder="e.g. DMed on TikTok, awaiting reply..."
+                              style="width: 100%; height: 80px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; padding: 1rem; resize: vertical; outline: none; margin-bottom: 0.8rem;"></textarea>
+                    <button id="saveNotesBtn" onclick="saveNotes()" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Save Notes</button>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Pipeline Status:</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button id="modalPrevBtn" onclick="modalMoveStatus(-1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">← Back</button>
+                        <span id="modalStatusBadge" style="background: var(--primary); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; min-width: 100px; text-align: center;">Discovery</span>
+                        <button id="modalNextBtn" onclick="modalMoveStatus(1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Forward →</button>
                     </div>
                 </div>
 
@@ -431,7 +456,28 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             
             document.getElementById('modalDraft').value = lead.outreach_draft || 'No draft generated.';
             document.getElementById('modalFeedback').textContent = lead.reason || lead.fit_feedback || 'No specific feedback provided by Scout.';
-            const modal = document.getElementById('leadModal');
+            
+            // Workflow Additions
+            currentLeadId = lead.id;
+            currentLeadStatus = lead.pipeline_status || 'discovery';
+            document.getElementById('modalNotes').value = lead.freelancer_notes || '';
+            document.getElementById('modalPostCaption').textContent = lead.post_caption || 'No caption available.';
+            
+            const cleanHandle = lead.handle.replace('@', '');
+            document.getElementById('modalProfileLink').href = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
+                ? 'https://tiktok.com/@' + cleanHandle 
+                : 'https://instagram.com/' + cleanHandle;
+            document.getElementById('modalPostLink').href = lead.post_url || '#';
+            document.getElementById('modalPostLink').style.display = lead.post_url ? 'inline-block' : 'none';
+
+            // Pipeline Nav State
+            const statusLabel = statusLabels[currentLeadStatus] || currentLeadStatus;
+            document.getElementById('modalStatusBadge').textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
+            
+            const idx = statusOrder.indexOf(currentLeadStatus);
+            document.getElementById('modalPrevBtn').disabled = idx <= 0;
+            document.getElementById('modalNextBtn').disabled = idx < 0 || idx >= statusOrder.length - 1;
+
             if (modal) modal.style.display = 'flex';
         }
         
@@ -451,6 +497,13 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         }
 
         let currentHandle = '';
+        let currentLeadId = null;
+        let currentLeadStatus = '';
+        const statusOrder = ['discovery', 'researching', 'approved', 'outreach_sent'];
+        const statusLabels = {
+            discovery: 'Discovery', researching: 'Researching',
+            approved: 'Approved', outreach_sent: 'Outreach Sent', rejected: 'Archive'
+        };
 
         async function claimCode() {
             const btn = document.getElementById('claimCodeBtn');
@@ -489,6 +542,64 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
             alert('Code copied: ' + text);
+        }
+
+        // Modal pipeline navigation
+        async function modalMoveStatus(direction) {
+            const idx = statusOrder.indexOf(currentLeadStatus);
+            const newStatus = statusOrder[idx + direction];
+            if (!newStatus || !currentLeadId) return;
+
+            const btnPrev = document.getElementById('modalPrevBtn');
+            const btnNext = document.getElementById('modalNextBtn');
+            btnPrev.disabled = true;
+            btnNext.disabled = true;
+
+            await updateStatus(currentLeadId, newStatus, null); // reuse existing updateStatus()
+            
+            currentLeadStatus = newStatus;
+            const statusLabel = statusLabels[newStatus] || newStatus;
+            document.getElementById('modalStatusBadge').textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
+            
+            const newIdx = statusOrder.indexOf(newStatus);
+            btnPrev.disabled = newIdx <= 0;
+            btnNext.disabled = newIdx >= statusOrder.length - 1;
+        }
+
+        // Save notes
+        async function saveNotes() {
+            const notes = document.getElementById('modalNotes').value;
+            const btn = document.getElementById('saveNotesBtn');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch('/mission-control-x89/save-notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: currentLeadId, notes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = 'Saved! ✔';
+                    btn.style.background = 'var(--secondary)';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = 'var(--primary)';
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('Save failed: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                alert('Connection failed');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         }
         
         modal.addEventListener('click', (e) => {

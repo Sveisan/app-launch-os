@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs-extra');
 const videoGenerator = require('../jobs/video-generator');
+const lungGenerator = require('../jobs/lung-video-generator');
 const { checkAuth } = require('../middleware/auth');
 
 
@@ -29,7 +30,7 @@ router.post('/generate', checkAuth, async (req, res) => {
         console.log(`[Video Studio] ${techKey}: ${phase}`);
         
         // Finalize job status if all done
-        const allDone = Object.keys(videoGenerator.TECHNIQUES).every(tKey => 
+        const allDone = Object.keys(videoGenerator.CAMPAIGNS).every(tKey => 
             JOBS[jobId].progress[tKey] === 'Done' || JOBS[jobId].progress[tKey]?.startsWith('Error')
         );
         
@@ -38,6 +39,31 @@ router.post('/generate', checkAuth, async (req, res) => {
         }
     }).catch(err => {
         console.error('Job Orchestration Failed:', err);
+        JOBS[jobId].status = 'error';
+        JOBS[jobId].error = err.message;
+    });
+
+    res.json({ success: true, jobId });
+});
+
+router.post('/generate-lung', checkAuth, async (req, res) => {
+    const jobId = 'lung-' + Date.now();
+    const technique = req.body.technique || 'box-breathing';
+    
+    JOBS[jobId] = {
+        id: jobId,
+        status: 'processing',
+        timestamp: new Date(),
+        progress: {}
+    };
+
+    lungGenerator.generator.generateAll((techKey, phase) => {
+        JOBS[jobId].progress[techKey] = phase;
+        if (phase === 'Done' || phase.startsWith('Error')) {
+            JOBS[jobId].status = phase === 'Done' ? 'completed' : 'error';
+        }
+    }, technique).catch(err => {
+        console.error('Lung Video Generation Failed:', err);
         JOBS[jobId].status = 'error';
         JOBS[jobId].error = err.message;
     });
