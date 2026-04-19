@@ -317,6 +317,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         <button id="modalPrevBtn" onclick="modalMoveStatus(-1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">← Back</button>
                         <span id="modalStatusBadge" style="background: var(--primary); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; min-width: 100px; text-align: center;">Discovery</span>
                         <button id="modalNextBtn" onclick="modalMoveStatus(1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Forward →</button>
+                        <button onclick="rejectLead()" style="margin-left: auto; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500;">Not Relevant / Reject</button>
                     </div>
                 </div>
 
@@ -559,12 +560,14 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             await updateStatus(currentLeadId, newStatus, null); // reuse existing updateStatus()
             
             currentLeadStatus = newStatus;
-            const statusLabel = statusLabels[newStatus] || newStatus;
-            document.getElementById('modalStatusBadge').textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
-            
-            const newIdx = statusOrder.indexOf(newStatus);
-            btnPrev.disabled = newIdx <= 0;
-            btnNext.disabled = newIdx >= statusOrder.length - 1;
+            openModal(document.getElementById('card-' + currentLeadId).getAttribute('data-lead')); 
+        }
+
+        async function rejectLead() {
+            if (!currentLeadId) return;
+            if (!confirm('Mark this lead as Not Relevant / Rejected?')) return;
+            await updateStatus(currentLeadId, 'rejected', null);
+            closeModal();
         }
 
         // Save notes
