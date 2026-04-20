@@ -75,6 +75,47 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         .kanban-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.05) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .kanban-card:active { cursor: grabbing; }
         .drag-over { background: rgba(82, 171, 152, 0.1) !important; border-color: var(--secondary) !important; }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); }
+        .nav-btn:active { transform: scale(0.95); }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            header { margin-bottom: 2rem; }
+            h1 { font-size: 1.8rem; }
+            .stat-value { font-size: 2rem; }
+            .kanban-board { gap: 1rem; }
+            .modal-content { width: 95% !important; padding: 1.5rem !important; }
+            
+            .modal-status-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1.2rem !important;
+            }
+            .nav-btn {
+                padding: 0.8rem 1.5rem !important;
+                font-size: 1rem !important;
+                flex: 1;
+            }
+            #modalStatusBadge {
+                width: 100% !important;
+                padding: 0.6rem !important;
+                font-size: 0.9rem !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -127,19 +168,18 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </div>
         </div>
 
+        ${isOwner ? `
         <h2 class="section-title">Video Studio (TikTok Pipeline)</h2>
-        <div class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 3rem;">
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem;">
+        <div id="videoStudioCard" class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 3rem;">
+            <div class="modal-status-bar" style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem;">
                 <div>
                     <h3 style="font-weight: 400; font-size: 1.2rem; margin-bottom: 0.5rem;">Automated Batch Production</h3>
                     <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px;">Generate 6 research-backed TikTok videos (9:16) with Ultra-Glass aesthetics and Liam voiceover. Total production time is ~3-4 minutes.</p>
                 </div>
-                ${isOwner ? `
-                <div style="display: flex; gap: 10px;">
-                    <button id="clearCacheBtn" class="btn" style="background: transparent; border: 1px solid var(--card-border); opacity: 0.6;">Clear Cache</button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="clearCacheBtn" class="btn" style="background: transparent; border: 1px solid var(--card-border); opacity: 0.6; padding: 0.8rem 1.5rem; border-radius: 12px; color: white;">Clear Cache</button>
                     <button id="generateVideosBtn" class="btn-primary" style="background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; cursor: pointer;">● Generate 6 TikTok Videos</button>
                 </div>
-                ` : '<div style="font-size: 0.75rem; color: var(--accent); border: 1px solid var(--accent); padding: 0.5rem 1rem; border-radius: 8px;">Reader Access Only</div>'}
             </div>
 
             <div id="videoProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
@@ -147,18 +187,19 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div class="empty-state" style="grid-column: 1/-1; padding: 2rem; border: 1px dashed var(--card-border); border-radius: 12px;">No active production. Click generate to start.</div>
             </div>
         </div>
+        ` : ''}
 
         <h2 class="section-title">Influencer Pipeline</h2>
         
         ${isOwner ? `
-        <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
+        <div class="modal-status-bar" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
             <div>
                 <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Override</h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Bypass the hourly timer and send Scout out now.</p>
             </div>
-            <div>
-                <button id="triggerSweep" class="btn" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.6rem 1.5rem; font-size: 0.9rem; border-radius: 8px; cursor: pointer;">Trigger Sweep</button>
-                <button id="testMission" class="btn" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; background: rgba(46, 213, 115, 0.1); color: #2ed573; border: 1px solid #2ed573; margin-left: 10px; border-radius: 8px; cursor: pointer;">Run Test Mission</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="triggerSweep" class="nav-btn" style="padding: 0.6rem 1.5rem;">Trigger Sweep</button>
+                <button id="testMission" class="nav-btn" style="background: rgba(46, 213, 115, 0.1); color: #2ed573; border-color: #2ed573;">Run Test Mission</button>
             </div>
         </div>
         ` : ''}
@@ -327,13 +368,13 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     <button id="saveNotesBtn" onclick="saveNotes()" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Save Notes</button>
                 </div>
 
-                <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                <div class="modal-status-bar" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--card-border);">
                     <span style="font-size: 0.85rem; color: var(--text-muted);">Pipeline Status:</span>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <button id="modalPrevBtn" onclick="modalMoveStatus(-1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">← Back</button>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                        <button id="modalPrevBtn" class="nav-btn" onclick="modalMoveStatus(-1)">← Back</button>
                         <span id="modalStatusBadge" style="background: var(--primary); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; min-width: 100px; text-align: center;">Discovery</span>
-                        <button id="modalNextBtn" onclick="modalMoveStatus(1)" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Forward →</button>
-                        <button onclick="rejectLead()" style="margin-left: auto; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500;">Not Relevant / Reject</button>
+                        <button id="modalNextBtn" class="nav-btn" onclick="modalMoveStatus(1)">Forward →</button>
+                        <button class="nav-btn" onclick="rejectLead()" style="margin-left: auto; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757;">Not Relevant / Reject</button>
                     </div>
                 </div>
 
@@ -932,6 +973,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         };
 
         function renderProgress(job) {
+            if (!progressGrid) return;
             progressGrid.innerHTML = techniques.map(tech => {
                 const phase = job.progress[tech] || 'Queued';
                 let statusColor = 'var(--text-muted)';
@@ -969,40 +1011,44 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             }
         }
 
-        videoBtn.addEventListener('click', async () => {
-            if (!confirm('Start video production? This will consume Claude and ElevenLabs credits.')) return;
-            
-            videoBtn.disabled = true;
-            videoBtn.textContent = 'Initializing Batch...';
-            videoBtn.style.opacity = '0.5';
-
-            try {
-                const res = await fetch('/api/video-studio/generate?auth=breathe88', { method: 'POST' });
-                const data = await res.json();
+        if (videoBtn) {
+            videoBtn.addEventListener('click', async () => {
+                if (!confirm('Start video production? This will consume Claude and ElevenLabs credits.')) return;
                 
-                if (data.success) {
-                    if (pollingInterval) clearInterval(pollingInterval);
-                    pollingInterval = setInterval(() => pollStatus(data.jobId), 2000);
-                    pollStatus(data.jobId);
-                } else {
-                    alert('Failed to start: ' + data.error);
+                videoBtn.disabled = true;
+                videoBtn.textContent = 'Initializing Batch...';
+                videoBtn.style.opacity = '0.5';
+
+                try {
+                    const res = await fetch('/api/video-studio/generate?auth=breathe88', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        if (pollingInterval) clearInterval(pollingInterval);
+                        pollingInterval = setInterval(() => pollStatus(data.jobId), 2000);
+                        pollStatus(data.jobId);
+                    } else {
+                        alert('Failed to start: ' + data.error);
+                        videoBtn.disabled = false;
+                    }
+                } catch (err) {
+                    alert('Connection failed');
                     videoBtn.disabled = false;
                 }
-            } catch (err) {
-                alert('Connection failed');
-                videoBtn.disabled = false;
-            }
-        });
+            });
+        }
 
-        clearBtn.addEventListener('click', async () => {
-            if (!confirm('Clear all generated videos?')) return;
-            const res = await fetch('/api/video-studio/clear-cache?auth=breathe88', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                alert('Cache cleared.');
-                location.reload();
-            }
-        });
+        if (clearBtn) {
+            clearBtn.addEventListener('click', async () => {
+                if (!confirm('Clear all generated videos?')) return;
+                const res = await fetch('/api/video-studio/clear-cache?auth=breathe88', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Cache cleared.');
+                    location.reload();
+                }
+            });
+        }
 
         // Filter Logic
         function applyFilters() {
@@ -1020,7 +1066,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     const matchLang = lang === 'all' || cardLang === lang;
 
                     if (matchPlatform && matchLang) {
-                        card.style.display = 'block';
+                        card.style.display = '';
                         visibleCount++;
                     } else {
                         card.style.display = 'none';
