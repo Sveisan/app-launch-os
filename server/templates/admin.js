@@ -324,7 +324,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div id="promoSection" style="margin-top: 2rem; background: rgba(224, 123, 57, 0.05); border: 1px dashed rgba(224, 123, 57, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <h4 style="font-weight: 500; color: var(--accent); font-size: 0.9rem; margin-bottom: 0.2rem;">Promo Code for Creator</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Generate a unique onboarding code for this lead.</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Unique onboarding code for <strong>1 Month Pro</strong> access.</p>
                     </div>
                     <div id="promoContainer">
                         <button id="claimCodeBtn" onclick="claimCode()" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Claim Code</button>
@@ -422,7 +422,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         const modal = document.getElementById('leadModal');
         
         function openModal(leadStr) {
-            const modal = document.getElementById('leadModal');
             if (!modal) return;
             const lead = JSON.parse(decodeURIComponent(leadStr));
             currentHandle = lead.handle;
@@ -533,7 +532,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         }
 
         function showCode(code) {
-            const fullUrl = \`https://breathecollection.app/creators?code=\${code}\`;
+            const fullUrl = 'https://breathecollection.app/creators?code=' + code;
             const container = document.getElementById('promoContainer');
             container.innerHTML = '<div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent); overflow: hidden;">' +
                 '<code style="color: var(--accent); font-weight: 500; font-size: 0.85rem; word-break: break-all;">' + fullUrl + '</code>' +
