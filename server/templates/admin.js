@@ -118,8 +118,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div class="stat-label">Creator Applications</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${stats.codesLeft}</div>
-                <div class="stat-label">Available Codes</div>
+                <div class="stat-value">${stats.codesLeft.trial}</div>
+                <div class="stat-label">1-Month Codes Remaining</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.codesLeft.lifetime}</div>
+                <div class="stat-label">Lifetime Codes Remaining</div>
             </div>
         </div>
 
@@ -188,14 +192,18 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 
                 const leads = stats.pipelineStatus[status] || [];
                 
+                const totalCount = stats.totalCounts ? (stats.totalCounts[status] || 0) : leads.length;
+                
                 return `
                 <div class="kanban-column" id="col-${status}" ondrop="drop(event, '${status}')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" style="flex: 0 0 320px; min-height: 60vh; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 85vh; transition: all 0.2s;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h4 style="font-weight: 500; font-size: 1rem; text-transform: capitalize;">${title}</h4>
-                        <span class="col-count" style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">${leads.length}</span>
+                        <span class="col-count-container" style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">
+                            <span class="col-count">${leads.length}</span> / ${totalCount}
+                        </span>
                     </div>
                     
-                    <div class="kanban-cards" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;" data-status="${status}">
+                    <div class="kanban-cards" id="cards-${status}" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;" data-status="${status}">
                         ${leads.length === 0 ? `<div class="empty-placeholder" style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; pointer-events: none;">Empty</div>` : leads.map(lead => {
                             
                             // Determine prev and next columns
@@ -246,6 +254,11 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                             `
                         }).join('')}
                     </div>
+                    ${totalCount > leads.length ? `
+                    <button class="load-more-btn" id="btn-load-${status}" onclick="loadMoreLeads('${status}')" style="margin-top: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-muted); padding: 0.6rem; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; width: 100%;">
+                        Load More leads...
+                    </button>
+                    ` : ''}
                 </div>
                 `;
             }).join('')}
@@ -321,13 +334,27 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     </div>
                 </div>
 
-                <div id="promoSection" style="margin-top: 2rem; background: rgba(224, 123, 57, 0.05); border: 1px dashed rgba(224, 123, 57, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <h4 style="font-weight: 500; color: var(--accent); font-size: 0.9rem; margin-bottom: 0.2rem;">Promo Code for Creator</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Unique onboarding code for <strong>1 Month Pro</strong> access.</p>
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <!-- Monthly Reward -->
+                    <div id="reward-trial" style="background: rgba(224, 123, 57, 0.05); border: 1px dashed rgba(224, 123, 57, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+                        <div>
+                            <h4 style="font-weight: 500; color: var(--accent); font-size: 0.9rem; margin-bottom: 0.2rem;">1 Month Pro Access</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Standard onboarding code. <br><strong>${stats.codesLeft.trial}</strong> remaining.</p>
+                        </div>
+                        <div id="promoContainer-trial">
+                            <button id="claimCodeBtn-trial" onclick="claimCode('trial')" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim 1-Month</button>
+                        </div>
                     </div>
-                    <div id="promoContainer">
-                        <button id="claimCodeBtn" onclick="claimCode()" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Claim Code</button>
+
+                    <!-- Lifetime Reward -->
+                    <div id="reward-lifetime" style="background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+                        <div>
+                            <h4 style="font-weight: 500; color: var(--secondary); font-size: 0.9rem; margin-bottom: 0.2rem;">Lifetime Pro Access</h4>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">High-value reward for top creators. <br><strong>${stats.codesLeft.lifetime}</strong> remaining.</p>
+                        </div>
+                        <div id="promoContainer-lifetime">
+                            <button id="claimCodeBtn-lifetime" onclick="claimCode('lifetime')" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim Lifetime</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -505,8 +532,118 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             approved: 'Approved', outreach_sent: 'Outreach Sent', rejected: 'Archive'
         };
 
-        async function claimCode() {
-            const btn = document.getElementById('claimCodeBtn');
+        const columnOffsets = {
+            discovery: 40, researching: 40, approved: 40, outreach_sent: 40, rejected: 40
+        };
+
+        const COLUMN_LIMITS = {
+            discovery: ${stats.totalCounts ? stats.totalCounts.discovery : 0},
+            researching: ${stats.totalCounts ? stats.totalCounts.researching : 0},
+            approved: ${stats.totalCounts ? stats.totalCounts.approved : 0},
+            outreach_sent: ${stats.totalCounts ? stats.totalCounts.outreach_sent : 0},
+            rejected: ${stats.totalCounts ? stats.totalCounts.rejected : 0}
+        };
+
+        const escJS = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        function renderLeadCard(lead, status) {
+            const cols = ['discovery', 'researching', 'approved', 'outreach_sent'];
+            const idx = cols.indexOf(status);
+            const prevStatus = idx > 0 ? cols[idx - 1] : null;
+            const nextStatus = idx >= 0 && idx < cols.length - 1 ? cols[idx + 1] : null;
+            
+            const noTags = ['pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge'];
+            const esTags = ['respiracion', 'meditacion', 'bienestar', 'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse', 'saludmental'];
+            const nicheLower = (lead.niche || '').toLowerCase();
+            let lang = niches => {
+                if (noTags.includes(nicheLower)) return 'no';
+                if (esTags.includes(nicheLower)) return 'es';
+                return 'en';
+            };
+            const leadLang = lang();
+            const leadData = encodeURIComponent(JSON.stringify(lead));
+
+            return \`
+                <div id="card-\${lead.id}" class="kanban-card" 
+                     onpointerdown="window.cardStartX = event.clientX; window.cardStartY = event.clientY"
+                     onpointerup="if(Math.abs(event.clientX - (window.cardStartX||0)) < 5 && Math.abs(event.clientY - (window.cardStartY||0)) < 5) openModal(this.getAttribute('data-lead'))"
+                     data-id="\${lead.id}" data-platform="\${escJS(lead.platform)}" data-lang="\${leadLang}" data-lead="\${leadData}" 
+                     style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; -webkit-tap-highlight-color: transparent;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <div draggable="true" ondragstart="drag(event, \${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
+                            <span class="score score-high" style="pointer-events: none;">\${escJS(lead.fit_score)}</span>
+                        </div>
+                        <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
+                            \${status !== 'rejected' ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>\` : ''}
+                            \${prevStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">←</button>\` : ''}
+                            \${nextStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">→</button>\` : ''}
+                        </div>
+                    </div>
+                    
+                    <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white; pointer-events: none;">@\${escJS(lead.handle)}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.2rem; pointer-events: none;">\${escJS(lead.platform)} &middot; \${escJS(lead.niche)}</div>
+                    
+                    <div style="padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: flex-end;">
+                        <button draggable="false" onclick="event.stopPropagation(); openModal(this.closest('.kanban-card').getAttribute('data-lead'))" 
+                                class="view-btn"
+                                style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.2); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; pointer-events: auto;">
+                            View Dossier →
+                        </button>
+                    </div>
+                </div>
+            \`;
+        }
+
+        async function loadMoreLeads(status) {
+            const btn = document.getElementById('btn-load-' + status);
+            const container = document.getElementById('cards-' + status);
+            const currentOffset = columnOffsets[status];
+            
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            try {
+                const res = await fetch(\`/mission-control-x89/api/leads-batch?status=\${status}&offset=\${currentOffset}&limit=50&auth=breathe88\`);
+                const data = await res.json();
+                
+                if (data.success && data.leads.length > 0) {
+                    data.leads.forEach(lead => {
+                        const cardHtml = renderLeadCard(lead, status);
+                        const template = document.createElement('template');
+                        template.innerHTML = cardHtml.trim();
+                        container.appendChild(template.content.firstChild);
+                    });
+                    
+                    columnOffsets[status] += data.leads.length;
+                    
+                    // Update count display
+                    const countSpan = btn.closest('.kanban-column').querySelector('.col-count');
+                    countSpan.textContent = parseInt(countSpan.textContent) + data.leads.length;
+
+                    // Hide button if no more leads
+                    if (columnOffsets[status] >= COLUMN_LIMITS[status]) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.textContent = 'Load More leads...';
+                        btn.disabled = false;
+                    }
+                } else {
+                    btn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Load more failed:', err);
+                btn.textContent = 'Error loading. Try again?';
+                btn.disabled = false;
+            }
+        }
+
+        async function claimCode(rewardType) {
+            const btn = document.getElementById('claimCodeBtn-' + rewardType);
+            if (!btn) return;
+            const originalText = rewardType === 'lifetime' ? 'Claim Lifetime' : 'Claim 1-Month';
+            
             btn.disabled = true;
             btn.textContent = 'Claiming...';
             
@@ -514,30 +651,32 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 const res = await fetch('/mission-control-x89/claim-code?auth=breathe88', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ handle: currentHandle })
+                    body: JSON.stringify({ handle: currentHandle, rewardType: rewardType })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showCode(data.code);
+                    showCode(data.code, rewardType);
                 } else {
                     alert('Error: ' + data.error);
                     btn.disabled = false;
-                    btn.textContent = 'Claim Code';
+                    btn.textContent = originalText;
                 }
             } catch (err) {
                 alert('Connection failed');
                 btn.disabled = false;
-                btn.textContent = 'Claim Code';
+                btn.textContent = originalText;
             }
         }
 
-        function showCode(code) {
+        function showCode(code, type) {
             const fullUrl = 'https://breathecollection.app/creators?code=' + code;
-            const container = document.getElementById('promoContainer');
+            const container = document.getElementById('promoContainer-' + type);
+            if (!container) return;
+            
             container.innerHTML = \`
-                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--accent); overflow: hidden;">
-                    <code style="color: var(--accent); font-weight: 500; font-size: 0.85rem; word-break: break-all;">\${fullUrl}</code>
-                    <button onclick="copyToClipboard('\${fullUrl}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; white-space: nowrap; padding-left: 0.5rem; border-left: 1px solid rgba(224, 123, 57, 0.3);">Copy URL</button>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.6rem; border-radius: 6px; border: 1px solid var(--accent); overflow: hidden;">
+                    <code style="color: var(--accent); font-weight: 500; font-size: 0.75rem; word-break: break-all; margin-bottom: 0.3rem;">\${fullUrl}</code>
+                    <button onclick="copyToClipboard('\${fullUrl}')" style="background: var(--accent); border: none; color: white; cursor: pointer; font-size: 0.75rem; border-radius: 4px; padding: 0.3rem; font-weight: 500;">Copy URL</button>
                 </div>\`;
         }
 

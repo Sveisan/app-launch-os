@@ -131,8 +131,19 @@ router.get('/', checkAuth, async (req, res) => {
         // 4. Creator Applications
         const creatorRes = await pool.query("SELECT COUNT(*) FROM contacts WHERE scout_logged = FALSE");
         
-        // 5. Offer Codes Left
-        const codesRes = await pool.query("SELECT COUNT(*) FROM offer_codes WHERE is_used = FALSE");
+        // 5. Offer Codes Left (By Type)
+        const codesRes = await pool.query(`
+            SELECT type, COUNT(*) as count 
+            FROM offer_codes 
+            WHERE is_used = FALSE AND assigned_to_handle IS NULL
+            GROUP BY type
+        `);
+        const codesLeft = { trial: 0, lifetime: 0 };
+        codesRes.rows.forEach(r => {
+            if (codesLeft[r.type] !== undefined) {
+                codesLeft[r.type] = parseInt(r.count);
+            }
+        });
         
         // 6. Leads grouped by pipeline_status (Limited per column for performance)
         const leadsRes = await pool.query(`
@@ -142,13 +153,27 @@ router.get('/', checkAuth, async (req, res) => {
             ORDER BY fit_score DESC NULLS LAST, created_at DESC
         `);
         
+        // 7. Get total counts for each status (for "Load More" logic)
+        const countsRes = await pool.query(`
+            SELECT pipeline_status, COUNT(*) as count 
+            FROM contacts 
+            WHERE scout_logged = TRUE 
+            GROUP BY pipeline_status
+        `);
+        
+        const totalCounts = {
+            discovery: 0, researching: 0, approved: 0, outreach_sent: 0, rejected: 0
+        };
+        countsRes.rows.forEach(r => {
+            const status = r.pipeline_status || 'discovery';
+            if (totalCounts[status] !== undefined) {
+                totalCounts[status] = parseInt(r.count);
+            }
+        });
+
         // Group leads with a limit per category
         const pipelineStatus = {
-            discovery: [],
-            researching: [],
-            approved: [],
-            outreach_sent: [],
-            rejected: []
+            discovery: [], researching: [], approved: [], outreach_sent: [], rejected: []
         };
         
         const LIMIT_PER_COLUMN = 40;
@@ -172,8 +197,9 @@ router.get('/', checkAuth, async (req, res) => {
             scoutLeads: scoutRes.rows[0].count,
             waitlistTotal: waitlistRes.rows[0].count,
             creatorApps: creatorRes.rows[0].count,
-            codesLeft: codesRes.rows[0].count,
+            codesLeft,
             pipelineStatus,
+            totalCounts,
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
@@ -182,6 +208,28 @@ router.get('/', checkAuth, async (req, res) => {
     } catch (err) {
         console.error('Admin Dashboard Error:', err);
         res.status(500).send(`Admin Error: ${err.message}`);
+    }
+});
+
+router.get('/api/leads-batch', checkAuth, async (req, res) => {
+    try {
+        const { status, offset, limit } = req.query;
+        const targetStatus = status || 'discovery';
+        const targetOffset = parseInt(offset) || 0;
+        const targetLimit = parseInt(limit) || 50;
+
+        const result = await pool.query(`
+            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes
+            FROM contacts 
+            WHERE scout_logged = TRUE AND (pipeline_status = $1 OR ($1 = 'discovery' AND pipeline_status IS NULL))
+            ORDER BY fit_score DESC NULLS LAST, created_at DESC
+            LIMIT $2 OFFSET $3
+        `, [targetStatus, targetLimit, targetOffset]);
+
+        res.json({ success: true, leads: result.rows });
+    } catch (err) {
+        console.error('API Leads Batch Error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -253,30 +301,31 @@ router.post('/save-notes', checkAuth, async (req, res) => {
 
 router.post('/claim-code', checkAuth, async (req, res) => {
     try {
-        const { handle } = req.body;
+        const { handle, rewardType } = req.body;
         if (!handle) return res.status(400).json({ success: false, error: 'Handle is required' });
+        const type = rewardType || 'trial';
 
-        // 1. Check if handle already has a code
-        const existing = await pool.query('SELECT code FROM offer_codes WHERE assigned_to_handle = $1', [handle]);
+        // 1. Check if handle already has a code of this type
+        const existing = await pool.query('SELECT code FROM offer_codes WHERE assigned_to_handle = $1 AND type = $2', [handle, type]);
         if (existing.rows.length > 0) {
             return res.json({ success: true, code: existing.rows[0].code, alreadyAssigned: true });
         }
 
-        // 2. Find and claim a new code
+        // 2. Find and claim a new code of the requested type
         const result = await pool.query(`
             UPDATE offer_codes 
             SET assigned_to_handle = $1, assigned_at = NOW() 
             WHERE id = (
                 SELECT id FROM offer_codes 
-                WHERE is_used = FALSE AND assigned_to_handle IS NULL 
+                WHERE is_used = FALSE AND assigned_to_handle IS NULL AND type = $2
                 ORDER BY created_at ASC 
                 LIMIT 1
             ) 
             RETURNING code
-        `, [handle]);
+        `, [handle, type]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'No available promo codes found' });
+            return res.status(404).json({ success: false, error: `No available ${type} promo codes found` });
         }
 
         res.json({ success: true, code: result.rows[0].code });
