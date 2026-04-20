@@ -773,12 +773,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         btn.disabled = false;
                     }, 2000);
                 } else {
-                    textarea.value = 'Regeneration failed: ' + data.error + '\n\n' + originalVal;
+                    textarea.value = 'Regeneration failed: ' + data.error + '\\n\\n' + originalVal;
                     btn.disabled = false;
                     btn.textContent = originalText;
                 }
             } catch (err) {
-                textarea.value = 'Connection failed.\n\n' + originalVal;
+                textarea.value = 'Connection failed.\\n\\n' + originalVal;
                 btn.disabled = false;
                 btn.textContent = originalText;
             }
