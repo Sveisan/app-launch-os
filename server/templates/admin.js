@@ -582,6 +582,55 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             setTimeout(() => btn.textContent = originalText, 2000);
         }
 
+        function renderLeadCard(lead, status) {
+            const cols = ['discovery', 'researching', 'approved', 'outreach_sent'];
+            const idx = cols.indexOf(status);
+            const prevStatus = idx > 0 ? cols[idx - 1] : null;
+            const nextStatus = idx >= 0 && idx < cols.length - 1 ? cols[idx + 1] : null;
+
+            const noTags = ['pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge'];
+            const esTags = ['respiracion', 'meditacion', 'bienestar', 'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse', 'saludmental'];
+            const nicheLower = (lead.niche || '').toLowerCase();
+            let lang = 'en';
+            if (noTags.includes(nicheLower)) lang = 'no';
+            else if (esTags.includes(nicheLower)) lang = 'es';
+
+            const encoded = encodeURIComponent(JSON.stringify(lead));
+            const esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+            return `
+                <div id="card-\${lead.id}" class="kanban-card" 
+                     onpointerdown="window.cardStartX = event.clientX; window.cardStartY = event.clientY"
+                     onpointerup="if(Math.abs(event.clientX - (window.cardStartX||0)) < 5 && Math.abs(event.clientY - (window.cardStartY||0)) < 5) openModal(this.getAttribute('data-lead'))"
+                     data-id="\${lead.id}" data-platform="\${esc(lead.platform)}" data-lang="\${lang}" data-lead="\${encoded}" 
+                     style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; -webkit-tap-highlight-color: transparent;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <div draggable="true" ondragstart="drag(event, \${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
+                            <span class="score score-high" style="pointer-events: none;">\${esc(lead.fit_score)}</span>
+                        </div>
+                        <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
+                            \${status !== 'rejected' ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>\` : ''}
+                            \${prevStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">←</button>\` : ''}
+                            \${nextStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">→</button>\` : ''}
+                        </div>
+                    </div>
+                    
+                    <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white; pointer-events: none;">@\${esc(lead.handle)}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.2rem; pointer-events: none;">\${esc(lead.platform)} &middot; \${esc(lead.niche)}</div>
+                    
+                    <div style="padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: flex-end;">
+                        <button draggable="false" onclick="event.stopPropagation(); openModal(this.closest('.kanban-card').getAttribute('data-lead'))" 
+                                class="view-btn"
+                                style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.2); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; pointer-events: auto;">
+                            View Dossier →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
         async function loadMoreLeads(status) {
             const btn = document.getElementById('btn-load-' + status);
             const container = document.getElementById('cards-' + status);
