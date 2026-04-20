@@ -92,31 +92,40 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
 
   // DB write succeeded — safe to send emails now
   
-  // Try to pop a trial code from the pool
-  let codeStr = null
+  // Allocate 11 trial codes (1 for creator + 10 for community)
+  let codes = []
   try {
     const codeRes = await pool.query(`
       UPDATE offer_codes 
       SET is_used = TRUE, used_by_email = $1, used_at = NOW() 
-      WHERE id = (
-        SELECT id FROM offer_codes WHERE type = 'trial' AND is_used = FALSE LIMIT 1 FOR UPDATE SKIP LOCKED
+      WHERE id IN (
+        SELECT id FROM offer_codes 
+        WHERE type = 'trial' AND is_used = FALSE 
+        LIMIT 11 
+        FOR UPDATE SKIP LOCKED
       ) 
       RETURNING code
     `, [email])
     
-    if (codeRes.rows.length > 0) {
-      codeStr = codeRes.rows[0].code
-    } else {
+    codes = codeRes.rows.map(r => r.code)
+    if (codes.length === 0) {
       console.error('CRITICAL: Out of trial offer codes in the DB for', email)
+    } else if (codes.length < 11) {
+      console.warn(`Only ${codes.length}/11 codes allocated for ${email}`)
     }
   } catch (err) {
-    console.error('Error allocating trial code:', err.message)
+    console.error('Error allocating trial codes:', err.message)
   }
+
+  const codeStr = codes[0] || null
+  const friendCodesList = codes.length > 1 
+    ? codes.slice(1).map(c => `- ${c}`).join('\n') 
+    : "Queueing more community codes — check back soon."
 
   try {
     await sendNotification({
       subject: `Creator approved: ${handle} (${platform})`,
-      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}\nCode Granted: ${codeStr ?? 'NONE - POOL EMPTY'}\nWants Giveaway Codes: ${wantsGiveaways ? 'YES' : 'No'}`,
+      text: `Handle: ${handle}\nPlatform: ${platform}\nFollowers: ${followers ?? 'auto-approved'}\nEmail: ${email}\nCodes Granted: ${codes.length}\nMain Code: ${codeStr ?? 'NONE'}\nWants Giveaway Codes: ${wantsGiveaways ? 'YES' : 'No'}`,
     })
   } catch (err) {
     console.error('Eligibility notification error:', err.message)
@@ -129,45 +138,48 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
 
     await sendEmail({
       to: email,
-      subject: "You're in: The mechanics of breath",
+      subject: "You're in — here's your access",
       text: `Hi ${handle},
 
-Welcome to the Breathe Collection creator program. We’re glad to have you.
+You're in. Here's what to do.
 
-Below is everything you need to activate your access and transition from generic breathwork to physiological protocols.
+**STEP 1 — Activate**
+Tap the link below to automatically redeem your trial in the App Store:
+${appleRedeemUrl ? appleRedeemUrl : `(Your unique trial code is being generated and will be sent shortly.)`}
 
-STEP 1 — Activate your access
-${appleRedeemUrl 
-  ? `Tap the link below to automatically redeem your trial in the App Store:\n${appleRedeemUrl}\n\n(If the link doesn't open, you can manually enter this code in the App Store: ${codeStr})` 
-  : `Your unique trial code is being generated and will be sent in a follow-up email shortly.`}
+${codeStr ? `*If the link doesn't open, you can manually enter this code in the App Store: ${codeStr}*` : ''}
 
-STEP 2 — The Experience
-Take a few days to test the protocols before you post. 
-- The Huberman Sigh: Best for rapid stress relief.
-- Wim Hof (Cyclic Hyperventilation): High-impact, highly visible for video content.
-- Haptic Guidance: Put your phone away and close your eyes. The haptics are designed to keep you centered without the screen glare—this is usually the "wow" moment for audiences.
+Here are 10 additional 1-month codes for you to share with your friends and community:
+${friendCodesList}
 
-Scientific context for every technique is at breathecollection.app/creators. Use it to speak with authority.
+**STEP 2 — Experience**
+We would love for you to test the app! Breathe Collection is built for those who value zero distractions and evidence-led practice:
+- **Huberman Sigh** — Fastest physiological reset for stress and anxiety.
+- **Wim Hof** — High energy, perfect for morning focus and state-shifting.
+- **Haptic Guidance** — Fully designed for practice with your eyes closed.
 
-STEP 3 — Post and Reply
-Once you’ve shared your experience, reply to this email with the link. Within 24 hours, we’ll send:
-1. Your Lifetime Pro code (Permanent, subscription-free access).
-2. 10 viewer giveaway codes to drive engagement in your comments.
+Explore the research behind our protocols here: https://www.breathecollection.app/library
 
-Caption starting point
-(Authenticity beats templates. Make this yours.)
+**STEP 3 — Reply with your post URL**
+Once you've experienced the app and shared a post with your community, simply reply to this email with the link. We'll send your **Lifetime Pro** code (no subscription, forever) within 48h.
 
-"I’ve been testing this breathing app and it’s genuinely different. No ads, no 'sleep stories,' no fluff. Just 9 precise protocols like Wim Hof, Box Breathing, and the Huberman sigh. It uses haptics so you can practice with your eyes closed—it feels like a legitimate tool for your nervous system.
+---
 
-A full Pro subscription is $29.99/year—less than half of what Calm or Headspace charge for a fraction of the utility.
+**Caption starting point**
+*(Make it yours — authenticity wins.)*
 
-I’m giving away [X] lifetime Pro codes below. Drop a 🌬️ to enter — picking winners in 48h.
-[Link in bio]"
+"I’ve been using this breathing app and it actually works for me. No ads, no fluff, just the mechanics of breath."
+"This app was made for people who just want to breathe with zero distractions."
+"It’s haptics-driven, so you can actually do it with your eyes closed."
+"Compared to similar apps, this one is priced at about 1/10th of the market price of Calm or Headspace."
 
-What performs best
-A raw, "talk to camera" reaction or a screen recording of a live session usually outperforms a polished production. Authenticity is the point.
+*FYI: Pro is $3.99/month or $9.99/year. Lifetime access is $39.99.*
 
-Any questions, just reply here.
+---
+
+We are deeply grateful to have you join us on this mission to help humans breathe better.
+
+**Steady breath,**
 
 Eirik
 Breathe Collection`,

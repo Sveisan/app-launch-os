@@ -310,7 +310,10 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
                     <div style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--card-border); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                         <h4 style="font-weight: 500; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">AI Outreach Draft</h4>
-                        <button onclick="copyDraft()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s;">Copy to Clipboard</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="regenerateBtn" onclick="regenerateDraft()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">↺ Regenerate</button>
+                            <button onclick="copyDraft()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: white; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: background 0.2s;">Copy to Clipboard</button>
+                        </div>
                     </div>
                     <div style="position: relative;">
                         <textarea id="modalDraft" style="width: 100%; height: 200px; background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 1rem; line-height: 1.6; padding: 1.5rem; resize: vertical; outline: none;"></textarea>
@@ -710,6 +713,45 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         }
 
         // Save notes
+        async function regenerateDraft() {
+            const btn = document.getElementById('regenerateBtn');
+            const textarea = document.getElementById('modalDraft');
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = '↺ Generating...';
+            const originalVal = textarea.value;
+            textarea.value = 'Generating new draft...';
+
+            try {
+                const res = await fetch('/mission-control-x89/regenerate-draft?auth=breathe88', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: currentLeadId })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    textarea.value = data.draft;
+                    btn.textContent = '✔ Done';
+                    btn.style.color = 'var(--secondary)';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.color = '';
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    textarea.value = 'Regeneration failed: ' + data.error + '\n\n' + originalVal;
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                textarea.value = 'Connection failed.\n\n' + originalVal;
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
         async function saveNotes() {
             const notes = document.getElementById('modalNotes').value;
             const btn = document.getElementById('saveNotesBtn');

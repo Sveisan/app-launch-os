@@ -380,18 +380,24 @@ class VideoGenerator {
             ctx.clearRect(0, 0, width, height);
             
             // 0. DRAW LIQUID SPACE OCEAN BACKGROUND
-            this.drawLiquidUniverseBackground(ctx, width, height, frame, stars);
+            this.drawLiquidUniverseBackground(ctx, width, height, frame, stars, smoothProgress);
             
             // Refined Vignette for Ocean depth
             const vignette = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, height);
             vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
             vignette.addColorStop(0.6, 'rgba(0, 0, 0, 0.2)');
-            vignette.addColorStop(1, 'rgba(10, 0, 20, 0.6)'); // Hints at deep violet depths
+            vignette.addColorStop(1, 'rgba(5, 0, 15, 0.7)'); // Deeper violet/black depths
             ctx.fillStyle = vignette;
             ctx.fillRect(0, 0, width, height);
             
+            // 0.5 DRAW GOD RAYS (Behind Orb)
+            this.drawGodRays(ctx, width/2, height/2, smoothProgress, frame);
+            
             // 1. Draw Eternal Breathing Orb (Hypnotic, Continuous)
-            this.drawOrb(ctx, width/2, height/2, smoothProgress);
+            this.drawOrb(ctx, width/2, height/2, smoothProgress, frame);
+            
+            // 1.5 DRAW ANAMORPHIC FLARE
+            this.drawAnamorphicFlare(ctx, width/2, height/2, smoothProgress);
             
             // 2. Fading Text Narrative Sequence
             // Spread sequence evenly across 30seconds 
@@ -443,42 +449,58 @@ class VideoGenerator {
         return framesDir;
     }
 
-    drawLiquidUniverseBackground(ctx, width, height, frame, stars) {
-        // Deep Space Base (Rich Deep Depth)
-        ctx.fillStyle = '#020108';
+    drawLiquidUniverseBackground(ctx, width, height, frame, stars, progress) {
+        // Atmospheric Breathing: modulate background brightness
+        const breathMod = 0.5 + (Math.sin(progress * Math.PI) * 0.1);
+        
+        // Deep Space Base (Rich Deep Depth) - slightly shifts color
+        ctx.fillStyle = `rgba(2, 1, 8, 1)`;
         ctx.fillRect(0, 0, width, height);
+
+        // 0. BACKGROUND BREATHING GLOW
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const bgGlow = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, height);
+        bgGlow.addColorStop(0, `rgba(44, 120, 115, ${0.05 * breathMod})`);
+        bgGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = bgGlow;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
 
         // 1. ORGANIC SOFT-BODY NEBULAE
         const time = frame * 0.01;
         
-        const drawCloud = (x, y, radius, color, seed) => {
+        const drawCloud = (x, y, radius, color, seed, morphSpeed = 1.0) => {
             ctx.save();
             ctx.globalCompositeOperation = 'screen';
             // Use sine-driven drift for "liquid" gas movement
-            const nx = x + Math.sin(time * 0.5 + seed) * 150;
-            const ny = y + Math.cos(time * 0.3 + seed) * 100;
+            const nx = x + Math.sin(time * 0.5 * morphSpeed + seed) * 150;
+            const ny = y + Math.cos(time * 0.3 * morphSpeed + seed) * 100;
             
-            const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, radius);
+            // Morph the radius slightly
+            const currentRadius = radius * (1 + Math.sin(time * 0.2 + seed) * 0.1);
+            
+            const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, currentRadius);
             grad.addColorStop(0, color);
-            grad.addColorStop(0.5, color.replace(/[\d.]+\)$/, '0.05)'));
+            grad.addColorStop(0.5, color.replace(/[\d.]+\)$/, `${0.05 * breathMod})`));
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             
             ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+            ctx.arc(nx, ny, currentRadius, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         };
 
         // Layered clusters for a "Real" nebula look
-        // Magenta/Violet core clusters
-        drawCloud(width * 0.7, height * 0.8, height * 0.6, 'rgba(180, 0, 180, 0.12)', 1.2);
-        drawCloud(width * 0.3, height * 0.7, height * 0.5, 'rgba(120, 0, 180, 0.08)', 2.5);
+        // Magenta/Violet core clusters - more present during exhale/inhale transition
+        drawCloud(width * 0.7, height * 0.8, height * 0.6, 'rgba(180, 0, 180, 0.15)', 1.2, 0.8);
+        drawCloud(width * 0.3, height * 0.7, height * 0.5, 'rgba(120, 0, 180, 0.12)', 2.5, 1.2);
         
         // Brand Teal depth
-        drawCloud(width * 0.2, height * 0.3, height * 0.7, 'rgba(44, 120, 115, 0.1)', 3.8);
+        drawCloud(width * 0.2, height * 0.3, height * 0.7, 'rgba(44, 120, 115, 0.15)', 3.8, 0.5);
 
-        // 2. DEPTH-OF-FIELD STARFIELD
+        // 2. DEPTH-OF-FIELD STARFIELD & SPACE DUST
         stars.forEach(star => {
             const driftX = (frame * star.speed * 0.4) % width;
             let sx = star.x + driftX;
@@ -494,10 +516,14 @@ class VideoGenerator {
                 ctx.shadowBlur = 0;
             }
             
-            ctx.globalAlpha = Math.max(0.1, Math.min(1, star.opacity + twinkle));
+            // Particle scaling (Space Dust effect)
+            const pulseScale = 1 + (Math.sin(progress * Math.PI) * 0.05);
+            const size = star.size * pulseScale;
+
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, (star.opacity + twinkle) * breathMod));
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(sx, star.y, star.size, 0, Math.PI * 2);
+            ctx.arc(sx, star.y, size, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
         });
@@ -552,54 +578,85 @@ class VideoGenerator {
         ctx.restore();
     }
 
-    drawOrb(ctx, x, y, progress) {
-        const sizeBase = 280; // Larger for the eternal flow
+    drawOrb(ctx, x, y, progress, frame) {
+        const sizeBase = 320; // Increased for more immersion
         
-        // Progress goes 0 to 1. Scale smoothly from 1.0 -> 1.5 -> 1.0 over the cycle
-        const scale = 1.0 + (progress * 0.5);
-
+        // Progress goes 0 to 1. Scale smoothly from 1.0 -> 1.4 -> 1.0 over the cycle
+        const scale = 1.0 + (progress * 0.4);
         const radius = sizeBase * scale;
 
-        // 1. ATMOSPHERIC SOUL GLOW (Gaseous bio-field)
-        const auraAlpha = 0.1 + (Math.sin(progress * Math.PI) * 0.05);
+        // 1. ATMOSPHERIC SOUL GLOW & CORONA
+        const auraAlpha = 0.1 + (progress * 0.1);
+        const coronaAlpha = 0.2 + (progress * 0.3);
+        
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const aura = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.5);
+        
+        // The Outer Aura
+        const aura = ctx.createRadialGradient(x, y, 0, x, y, radius * 4);
         aura.addColorStop(0, `rgba(82, 171, 152, ${auraAlpha})`);
         aura.addColorStop(0.5, `rgba(44, 120, 115, ${auraAlpha * 0.3})`);
         aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = aura;
         ctx.beginPath();
-        ctx.arc(x, y, radius * 3.5, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 4, 0, Math.PI * 2);
         ctx.fill();
+
+        // The Corona (Sharp energy flare at the edge)
+        const corona = ctx.createRadialGradient(x, y, radius * 0.95, x, y, radius * 1.05);
+        corona.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        corona.addColorStop(0.5, `rgba(150, 255, 240, ${coronaAlpha})`);
+        corona.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = corona;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        
         ctx.restore();
 
-        // 2. THE LIQUID UNIVERSE CORE (The Planet)
+        // 2. THE STELLAR CORE (Liquid Universe)
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.clip(); // Mask everything inside the planet shell
 
-        // Swirling internal nebulae (Planet texture)
-        const rot = progress * 0.2;
-        ctx.translate(x, y);
-        ctx.rotate(rot);
+        // Layered Gaseous Textures
+        const time = frame * 0.02;
         
-        const coreTexture = ctx.createLinearGradient(-radius, -radius, radius, radius);
-        coreTexture.addColorStop(0, '#000000');
-        coreTexture.addColorStop(0.4, '#1a1a2e');
-        coreTexture.addColorStop(0.6, '#2C7873');
-        coreTexture.addColorStop(0.8, '#52AB98');
-        coreTexture.addColorStop(1, '#ffffff');
-        ctx.fillStyle = coreTexture;
-        ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
-        
-        // Inner depth shadowing
-        const innerShadow = ctx.createRadialGradient(0, 0, radius * 0.4, 0, 0, radius);
-        innerShadow.addColorStop(0, 'rgba(0,0,0,0)');
-        innerShadow.addColorStop(1, 'rgba(0,0,0,0.8)');
+        // Base Deep Color
+        ctx.fillStyle = '#050212';
+        ctx.fillRect(-radius + x, -radius + y, radius * 2, radius * 2);
+
+        const drawGasLayer = (color, seed, speed, scaleMod) => {
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            ctx.translate(x, y);
+            ctx.rotate(time * speed + seed);
+            
+            const grad = ctx.createLinearGradient(-radius * scaleMod, -radius * scaleMod, radius * scaleMod, radius * scaleMod);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.5, color);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
+            ctx.restore();
+        };
+
+        // Swirling gas layers
+        drawGasLayer('rgba(44, 120, 115, 0.8)', 0, 0.5, 1.2); // Teal
+        drawGasLayer('rgba(120, 0, 180, 0.5)', 2.1, -0.3, 1.5); // Purple
+        drawGasLayer('rgba(255, 255, 255, 0.2)', 4.5, 0.8, 0.8); // White highlights
+
+        // Inner Depth Shading (3D Sphere effect)
+        const innerShadow = ctx.createRadialGradient(x - radius * 0.2, y - radius * 0.2, 0, x, y, radius);
+        innerShadow.addColorStop(0, 'rgba(255, 255, 255, 0.05)'); // Subtle inner light
+        innerShadow.addColorStop(0.5, 'rgba(0,0,0,0)');
+        innerShadow.addColorStop(1, 'rgba(0,0,0,0.92)'); // Hard shadow at edge
         ctx.fillStyle = innerShadow;
-        ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
         
         ctx.restore();
 
@@ -607,28 +664,100 @@ class VideoGenerator {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         
-        // Rim Highlight (Subtle Brand Color instead of grey/white)
+        // Rim Highlight - Sharp Outer Arc
+        ctx.beginPath();
+        ctx.arc(x, y, radius, -Math.PI * 0.8, -Math.PI * 0.2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 + (progress * 0.1)})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Soft Interior Rim Glow
+        const rim = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius);
+        rim.addColorStop(0, 'rgba(82, 171, 152, 0)');
+        rim.addColorStop(1, `rgba(150, 255, 240, ${0.3 + (progress * 0.2)})`);
+        ctx.fillStyle = rim;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        const rim = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius);
-        rim.addColorStop(0, 'rgba(82, 171, 152, 0)'); // Brand Teal inner fade
-        rim.addColorStop(1, 'rgba(82, 171, 152, 0.4)'); // Subtle Teal outer edge
-        ctx.fillStyle = rim;
         ctx.fill();
 
-        // Specular Glint (The Shine)
-        const glint = ctx.createRadialGradient(x - radius * 0.4, y - radius * 0.4, 0, x - radius * 0.4, y - radius * 0.4, radius * 0.6);
-        glint.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        // Specular Glint (Sharp Shine)
+        const glintX = x - radius * 0.35;
+        const glintY = y - radius * 0.35;
+        const glint = ctx.createRadialGradient(glintX, glintY, 0, glintX, glintY, radius * 0.5);
+        glint.addColorStop(0, `rgba(255, 255, 255, ${0.4 + (progress * 0.2)})`);
         glint.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = glint;
+        ctx.beginPath();
+        ctx.arc(glintX, glintY, radius * 0.5, 0, Math.PI * 2);
         ctx.fill();
         
-        // 4. OCEAN REFLECTION (Bottom Lighting)
-        const reflect = ctx.createLinearGradient(x, y + radius * 0.5, x, y + radius);
+        // Bottom Ocean Reflection (Deep Violet)
+        const reflect = ctx.createLinearGradient(x, y + radius * 0.3, x, y + radius);
         reflect.addColorStop(0, 'rgba(180, 0, 180, 0)');
-        reflect.addColorStop(1, 'rgba(180, 0, 180, 0.25)'); // Magenta bottom glow
+        reflect.addColorStop(1, `rgba(180, 0, 180, ${0.2 + (progress * 0.2)})`);
         ctx.fillStyle = reflect;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
+        
+        ctx.restore();
+    }
+
+    drawGodRays(ctx, x, y, progress, frame) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const numRays = 12;
+        const time = frame * 0.01;
+        
+        for (let i = 0; i < numRays; i++) {
+            const angle = (i / numRays) * Math.PI * 2 + time * 0.1;
+            const length = 800 + (Math.sin(time * 0.5 + i) * 100);
+            const width = 0.2 + (progress * 0.3);
+            
+            const grad = ctx.createLinearGradient(x, y, x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+            grad.addColorStop(0, `rgba(150, 255, 240, ${0.1 * progress})`);
+            grad.addColorStop(0.5, `rgba(150, 255, 240, ${0.02 * progress})`);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            const p1x = x + Math.cos(angle - width) * length;
+            const p1y = y + Math.sin(angle - width) * length;
+            const p2x = x + Math.cos(angle + width) * length;
+            const p2y = y + Math.sin(angle + width) * length;
+            ctx.lineTo(p1x, p1y);
+            ctx.lineTo(p2x, p2y);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    drawAnamorphicFlare(ctx, x, y, progress) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        
+        const flareWidth = 1080;
+        const flareHeight = 2 + (progress * 10);
+        const flareAlpha = 0.1 * progress;
+        
+        const grad = ctx.createLinearGradient(x - flareWidth/2, y, x + flareWidth/2, y);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(0.1, 'rgba(150, 255, 255, 0)');
+        grad.addColorStop(0.5, `rgba(150, 255, 255, ${flareAlpha})`);
+        grad.addColorStop(0.9, 'rgba(150, 255, 255, 0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, y - flareHeight/2, 1080, flareHeight);
+        
+        // Add a central core highlight to the flare
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, flareHeight * 4);
+        coreGrad.addColorStop(0, `rgba(255, 255, 255, ${flareAlpha * 2})`);
+        coreGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = coreGrad;
+        ctx.fillRect(0, y - flareHeight, 1080, flareHeight * 2);
         
         ctx.restore();
     }

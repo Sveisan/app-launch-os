@@ -299,6 +299,38 @@ router.post('/save-notes', checkAuth, async (req, res) => {
     }
 });
 
+router.post('/regenerate-draft', checkAuth, async (req, res) => {
+    try {
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ success: false, error: 'id required' });
+
+        // 1. Fetch lead data
+        const leadRes = await pool.query('SELECT * FROM contacts WHERE id = $1', [id]);
+        if (leadRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead not found' });
+        }
+        const lead = leadRes.rows[0];
+
+        // 2. Initialize ScoutAgent with current memory
+        const { ScoutAgent } = require('../jobs/scout');
+        const agent = new ScoutAgent();
+        await agent.refreshDeepMemory();
+        const memory = await agent.getFitMemory();
+
+        // 3. Generate new draft
+        const scoreData = { finalScore: lead.fit_score || 0.7 };
+        const draft = await agent.generateStarkDraft(lead, scoreData, memory);
+
+        // 4. Persist to DB
+        await pool.query('UPDATE contacts SET outreach_draft = $1 WHERE id = $2', [draft, id]);
+
+        res.json({ success: true, draft });
+    } catch (err) {
+        console.error('Regenerate Draft Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 router.post('/claim-code', checkAuth, async (req, res) => {
     try {
         const { handle, rewardType } = req.body;
