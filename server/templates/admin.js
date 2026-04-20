@@ -598,7 +598,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             const encoded = encodeURIComponent(JSON.stringify(lead));
             const esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-            return `
+            return \`
                 <div id="card-\${lead.id}" class="kanban-card" 
                      onpointerdown="window.cardStartX = event.clientX; window.cardStartY = event.clientY"
                      onpointerup="if(Math.abs(event.clientX - (window.cardStartX||0)) < 5 && Math.abs(event.clientY - (window.cardStartY||0)) < 5) openModal(this.getAttribute('data-lead'))"
@@ -628,7 +628,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         </button>
                     </div>
                 </div>
-            `;
+            \`;
         }
 
         async function loadMoreLeads(status) {
