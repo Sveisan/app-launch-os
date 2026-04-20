@@ -424,6 +424,88 @@ function renderAdminDashboard(stats, userRole = 'owner') {
     </div>
 
     <script>
+        // Global State & Core Configuration
+        const modal = document.getElementById('leadModal');
+        let currentHandle = '';
+        let currentLeadId = null;
+        let currentLeadStatus = '';
+        const statusOrder = ['discovery', 'researching', 'approved', 'outreach_sent'];
+        const statusLabels = {
+            discovery: 'Discovery', researching: 'Researching',
+            approved: 'Approved', outreach_sent: 'Outreach Sent', rejected: 'Archive'
+        };
+        const columnOffsets = {
+            discovery: 40, researching: 40, approved: 40, outreach_sent: 40, rejected: 40
+        };
+        const COLUMN_LIMITS = {
+            discovery: ${stats.totalCounts ? stats.totalCounts.discovery : 0},
+            researching: ${stats.totalCounts ? stats.totalCounts.researching : 0},
+            approved: ${stats.totalCounts ? stats.totalCounts.approved : 0},
+            outreach_sent: ${stats.totalCounts ? stats.totalCounts.outreach_sent : 0},
+            rejected: ${stats.totalCounts ? stats.totalCounts.rejected : 0}
+        };
+
+        const escJS = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        function openModal(leadStr) {
+            if (!modal) return;
+            const lead = JSON.parse(decodeURIComponent(leadStr));
+            currentHandle = lead.handle;
+            document.getElementById('modalScore').textContent = lead.fit_score;
+            document.getElementById('modalHandle').textContent = '@' + lead.handle;
+            
+            let profileUrl = lead.post_url;
+            if (!profileUrl) {
+                const cleanHandle = lead.handle.replace('@', '');
+                profileUrl = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
+                    ? 'https://tiktok.com/@' + cleanHandle 
+                    : 'https://instagram.com/' + cleanHandle;
+            }
+            document.getElementById('modalLink').href = profileUrl;
+            document.getElementById('modalFollowers').textContent = (lead.followers_count || lead.followers || 0).toLocaleString();
+            document.getElementById('modalER').textContent = Number(lead.engagement_rate || 0).toFixed(1);
+            document.getElementById('modalNiche').textContent = '#' + (lead.niche || 'unknown');
+            document.getElementById('modalPlatform').textContent = lead.platform;
+            
+            const contentFound = lead.bio || lead.post_caption;
+            if (contentFound) {
+                document.getElementById('modalBio').textContent = contentFound;
+                document.getElementById('modalBio').style.fontStyle = 'normal';
+                document.getElementById('modalBio').style.color = 'var(--text-muted)';
+            } else {
+                document.getElementById('modalBio').textContent = '⚠️ Profile summary not stored for this older lead. Please use the "Profile ↗" button above to evaluate them manually.';
+                document.getElementById('modalBio').style.fontStyle = 'italic';
+                document.getElementById('modalBio').style.color = 'rgba(255,255,255,0.4)';
+            }
+            document.getElementById('modalDraft').value = lead.outreach_draft || 'No draft generated.';
+            document.getElementById('modalFeedback').textContent = lead.reason || lead.fit_feedback || 'No specific feedback provided by Scout.';
+            
+            currentLeadId = lead.id;
+            currentLeadStatus = lead.pipeline_status || 'discovery';
+            document.getElementById('modalNotes').value = lead.freelancer_notes || '';
+            document.getElementById('modalPostCaption').textContent = lead.post_caption || 'No caption available.';
+            
+            const cleanHandle2 = lead.handle.replace('@', '');
+            document.getElementById('modalProfileLink').href = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
+                ? 'https://tiktok.com/@' + cleanHandle2 
+                : 'https://instagram.com/' + cleanHandle2;
+            document.getElementById('modalPostLink').href = lead.post_url || '#';
+            document.getElementById('modalPostLink').style.display = lead.post_url ? 'inline-block' : 'none';
+
+            const statusLabel = statusLabels[currentLeadStatus] || currentLeadStatus;
+            document.getElementById('modalStatusBadge').textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
+            
+            const idx = statusOrder.indexOf(currentLeadStatus);
+            document.getElementById('modalPrevBtn').disabled = idx <= 0;
+            document.getElementById('modalNextBtn').disabled = idx < 0 || idx >= statusOrder.length - 1;
+
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            if (modal) modal.style.display = 'none';
+        }
+
         async function logout() {
             if (!confirm('Logout?')) return;
             const res = await fetch('/mission-control-x89/logout', { method: 'POST' });
@@ -489,73 +571,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             });
         }
 
-        // Kanban Interactive Functions
-        const modal = document.getElementById('leadModal');
-        
-        function openModal(leadStr) {
-            if (!modal) return;
-            const lead = JSON.parse(decodeURIComponent(leadStr));
-            currentHandle = lead.handle;
-            document.getElementById('modalScore').textContent = lead.fit_score;
-            document.getElementById('modalHandle').textContent = '@' + lead.handle;
-            
-            // Build fallback URL if post_url is missing
-            let profileUrl = lead.post_url;
-            if (!profileUrl) {
-                const cleanHandle = lead.handle.replace('@', '');
-                profileUrl = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
-                    ? 'https://tiktok.com/@' + cleanHandle 
-                    : 'https://instagram.com/' + cleanHandle;
-            }
-            document.getElementById('modalLink').href = profileUrl;
-            
-            document.getElementById('modalFollowers').textContent = (lead.followers_count || lead.followers || 0).toLocaleString();
-            document.getElementById('modalER').textContent = Number(lead.engagement_rate || 0).toFixed(1);
-            document.getElementById('modalNiche').textContent = '#' + (lead.niche || 'unknown');
-            document.getElementById('modalPlatform').textContent = lead.platform;
-            
-            const contentFound = lead.bio || lead.post_caption;
-            if (contentFound) {
-                document.getElementById('modalBio').textContent = contentFound;
-                document.getElementById('modalBio').style.fontStyle = 'normal';
-                document.getElementById('modalBio').style.color = 'var(--text-muted)';
-            } else {
-                document.getElementById('modalBio').textContent = '⚠️ Profile summary not stored for this older lead. Please use the "Profile ↗" button above to evaluate them manually.';
-                document.getElementById('modalBio').style.fontStyle = 'italic';
-                document.getElementById('modalBio').style.color = 'rgba(255,255,255,0.4)';
-            }
-            
-            document.getElementById('modalDraft').value = lead.outreach_draft || 'No draft generated.';
-            document.getElementById('modalFeedback').textContent = lead.reason || lead.fit_feedback || 'No specific feedback provided by Scout.';
-            
-            // Workflow Additions
-            currentLeadId = lead.id;
-            currentLeadStatus = lead.pipeline_status || 'discovery';
-            document.getElementById('modalNotes').value = lead.freelancer_notes || '';
-            document.getElementById('modalPostCaption').textContent = lead.post_caption || 'No caption available.';
-            
-            const cleanHandle = lead.handle.replace('@', '');
-            document.getElementById('modalProfileLink').href = lead.platform && lead.platform.toLowerCase() === 'tiktok' 
-                ? 'https://tiktok.com/@' + cleanHandle 
-                : 'https://instagram.com/' + cleanHandle;
-            document.getElementById('modalPostLink').href = lead.post_url || '#';
-            document.getElementById('modalPostLink').style.display = lead.post_url ? 'inline-block' : 'none';
-
-            // Pipeline Nav State
-            const statusLabel = statusLabels[currentLeadStatus] || currentLeadStatus;
-            document.getElementById('modalStatusBadge').textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
-            
-            const idx = statusOrder.indexOf(currentLeadStatus);
-            document.getElementById('modalPrevBtn').disabled = idx <= 0;
-            document.getElementById('modalNextBtn').disabled = idx < 0 || idx >= statusOrder.length - 1;
-
-            if (modal) modal.style.display = 'flex';
-        }
-        
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-        
         function copyDraft() {
             const copyText = document.getElementById('modalDraft');
             copyText.select();
@@ -565,79 +580,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             const originalText = btn.textContent;
             btn.textContent = 'Copied!';
             setTimeout(() => btn.textContent = originalText, 2000);
-        }
-
-        let currentHandle = '';
-        let currentLeadId = null;
-        let currentLeadStatus = '';
-        const statusOrder = ['discovery', 'researching', 'approved', 'outreach_sent'];
-        const statusLabels = {
-            discovery: 'Discovery', researching: 'Researching',
-            approved: 'Approved', outreach_sent: 'Outreach Sent', rejected: 'Archive'
-        };
-
-        const columnOffsets = {
-            discovery: 40, researching: 40, approved: 40, outreach_sent: 40, rejected: 40
-        };
-
-        const COLUMN_LIMITS = {
-            discovery: ${stats.totalCounts ? stats.totalCounts.discovery : 0},
-            researching: ${stats.totalCounts ? stats.totalCounts.researching : 0},
-            approved: ${stats.totalCounts ? stats.totalCounts.approved : 0},
-            outreach_sent: ${stats.totalCounts ? stats.totalCounts.outreach_sent : 0},
-            rejected: ${stats.totalCounts ? stats.totalCounts.rejected : 0}
-        };
-
-        const escJS = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-        function renderLeadCard(lead, status) {
-            const cols = ['discovery', 'researching', 'approved', 'outreach_sent'];
-            const idx = cols.indexOf(status);
-            const prevStatus = idx > 0 ? cols[idx - 1] : null;
-            const nextStatus = idx >= 0 && idx < cols.length - 1 ? cols[idx + 1] : null;
-            
-            const noTags = ['pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge'];
-            const esTags = ['respiracion', 'meditacion', 'bienestar', 'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse', 'saludmental'];
-            const nicheLower = (lead.niche || '').toLowerCase();
-            let lang = niches => {
-                if (noTags.includes(nicheLower)) return 'no';
-                if (esTags.includes(nicheLower)) return 'es';
-                return 'en';
-            };
-            const leadLang = lang();
-            const leadData = encodeURIComponent(JSON.stringify(lead));
-
-            return \`
-                <div id="card-\${lead.id}" class="kanban-card" 
-                     onpointerdown="window.cardStartX = event.clientX; window.cardStartY = event.clientY"
-                     onpointerup="if(Math.abs(event.clientX - (window.cardStartX||0)) < 5 && Math.abs(event.clientY - (window.cardStartY||0)) < 5) openModal(this.getAttribute('data-lead'))"
-                     data-id="\${lead.id}" data-platform="\${escJS(lead.platform)}" data-lang="\${leadLang}" data-lead="\${leadData}" 
-                     style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; position: relative; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; -webkit-tap-highlight-color: transparent;">
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem;">
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <div draggable="true" ondragstart="drag(event, \${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
-                            <span class="score score-high" style="pointer-events: none;">\${escJS(lead.fit_score)}</span>
-                        </div>
-                        <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
-                            \${status !== 'rejected' ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>\` : ''}
-                            \${prevStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${prevStatus}', event)" title="Move Back" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">←</button>\` : ''}
-                            \${nextStatus ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, '\${nextStatus}', event)" title="Move Forward" style="background:none; border:none; color: rgba(255,255,255,0.2); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">→</button>\` : ''}
-                        </div>
-                    </div>
-                    
-                    <div style="font-weight: 500; font-size: 0.95rem; margin-bottom: 0.2rem; color: white; pointer-events: none;">@\${escJS(lead.handle)}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1.2rem; pointer-events: none;">\${escJS(lead.platform)} &middot; \${escJS(lead.niche)}</div>
-                    
-                    <div style="padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: flex-end;">
-                        <button draggable="false" onclick="event.stopPropagation(); openModal(this.closest('.kanban-card').getAttribute('data-lead'))" 
-                                class="view-btn"
-                                style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.2); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; pointer-events: auto;">
-                            View Dossier →
-                        </button>
-                    </div>
-                </div>
-            \`;
         }
 
         async function loadMoreLeads(status) {
@@ -1005,9 +947,11 @@ function renderAdminDashboard(stats, userRole = 'owner') {
 
             if (job.status === 'completed' || job.status === 'error') {
                 clearInterval(pollingInterval);
-                videoBtn.disabled = false;
-                videoBtn.textContent = '● Generate 6 TikTok Videos';
-                videoBtn.style.opacity = '1';
+                if (videoBtn) {
+                    videoBtn.disabled = false;
+                    videoBtn.textContent = '● Generate 6 TikTok Videos';
+                    videoBtn.style.opacity = '1';
+                }
             }
         }
 
