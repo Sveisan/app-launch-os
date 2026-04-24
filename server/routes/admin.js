@@ -201,15 +201,14 @@ router.get('/', checkAuth, async (req, res) => {
             }
         });
 
-        // Group leads with a limit per category
+        // Group leads (unlimited for client-side filtering)
         const pipelineStatus = {
             discovery: [], researching: [], approved: [], outreach_sent: [], rejected: []
         };
         
-        const LIMIT_PER_COLUMN = 40;
         leadsRes.rows.forEach(lead => {
             const status = lead.pipeline_status || 'discovery';
-            if (pipelineStatus[status] && pipelineStatus[status].length < LIMIT_PER_COLUMN) {
+            if (pipelineStatus[status]) {
                 pipelineStatus[status].push(lead);
             }
         });

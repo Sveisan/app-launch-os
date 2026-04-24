@@ -77,6 +77,34 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             letter-spacing: 0.05em;
         }
         
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.02);
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            width: fit-content;
+        }
+        .filter-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { color: white; background: rgba(255,255,255,0.03); }
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(44, 120, 115, 0.2);
+        }
+        
         .empty-state { text-align: center; padding: 4rem; color: var(--text-muted); font-weight: 300; }
         
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -238,6 +266,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </select>
         </div>
 
+        <div class="filter-bar" id="platformFilter">
+            <button class="filter-btn active" onclick="setPlatform('all')">All Platforms</button>
+            <button class="filter-btn" onclick="setPlatform('TikTok')">TikTok</button>
+            <button class="filter-btn" onclick="setPlatform('Instagram')">Instagram</button>
+        </div>
+
         <div class="kanban-board" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem;">
             ${['discovery', 'researching', 'approved', 'outreach_sent', 'rejected'].map(status => {
                 const title = {
@@ -257,7 +291,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h4 style="font-weight: 500; font-size: 1rem; text-transform: capitalize;">${title}</h4>
                         <span class="col-count-container" style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">
-                            <span class="col-count">${leads.length}</span> / ${totalCount}
+                            <span class="col-count">${leads.length}</span>
                         </span>
                     </div>
                     
@@ -313,11 +347,9 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                             `
                         }).join('')}
                     </div>
-                    ${totalCount > leads.length ? `
-                    <button class="load-more-btn" id="btn-load-${status}" onclick="loadMoreLeads('${status}')" style="margin-top: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-muted); padding: 0.6rem; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; width: 100%;">
+                    <button class="load-more-btn" id="btn-load-${status}" onclick="loadMore('${status}')" style="display: none; margin-top: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-muted); padding: 0.8rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%;">
                         Load More leads...
                     </button>
-                    ` : ''}
                 </div>
                 `;
             }).join('')}
@@ -493,16 +525,10 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             discovery: 'Discovery', researching: 'Researching',
             approved: 'Approved', outreach_sent: 'Outreach Sent', rejected: 'Archive'
         };
-        const columnOffsets = {
-            discovery: 40, researching: 40, approved: 40, outreach_sent: 40, rejected: 40
-        };
-        const COLUMN_LIMITS = {
-            discovery: ${stats.totalCounts ? stats.totalCounts.discovery : 0},
-            researching: ${stats.totalCounts ? stats.totalCounts.researching : 0},
-            approved: ${stats.totalCounts ? stats.totalCounts.approved : 0},
-            outreach_sent: ${stats.totalCounts ? stats.totalCounts.outreach_sent : 0},
-            rejected: ${stats.totalCounts ? stats.totalCounts.rejected : 0}
-        };
+
+        // --- Platform Filter & Pagination State --- //
+        const PAGE_SIZE = 10;
+        const columnState = {}; // { [status]: { page: 1, platform: 'all' } }
 
         const escJS = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -688,51 +714,67 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         </button>
                     </div>
                 </div>
-            \`;
+            `;
         }
 
-        async function loadMoreLeads(status) {
-            const btn = document.getElementById('btn-load-' + status);
-            const container = document.getElementById('cards-' + status);
-            const currentOffset = columnOffsets[status];
-            
-            btn.disabled = true;
-            btn.textContent = 'Loading...';
-
-            try {
-                const res = await fetch(\`/mission-control-x89/api/leads-batch?status=\${status}&offset=\${currentOffset}&limit=50&auth=breathe88\`);
-                const data = await res.json();
-                
-                if (data.success && data.leads.length > 0) {
-                    data.leads.forEach(lead => {
-                        const cardHtml = renderLeadCard(lead, status);
-                        const template = document.createElement('template');
-                        template.innerHTML = cardHtml.trim();
-                        container.appendChild(template.content.firstChild);
-                    });
-                    
-                    columnOffsets[status] += data.leads.length;
-                    
-                    // Update count display
-                    const countSpan = btn.closest('.kanban-column').querySelector('.col-count');
-                    countSpan.textContent = parseInt(countSpan.textContent) + data.leads.length;
-
-                    // Hide button if no more leads
-                    if (columnOffsets[status] >= COLUMN_LIMITS[status]) {
-                        btn.style.display = 'none';
-                    } else {
-                        btn.textContent = 'Load More leads...';
-                        btn.disabled = false;
-                    }
+          function setPlatform(platform) {
+            // Update UI buttons
+            document.querySelectorAll('#platformFilter .filter-btn').forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                if (text.includes(platform.toLowerCase()) || (platform === 'all' && text.includes('all'))) {
+                    btn.classList.add('active');
                 } else {
-                    btn.style.display = 'none';
+                    btn.classList.remove('active');
                 }
-            } catch (err) {
-                console.error('Load more failed:', err);
-                btn.textContent = 'Error loading. Try again?';
-                btn.disabled = false;
-            }
+            });
+
+            // Reset all columns
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                const status = col.id.replace('col-', '');
+                columnState[status] = { page: 1, platform };
+                applyFilter(status);
+            });
         }
+
+        function applyFilter(status) {
+            const col = document.getElementById('col-' + status);
+            const { page, platform } = columnState[status] || { page: 1, platform: 'all' };
+            const cards = Array.from(col.querySelectorAll('.kanban-card'));
+            
+            // Filter by platform
+            const matching = platform === 'all' 
+                ? cards 
+                : cards.filter(c => c.dataset.platform === platform);
+            
+            // Hide all first
+            cards.forEach(c => c.style.display = 'none');
+            
+            // Show first page of matching
+            matching.slice(0, page * PAGE_SIZE).forEach(c => c.style.display = '');
+            
+            // Update column count
+            const countSpan = col.querySelector('.col-count');
+            if (countSpan) countSpan.textContent = matching.length;
+            
+            // Show/hide Load More button
+            const btn = document.getElementById('btn-load-' + status);
+            if (btn) btn.style.display = matching.length > page * PAGE_SIZE ? 'block' : 'none';
+        }
+
+        function loadMore(status) {
+            if (!columnState[status]) columnState[status] = { page: 1, platform: 'all' };
+            columnState[status].page += 1;
+            applyFilter(status);
+        }
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                const status = col.id.replace('col-', '');
+                columnState[status] = { page: 1, platform: 'all' };
+                applyFilter(status);
+            });
+        });
 
         async function claimCode(rewardType) {
             const btn = document.getElementById('claimCodeBtn-' + rewardType);
