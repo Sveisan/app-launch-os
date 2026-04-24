@@ -110,6 +110,36 @@ router.post('/trigger', checkAuth, ownerOnly, async (req, res) => {
     }
 });
 
+router.post('/add-lead', checkAuth, async (req, res) => {
+    try {
+        const { handle, platform } = req.body;
+        if (!handle || !platform) {
+            return res.status(400).json({ success: false, error: 'Handle and platform required' });
+        }
+
+        // Clean handle
+        const cleanHandle = handle.trim().replace(/^@/, '');
+        
+        await pool.query(`
+            INSERT INTO contacts (
+                handle, platform, pipeline_status, manually_added, scout_logged, created_at
+            ) VALUES ($1, $2, 'discovery', TRUE, TRUE, NOW())
+            ON CONFLICT (handle, platform) DO UPDATE SET 
+                manually_added = TRUE, 
+                scout_logged = TRUE,
+                pipeline_status = CASE 
+                    WHEN contacts.pipeline_status = 'rejected' THEN 'discovery' 
+                    ELSE contacts.pipeline_status 
+                END
+        `, [cleanHandle, platform]);
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Add Lead Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 router.get('/', checkAuth, async (req, res) => {
     try {
         // 1. Health Check (Checks for both columns and log table)
@@ -147,10 +177,10 @@ router.get('/', checkAuth, async (req, res) => {
         
         // 6. Leads grouped by pipeline_status (Limited per column for performance)
         const leadsRes = await pool.query(`
-            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes
+            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes, manually_added
             FROM contacts 
             WHERE scout_logged = TRUE 
-            ORDER BY fit_score DESC NULLS LAST, created_at DESC
+            ORDER BY manually_added DESC, fit_score DESC NULLS LAST, created_at DESC
         `);
         
         // 7. Get total counts for each status (for "Load More" logic)
@@ -219,10 +249,10 @@ router.get('/api/leads-batch', checkAuth, async (req, res) => {
         const targetLimit = parseInt(limit) || 50;
 
         const result = await pool.query(`
-            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes
+            SELECT id, handle, platform, fit_score, niche, outreach_draft, post_url, pipeline_status, fit_feedback, reason, followers, followers_count, engagement_rate, bio, post_caption, freelancer_notes, manually_added
             FROM contacts 
             WHERE scout_logged = TRUE AND (pipeline_status = $1 OR ($1 = 'discovery' AND pipeline_status IS NULL))
-            ORDER BY fit_score DESC NULLS LAST, created_at DESC
+            ORDER BY manually_added DESC, fit_score DESC NULLS LAST, created_at DESC
             LIMIT $2 OFFSET $3
         `, [targetStatus, targetLimit, targetOffset]);
 

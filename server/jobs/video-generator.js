@@ -82,24 +82,28 @@ const CAMPAIGNS = {
     'post-workout-return': {
         name: 'The Return',
         sequence: [
-            "You trained hard. Now let your body catch up.",
-            "After intense effort, your sympathetic nervous system is in overdrive.",
+            "You trained hard.",
+            "Now let your body catch up.",
+            "After intense effort, your body is still in fight mode.",
             "Recovery isn't passive.",
-            "Slow nasal breathing drops heart rate faster than rest alone.",
-            "CO2 tolerance rebuilds. Lactate clears quicker.",
-            "The breath is the finish line. Breathe to recover."
+            "Slow nasal breathing brings your heart rate down faster than rest alone.",
+            "Your muscles recover quicker.",
+            "The breath is the finish line.",
+            "Breathe to recover."
         ],
         context: 'Post-Workout Recovery'
     },
     'slump-reset': {
         name: 'The Reset',
         sequence: [
-            "The afternoon slump isn't laziness. It's biology.",
-            "Circadian rhythms dip between 2 and 4pm.",
-            "Most people reach for caffeine.",
-            "Instead: 20 rapid nasal breaths, then hold.",
-            "CO2 drops. Oxygen floods your brain. Alertness snaps back.",
-            "No crash. No dependency. Reset. Don't caffeinate."
+            "The afternoon slump isn't laziness.",
+            "It's biology.",
+            "Your energy naturally dips between 2 and 4pm.",
+            "Instead of caffeine: 20 quick nasal breaths. Then hold.",
+            "Blood rushes to your brain.",
+            "Alertness snaps back.",
+            "No crash. No dependency.",
+            "Reset. Don't caffeinate."
         ],
         context: '2pm Energy Slump'
     },
@@ -107,10 +111,12 @@ const CAMPAIGNS = {
         name: 'The Descent',
         sequence: [
             "You can't think your way into sleep.",
-            "When you try to force it, cortisol rises.",
-            "But when you extend your exhale, your parasympathetic system takes over.",
-            "Heart rate drops. Muscles release. The mind stops looking for threats.",
-            "Four in. Eight out. Repeat until you're gone.",
+            "Trying makes it worse.",
+            "When you extend your exhale, your body takes over.",
+            "Heart rate drops. Muscles release.",
+            "Your mind stops looking for threats.",
+            "Four in. Eight out.",
+            "Repeat until you're gone.",
             "Let the exhale carry you."
         ],
         context: 'Pre-Sleep Wind-Down'
@@ -118,11 +124,13 @@ const CAMPAIGNS = {
     'anger-pause': {
         name: 'The Pause',
         sequence: [
-            "Anger is a physiological event. Not a personality trait.",
-            "When rage fires, your amygdala hijacks your prefrontal cortex.",
-            "You can't think clearly — blood has literally left that part of your brain.",
-            "A slow, controlled exhale re-routes it.",
-            "Six seconds out. The pause is the power.",
+            "Anger is a physical event.",
+            "Not a personality trait.",
+            "When rage fires, your thinking brain goes offline.",
+            "You can't reason your way out. Not yet.",
+            "One slow exhale. Six seconds out.",
+            "Your thinking comes back.",
+            "The pause is the power.",
             "Breathe before you react."
         ],
         context: 'Anger Reset'
@@ -144,10 +152,11 @@ const CAMPAIGNS = {
     'chest-belly-shallow': {
         name: 'The Shallow Trap',
         sequence: [
-            "Chest breathing is survival mode. Not living mode.",
-            "When you breathe into your chest, you activate the muscles of stress response.",
-            "Your body reads it as urgency.",
-            "Diaphragmatic breathing tells your nervous system the opposite — you're safe, resourced, in control.",
+            "Sent every breath. All day.",
+            "Breathing into your chest keeps your body on edge.",
+            "It's a stress signal.",
+            "Breathing into your belly tells your body the opposite.",
+            "You're safe. You're in control.",
             "Most people have never breathed correctly.",
             "Breathe from your belly."
         ],
@@ -168,12 +177,15 @@ const CAMPAIGNS = {
     'overbreathing-epidemic': {
         name: 'The Invisible Epidemic',
         sequence: [
-            "You might be breathing too much. That's the problem.",
-            "Chronic overbreathing lowers CO2 tolerance, constricts blood vessels,",
-            "and reduces oxygen delivery to your tissues — despite breathing more.",
-            "The Bohr Effect.",
+            "You might be breathing too much.",
+            "That's the problem.",
             "More breaths doesn't mean more oxygen.",
-            "Breathing less, more efficiently, is what raises performance. Less breath. More oxygen."
+            "It means less.",
+            "When you overbreathe, your blood vessels tighten.",
+            "Oxygen can't reach your body.",
+            "Breathe slower.",
+            "Breathe less.",
+            "More oxygen."
         ],
         context: 'Overbreathing Myth'
     },
@@ -182,11 +194,13 @@ const CAMPAIGNS = {
     'athletes-advantage': {
         name: 'The Unfair Advantage',
         sequence: [
-            "The best athletes aren't just stronger. They breathe differently.",
-            "CO2 tolerance determines how long you can push before hitting your ceiling.",
-            "Elite performers train it deliberately.",
-            "Nasal breathing during low-intensity work raises that ceiling.",
-            "When race day comes, you don't gas out. You outlast.",
+            "The best athletes aren't just stronger.",
+            "They breathe differently.",
+            "How long you can push before you break comes down to how well you breathe.",
+            "Train it deliberately.",
+            "Nose breathing during easy sessions raises your ceiling.",
+            "When it matters - you don't gas out.",
+            "You outlast.",
             "Train your breath. Raise your ceiling."
         ],
         context: 'Athletes'
@@ -195,10 +209,12 @@ const CAMPAIGNS = {
         name: 'The Clarity Protocol',
         sequence: [
             "Decisions made under stress are rarely your best ones.",
-            "Under pressure, cortisol floods the prefrontal cortex and narrows thinking.",
-            "The executives who perform under sustained pressure have one thing in common:",
-            "they regulate their nervous system.",
-            "Three minutes before a critical decision changes your cognitive output.",
+            "Pressure shrinks your thinking.",
+            "You see less. React more.",
+            "The people who perform best under sustained pressure have one thing in common.",
+            "They regulate.",
+            "Three minutes.",
+            "Before the decision that matters.",
             "The best decision starts with a breath."
         ],
         context: 'Executives / High-Performers'
@@ -206,24 +222,27 @@ const CAMPAIGNS = {
     'students-exam': {
         name: 'The Exam Protocol',
         sequence: [
-            "Your brain has everything it needs. Anxiety is hiding it.",
-            "Test anxiety isn't a knowledge problem. It's a nervous system problem.",
-            "Controlled breathing in the 5 minutes before an exam reduces cortisol and improves recall.",
+            "Your brain has everything it needs.",
+            "Anxiety is hiding it.",
+            "Nerves before an exam aren't a knowledge problem.",
+            "They're a stress problem.",
+            "A few minutes of controlled breathing before you sit down clears the way to what you already know.",
             "The information is there.",
-            "The breath clears the path to it.",
-            "Breathe before you think."
+            "Breathe the path to it."
         ],
         context: 'Students'
     },
     'parents-reset': {
         name: 'The 60-Second Reset',
         sequence: [
-            "Parenting is one of the highest-stress roles that exists.",
-            "Dysregulation is contagious. When you're flooded, your kids feel it.",
-            "But co-regulation works both ways.",
-            "Sixty seconds of slow breathing lowers your stress markers visibly.",
-            "Your nervous system sets the tone in the room.",
-            "You reset first. Then everything else does. You go first."
+            "When you're overwhelmed, the people around you feel it too.",
+            "But calm works the same way.",
+            "Sixty seconds of slow breathing changes how you show up in the room.",
+            "You set the tone.",
+            "Without saying a word.",
+            "You reset first.",
+            "Then everything else does.",
+            "You go first."
         ],
         context: 'Parents'
     }
@@ -382,22 +401,14 @@ class VideoGenerator {
             // 0. DRAW LIQUID SPACE OCEAN BACKGROUND
             this.drawLiquidUniverseBackground(ctx, width, height, frame, stars, smoothProgress);
             
-            // Refined Vignette for Ocean depth
-            const vignette = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, height);
-            vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            vignette.addColorStop(0.6, 'rgba(0, 0, 0, 0.2)');
-            vignette.addColorStop(1, 'rgba(5, 0, 15, 0.7)'); // Deeper violet/black depths
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, width, height);
+            // 0.5 DRAW GOD RAYS (Behind Orb) - LOWERED POSITION
+            this.drawGodRays(ctx, width/2, height * 0.60, smoothProgress, frame);
             
-            // 0.5 DRAW GOD RAYS (Behind Orb)
-            this.drawGodRays(ctx, width/2, height/2, smoothProgress, frame);
+            // 1. Draw Eternal Breathing Orb (Hypnotic, Continuous) - LOWERED POSITION
+            this.drawOrb(ctx, width/2, height * 0.60, smoothProgress, frame);
             
-            // 1. Draw Eternal Breathing Orb (Hypnotic, Continuous)
-            this.drawOrb(ctx, width/2, height/2, smoothProgress, frame);
-            
-            // 1.5 DRAW ANAMORPHIC FLARE
-            this.drawAnamorphicFlare(ctx, width/2, height/2, smoothProgress);
+            // 1.5 ANAMORPHIC FLARE REMOVED (User requested dropping horizontal glow)
+            // this.drawAnamorphicFlare(ctx, width/2, height * 0.60, smoothProgress);
             
             // 2. Fading Text Narrative Sequence
             // Spread sequence evenly across 30seconds 
@@ -407,10 +418,10 @@ class VideoGenerator {
             
             // Fade in over 1.5s, fade out over 1.5s at end of segment
             let textAlpha = 1.0;
-            if (timeInSeq < 1.5) {
-                textAlpha = timeInSeq / 1.5;
-            } else if (timeInSeq > segmentTime - 1.5) {
-                textAlpha = (segmentTime - timeInSeq) / 1.5;
+            if (timeInSeq < 1.0) { // Sharper fade for faster reading
+                textAlpha = timeInSeq / 1.0;
+            } else if (timeInSeq > segmentTime - 1.0) {
+                textAlpha = (segmentTime - timeInSeq) / 1.0;
             }
 
             ctx.textAlign = 'center';
@@ -421,8 +432,9 @@ class VideoGenerator {
             // Split line into multiple if it's too long
             const words = tech.sequence[seqIndex].split(' ');
             let line = '';
-            let yOffset = 450; // Positioned securely below Instagram/TikTok top UI elements (music bar, profile)
-            const lineHeight = 55;
+            let yOffset = 380; // Moved slightly up to give more room for multi-line text blocks
+            const lineHeight = 65;
+
             
             ctx.font = '300 48px Outfit';
             ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha})`;
@@ -528,29 +540,72 @@ class VideoGenerator {
             ctx.shadowBlur = 0;
         });
         
-        // 3. SHOOTING STARS (Immersive atmosphere)
+        // 3. METEOR SHOWER (Enhanced - 5 simultaneous paths)
         ctx.save();
-        const shootingStarCycle = (time * 0.4) % 15; // Cycle roughly every 37 seconds
-        if (shootingStarCycle > 4 && shootingStarCycle < 5) { // Visible for ~2.5s
-            const localProgress = shootingStarCycle - 4;
-            // Draw a shooting star dashing across the upper layer
-            const sx = width * 1.2 - (localProgress * width * 1.5);
-            const sy = height * 0.1 + (localProgress * height * 0.4);
-            
-            ctx.globalCompositeOperation = 'screen';
-            ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(sx + 150, sy - 60);
-            const grad = ctx.createLinearGradient(sx, sy, sx + 150, sy - 60);
-            grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0, 1 - localProgress)})`);
-            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 5; i++) {
+            const meteorSeed = i * 7.2;
+            const meteorCycle = (time * (0.4 + i * 0.15) + meteorSeed) % 10;
+            if (meteorCycle > 1 && meteorCycle < 3) {
+                const localProgress = (meteorCycle - 1) / 2;
+                const msx = width * 1.4 - (localProgress * width * 2.0);
+                const msy = height * (0.05 + i * 0.15) + (localProgress * height * 0.4);
+
+                
+                ctx.beginPath();
+                ctx.moveTo(msx, msy);
+                ctx.lineTo(msx + 100, msy - 40);
+                const grad = ctx.createLinearGradient(msx, msy, msx + 100, msy - 40);
+                grad.addColorStop(0, `rgba(255, 255, 255, ${Math.max(0, 1 - localProgress)})`);
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
         }
         ctx.restore();
+
+        // 4. THE VOYAGER (Spacecraft Silhouette)
+        this.drawSpacecraft(ctx, width, height, frame);
         
         ctx.globalAlpha = 1.0;
+    }
+
+    drawSpacecraft(ctx, width, height, frame) {
+        const time = frame * 0.005;
+        const x = width * 0.8 + Math.sin(time) * 100;
+        const y = height * 0.2 + Math.cos(time * 0.7) * 50;
+        
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI / 6); // Slanted drift
+
+        // Ion Trail
+        const trailGrad = ctx.createLinearGradient(0, 0, 150, -20);
+        trailGrad.addColorStop(0, 'rgba(100, 200, 255, 0.4)');
+        trailGrad.addColorStop(1, 'rgba(100, 200, 255, 0)');
+        ctx.fillStyle = trailGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(150, -20);
+        ctx.lineTo(140, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Minimalist Body
+        ctx.fillStyle = 'rgba(10, 10, 20, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-20, 10);
+        ctx.lineTo(-15, -10);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Specular highlight on ship
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(-5, -2, 2, 2);
+        
+        ctx.restore();
     }
 
     applyCinematicPostProcessing(ctx, width, height, frame) {
@@ -660,6 +715,9 @@ class VideoGenerator {
         
         ctx.restore();
 
+        // 2.6 ACCRETION DISK REMOVED (User requested dropping horizontal glow)
+        // this.drawAccretionDisk(ctx, x, y, radius, progress);
+
         // 3. ULTRA-GLASS REFRACTIVE SHELL
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
@@ -698,6 +756,53 @@ class VideoGenerator {
         ctx.fillStyle = reflect;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+
+    drawBlackHoleCore(ctx, x, y, orbRadius, progress) {
+        // More subtle core: reduced radius from 0.3 to 0.1
+        const holeRadius = orbRadius * 0.1 * (1 + (1 - progress) * 0.2);
+        
+        ctx.save();
+        // Cut the hole
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(x, y, holeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw the black hole (back to source-over)
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(x, y, holeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Photon Ring (Cyan Edge)
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(100, 255, 240, 0.8)';
+        ctx.strokeStyle = 'rgba(150, 255, 240, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    drawAccretionDisk(ctx, x, y, orbRadius, progress) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        
+        const diskRadiusX = orbRadius * 1.8;
+        const diskRadiusY = orbRadius * 0.15;
+        const alpha = 0.1 + (progress * 0.1);
+
+        const grad = ctx.createRadialGradient(x, y, orbRadius * 0.8, x, y, diskRadiusX);
+        grad.addColorStop(0, `rgba(150, 255, 240, ${alpha})`);
+        grad.addColorStop(1, 'rgba(150, 255, 240, 0)');
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(x, y, diskRadiusX, diskRadiusY, Math.PI / 12, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();

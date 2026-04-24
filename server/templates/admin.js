@@ -65,6 +65,18 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         .score-high { background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.3); }
         .draft-text { color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; max-width: 400px; }
         
+        .badge-manual {
+            background: rgba(224, 123, 57, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(224, 123, 57, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
         .empty-state { text-align: center; padding: 4rem; color: var(--text-muted); font-weight: 300; }
         
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -125,9 +137,14 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div class="subtitle">Breathe Collection Core</div>
                 <h1>Control Panel</h1>
             </div>
-            <a href="/mission-control-x89/manual" style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.3); padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
-                Guide & Safety 📖
-            </a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="openAddLeadModal()" style="background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s;">
+                    + Add Influencer
+                </button>
+                <a href="/mission-control-x89/manual" style="background: rgba(82, 171, 152, 0.1); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.3); padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+                    Guide & Safety 📖
+                </a>
+            </div>
         </header>
 
         ${isOwner && !stats.isDbReady ? `
@@ -273,6 +290,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                                     <div style="display: flex; align-items: center; gap: 0.6rem;">
                                         <div draggable="true" ondragstart="drag(event, ${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
                                         <span class="score score-high" style="pointer-events: none;">${esc(lead.fit_score)}</span>
+                                        ${lead.manually_added ? '<span class="badge-manual" style="pointer-events: none;">Manual</span>' : ''}
                                     </div>
                                     <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
                                         ${status !== 'rejected' ? `<button draggable="false" onclick="event.stopPropagation(); updateStatus(${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>` : ''}
@@ -400,6 +418,47 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                             <button id="claimCodeBtn-lifetime" onclick="claimCode('lifetime')" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim Lifetime</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Lead Modal -->
+        <div id="addLeadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1100; align-items: center; justify-content: center;">
+            <div style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 24px; width: 90%; max-width: 450px; padding: 2.5rem; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.5);">
+                <button onclick="closeAddLeadModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 50%; color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;">&times;</button>
+                
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 60px; height: 60px; background: rgba(44, 120, 114, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <span style="font-size: 1.5rem;">👤</span>
+                    </div>
+                    <h2 style="font-weight: 400; font-size: 1.5rem; margin-bottom: 0.5rem;">Add Influencer</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Add a lead manually to the Discovery column.</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Handle</label>
+                        <input id="addHandle" type="text" placeholder="@username" 
+                               style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 12px; color: white; font-size: 1rem; outline: none; transition: border-color 0.2s;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Platform</label>
+                        <select id="addPlatform" 
+                                style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 12px; color: white; font-size: 1rem; outline: none; cursor: pointer; transition: border-color 0.2s;">
+                            <option value="TikTok">TikTok</option>
+                            <option value="Instagram">Instagram</option>
+                        </select>
+                    </div>
+
+                    <button id="submitAddLeadBtn" onclick="submitAddLead()" 
+                            style="margin-top: 1rem; width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: transform 0.2s, opacity 0.2s;">
+                        Add to Pipeline
+                    </button>
+                    <button onclick="closeAddLeadModal()" 
+                            style="width: 100%; background: transparent; color: var(--text-muted); border: none; font-size: 0.9rem; cursor: pointer;">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
@@ -609,6 +668,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         <div style="display: flex; align-items: center; gap: 0.6rem;">
                             <div draggable="true" ondragstart="drag(event, \${lead.id})" title="Drag to reorder" style="cursor: grab; padding: 4px 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; color: var(--text-muted); font-size: 1.1rem; line-height: 1; user-select: none;">⠿</div>
                             <span class="score score-high" style="pointer-events: none;">\${esc(lead.fit_score)}</span>
+                            \${lead.manually_added ? '<span class="badge-manual" style="pointer-events: none;">Manual</span>' : ''}
                         </div>
                         <div class="kanban-actions" style="display: flex; gap: 0.2rem; z-index: 20; pointer-events: auto;">
                             \${status !== 'rejected' ? \`<button draggable="false" onclick="event.stopPropagation(); updateStatus(\${lead.id}, 'rejected', event)" title="Reject" style="background:none; border:none; color: rgba(255, 71, 87, 0.4); cursor:pointer; font-size: 1.2rem; line-height: 1; padding: 4px;">✕</button>\` : ''}
@@ -1068,6 +1128,57 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 const countBadge = col.querySelector('.col-count');
                 if (countBadge) countBadge.textContent = visibleCount;
             });
+        }
+
+        // --- Add Lead Manual --- //
+        function openAddLeadModal() {
+            document.getElementById('addLeadModal').style.display = 'flex';
+            document.getElementById('addHandle').focus();
+        }
+
+        function closeAddLeadModal() {
+            document.getElementById('addLeadModal').style.display = 'none';
+            document.getElementById('addHandle').value = '';
+        }
+
+        async function submitAddLead() {
+            const handle = document.getElementById('addHandle').value.trim();
+            const platform = document.getElementById('addPlatform').value;
+            const btn = document.getElementById('submitAddLeadBtn');
+
+            if (!handle) {
+                alert('Please enter an influencer handle');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
+
+            try {
+                const res = await fetch('/mission-control-x89/add-lead?auth=breathe88', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ handle, platform })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    btn.textContent = 'Success! ✔';
+                    btn.style.background = 'var(--secondary)';
+                    setTimeout(() => {
+                        closeAddLeadModal();
+                        location.reload(); // Refresh to show new lead and updated counts
+                    }, 1000);
+                } else {
+                    alert('Failed to add lead: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.textContent = 'Add to Pipeline';
+                }
+            } catch (err) {
+                alert('Connection failed: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Add to Pipeline';
+            }
         }
     </script>
 </body>
