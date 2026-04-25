@@ -45,8 +45,8 @@ class ScoutAgent {
         'mindfulness', 'healthylifestyle', 'stressrelief', 'recovery',
         'anxietyrelief', 'burnout', 'insomnia', 'panicattack', 'mentalhealth', 
         'stressmanagement', 'productivityhacks', 'focus', 'flowstate', 'peakperformance',
-        'pust', 'pusteteknikk', 'stressmestring', 'biohackingnorge',
-        'respiracion', 'meditacion', 'bienestar', 'biohacking', 'saludmental',
+        // Norwegian keywords removed — were pulling sub-1k accounts, degrading lead quality
+        'respiracion', 'meditacion', 'bienestar', 'saludmental',
         'respiracao', 'bemestar', 'saudemental', 'ansiedade', 'estresse'
       ];
     }
@@ -348,7 +348,7 @@ They do not post challenge content, streak countdowns, or trend reactions.
 Penalise creators whose style resembles a wellness lifestyle brand. Reward creators whose style resembles a performance coach.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 150,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -444,7 +444,7 @@ Prioritize creators who mention pain points (stress, tired, focus, panic) even i
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 10,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -490,7 +490,7 @@ Keep the draft under 80 words. Direct, slightly exclusive, no emojis.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 400,
         messages: [{ role: 'user', content: prompt }]
       });
@@ -564,7 +564,7 @@ Based on their bios and niche, suggest 3 highly specific NEW hashtags (without t
 Format: Return only the keywords separated by commas.`;
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 50,
         messages: [{ role: 'user', content: prompt }]
       });

@@ -714,7 +714,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                         </button>
                     </div>
                 </div>
-            `;
+            \`;
         }
 
           function setPlatform(platform) {

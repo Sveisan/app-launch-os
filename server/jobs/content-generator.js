@@ -57,7 +57,7 @@ Please provide ONLY the raw JSON output.`;
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6', // Using the latest 4.6 model available on the workspace
+      model: 'claude-3-5-sonnet-20240620', // Using the latest 3.5 sonnet model
       max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]
