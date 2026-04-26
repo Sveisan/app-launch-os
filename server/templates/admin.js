@@ -1,5 +1,46 @@
 const esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+function timeAgo(d) {
+    if (!d) return ''
+    const diff = Date.now() - new Date(d).getTime()
+    const m = Math.floor(diff / 60000)
+    if (m < 60) return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h ago`
+    const days = Math.floor(h / 24)
+    return `${days}d ago`
+}
+
+function renderDailyValueCard(it) {
+    const statusButtons = ['new','drafted','replied','skipped']
+        .filter(s => s !== it.status)
+        .map(s => `<button onclick="dvSetStatus(${it.id}, '${s}', this)" style="background:none;border:1px solid var(--card-border);color:var(--text-muted);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;cursor:pointer;">&rarr; ${s}</button>`)
+        .join(' ')
+
+    return `
+    <div class="dv-card" data-id="${it.id}" data-status="${it.status}" style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+            <div style="font-size:0.8rem;color:var(--text-muted);">@${esc(it.commenter_handle)} &middot; ${esc(it.platform)} &middot; ${esc(timeAgo(it.comment_posted_at))}</div>
+        </div>
+        <div style="font-size:0.95rem;color:white;margin-bottom:0.8rem;">${esc(it.comment_text)}</div>
+        <div style="display:flex;gap:0.6rem;align-items:center;background:rgba(255,255,255,0.02);border:1px solid var(--card-border);border-radius:8px;padding:0.5rem;margin-bottom:0.8rem;">
+            ${it.post.thumbnail_url ? `<img src="${esc(it.post.thumbnail_url)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex:0 0 36px;"/>` : ''}
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.75rem;color:var(--secondary);">@${esc(it.post.account_handle)}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((it.post.caption || '').slice(0, 100))}</div>
+            </div>
+            <a href="${esc(it.post.post_url)}" target="_blank" style="color:var(--secondary);font-size:0.75rem;text-decoration:none;flex:0 0 auto;">View &#8599;</a>
+        </div>
+        <textarea data-id="${it.id}" onblur="dvSaveDraft(${it.id}, this.value)" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--card-border);color:white;border-radius:8px;padding:0.6rem;font-size:0.85rem;font-family:inherit;resize:vertical;min-height:60px;margin-bottom:0.6rem;">${esc(it.reply_draft || '')}</textarea>
+        <div style="display:flex;justify-content:space-between;gap:0.4rem;flex-wrap:wrap;">
+            <button onclick="dvCopyDraft(${it.id})" style="background:rgba(82,171,152,0.1);color:var(--secondary);border:1px solid rgba(82,171,152,0.3);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;cursor:pointer;">Copy</button>
+            <a href="${esc(it.post.post_url)}" target="_blank" style="background:rgba(255,255,255,0.05);color:white;border:1px solid var(--card-border);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;text-decoration:none;">Open post</a>
+            ${statusButtons}
+        </div>
+    </div>
+    `
+}
+
 function renderAdminDashboard(stats, userRole = 'owner') {
     const isOwner = userRole === 'owner';
 
@@ -233,6 +274,39 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </div>
         </div>
         ` : ''}
+
+        <h2 class="section-title">Daily Value</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 2rem;">Comment threads worth showing up in. Refreshed nightly at 06:00.</p>
+
+        ${isOwner ? `
+        <div class="modal-status-bar" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
+            <div>
+                <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Refresh</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Trigger the digest now instead of waiting for the cron.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="dvRunNow" class="nav-btn" style="padding: 0.6rem 1.5rem;">Run Now</button>
+            </div>
+        </div>
+        ` : ''}
+
+        <div class="kanban-board" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem;">
+            ${['new','drafted','replied','skipped'].map(status => {
+                const title = { new: 'New', drafted: 'Drafted', replied: 'Replied', skipped: 'Skipped' }[status];
+                const items = (stats.dailyValueByStatus && stats.dailyValueByStatus[status]) || [];
+                return `
+                <div class="kanban-column" data-board="daily-value" data-status="${status}" id="dv-col-${status}" style="flex: 0 0 320px; min-height: 40vh; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 70vh;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="font-weight: 500; font-size: 1rem;">${title}</h4>
+                        <span style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">${items.length}</span>
+                    </div>
+                    <div class="dv-cards" id="dv-cards-${status}" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;">
+                        ${items.length === 0 ? `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0;">Empty</div>` : items.map(it => renderDailyValueCard(it)).join('')}
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        </div>
 
         <h2 class="section-title">Influencer Pipeline</h2>
         
@@ -1221,6 +1295,50 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 btn.disabled = false;
                 btn.textContent = 'Add to Pipeline';
             }
+        }
+
+        // ----- Daily Value handlers -----
+        async function dvSaveDraft(id, draft) {
+            try {
+                await fetch('/mission-control-x89/daily-value/items/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reply_draft: draft }),
+                })
+            } catch (e) { console.error('dvSaveDraft', e) }
+        }
+        async function dvSetStatus(id, status, btn) {
+            try {
+                const res = await fetch('/mission-control-x89/daily-value/items/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status }),
+                })
+                if (res.ok) {
+                    const card = btn.closest('.dv-card')
+                    const target = document.getElementById('dv-cards-' + status)
+                    if (card && target) target.appendChild(card)
+                }
+            } catch (e) { console.error('dvSetStatus', e) }
+        }
+        function dvCopyDraft(id) {
+            const ta = document.querySelector('textarea[data-id="' + id + '"]')
+            if (!ta) return
+            navigator.clipboard.writeText(ta.value).catch(() => {})
+        }
+        const dvRunBtn = document.getElementById('dvRunNow')
+        if (dvRunBtn) {
+            dvRunBtn.addEventListener('click', async () => {
+                dvRunBtn.disabled = true
+                dvRunBtn.textContent = 'Running...'
+                try {
+                    await fetch('/mission-control-x89/daily-value/run', { method: 'POST' })
+                    dvRunBtn.textContent = 'Started — refresh in ~60s'
+                } catch (e) {
+                    dvRunBtn.textContent = 'Failed'
+                }
+                setTimeout(() => { dvRunBtn.disabled = false; dvRunBtn.textContent = 'Run Now' }, 5000)
+            })
         }
     </script>
 </body>

@@ -222,6 +222,35 @@ router.get('/', checkAuth, async (req, res) => {
             LIMIT 10
         `);
 
+        // Daily Value: initial payload for the new board section
+        let dailyValueByStatus = { new: [], drafted: [], replied: [], skipped: [] };
+        try {
+            const dvRes = await pool.query(`
+                SELECT d.id, d.status, d.monitored_post_id, d.platform,
+                       d.commenter_handle, d.comment_text, d.comment_posted_at,
+                       d.reply_draft, d.status_changed_at,
+                       m.account_handle, m.caption, m.thumbnail_url, m.post_url
+                FROM digest_items d
+                JOIN monitored_posts m ON m.id = d.monitored_post_id
+                WHERE d.created_at > NOW() - INTERVAL '7 days'
+                ORDER BY d.status_changed_at DESC
+            `);
+            for (const row of dvRes.rows) {
+                const it = {
+                    id: row.id, status: row.status, platform: row.platform,
+                    commenter_handle: row.commenter_handle, comment_text: row.comment_text,
+                    comment_posted_at: row.comment_posted_at, reply_draft: row.reply_draft,
+                    post: {
+                        account_handle: row.account_handle, caption: row.caption,
+                        thumbnail_url: row.thumbnail_url, post_url: row.post_url,
+                    },
+                };
+                if (dailyValueByStatus[row.status]) dailyValueByStatus[row.status].push(it);
+            }
+        } catch (err) {
+            console.warn('Daily Value initial payload skipped:', err.message);
+        }
+
         const stats = {
             isDbReady,
             scoutLeads: scoutRes.rows[0].count,
@@ -230,6 +259,7 @@ router.get('/', checkAuth, async (req, res) => {
             codesLeft,
             pipelineStatus,
             totalCounts,
+            dailyValueByStatus,
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
