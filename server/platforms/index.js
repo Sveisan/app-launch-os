@@ -2,6 +2,7 @@ const config = require('../../config/app')
 
 const APIFY_BASE = 'https://api.apify.com/v2'
 const TIMEOUT_SECS = 90
+const QUOTA_TAG = 'APIFY_QUOTA_EXCEEDED'
 
 async function runActor(actorId, input) {
   const url = `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?timeout=${TIMEOUT_SECS}`
@@ -13,7 +14,12 @@ async function runActor(actorId, input) {
     },
     body: JSON.stringify(input),
   })
-  if (!res.ok) throw new Error(`Apify responded ${res.status} for ${actorId}`)
+  if (!res.ok) {
+    if (res.status === 402 || res.status === 429) {
+      throw new Error(`${QUOTA_TAG}: Apify ${res.status} for ${actorId} (usage limit or rate limit)`)
+    }
+    throw new Error(`Apify responded ${res.status} for ${actorId}`)
+  }
   return res.json()
 }
 
@@ -196,4 +202,4 @@ async function getPostComments(platform, postId, { postUrl, limit = 100 } = {}) 
   }))
 }
 
-module.exports = { getFollowers, getRecentPosts, getPostComments }
+module.exports = { getFollowers, getRecentPosts, getPostComments, QUOTA_TAG }

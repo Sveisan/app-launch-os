@@ -5,6 +5,8 @@ const { getStrategy } = require('./strategies')
 const { draftReplies } = require('./digest-drafter')
 const { renderDigestEmail } = require('../email/daily-value')
 
+const isQuotaError = err => err && err.message && err.message.includes(platforms.QUOTA_TAG)
+
 async function resolveMonitoredAccounts() {
   const pipelineRes = await pool.query(`
     SELECT handle, LOWER(platform) AS platform, 'pipeline' AS source, id AS source_ref_id
@@ -32,7 +34,7 @@ async function resolveMonitoredAccounts() {
 }
 
 async function discoverPosts(accounts, { sinceHours = 24 } = {}) {
-  const summary = { accountsScanned: 0, postsDiscovered: 0, errors: [] }
+  const summary = { accountsScanned: 0, postsDiscovered: 0, errors: [], quotaExhausted: false }
   for (const acct of accounts) {
     summary.accountsScanned++
     try {
@@ -50,13 +52,17 @@ async function discoverPosts(accounts, { sinceHours = 24 } = {}) {
       }
     } catch (err) {
       summary.errors.push(`@${acct.handle} (${acct.platform}): ${err.message}`)
+      if (isQuotaError(err)) {
+        summary.quotaExhausted = true
+        break
+      }
     }
   }
   return summary
 }
 
 async function fetchCommentsForActivePosts({ maxCommentsPerPost }) {
-  const summary = { postsFetched: 0, commentsFetched: 0, errors: [] }
+  const summary = { postsFetched: 0, commentsFetched: 0, errors: [], quotaExhausted: false }
   const all = []
 
   const postsRes = await pool.query(`
@@ -84,6 +90,10 @@ async function fetchCommentsForActivePosts({ maxCommentsPerPost }) {
       )
     } catch (err) {
       summary.errors.push(`post ${post.platform}:${post.post_id}: ${err.message}`)
+      if (isQuotaError(err)) {
+        summary.quotaExhausted = true
+        break
+      }
     }
   }
 
@@ -113,7 +123,8 @@ async function persistDigestItems(items) {
 }
 
 async function logRunSummary(summary) {
-  const msg = `Daily Value: ${summary.accountsScanned} accounts, ${summary.postsDiscovered} posts, ${summary.commentsFetched} comments, ${summary.itemsSurfaced} items (dup ${summary.itemsDuplicate}), ${summary.errors.length} errors, ${summary.wallMs}ms`
+  const quotaSuffix = summary.quotaExhausted ? ' [APIFY QUOTA EXHAUSTED]' : ''
+  const msg = `Daily Value: ${summary.accountsScanned} accounts, ${summary.postsDiscovered} posts, ${summary.commentsFetched} comments, ${summary.itemsSurfaced} items (dup ${summary.itemsDuplicate}), ${summary.errors.length} errors, ${summary.wallMs}ms${quotaSuffix}`
   try { await pool.query('INSERT INTO scout_logs (message) VALUES ($1)', [msg]) }
   catch (err) { console.error('[daily-value] failed to log summary:', err.message) }
 }
@@ -173,6 +184,7 @@ async function runDailyValue() {
     itemsSurfaced: persistOut.itemsInserted,
     itemsDuplicate: persistOut.itemsDuplicate,
     errors: [...discover.errors, ...fetchOut.summary.errors],
+    quotaExhausted: discover.quotaExhausted || fetchOut.summary.quotaExhausted,
     wallMs: Date.now() - startMs,
   }
 

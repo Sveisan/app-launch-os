@@ -4,6 +4,7 @@ jest.mock('../../server/db/index', () => ({
 jest.mock('../../server/platforms', () => ({
   getRecentPosts: jest.fn(),
   getPostComments: jest.fn(),
+  QUOTA_TAG: 'APIFY_QUOTA_EXCEEDED',
 }))
 
 const { pool } = require('../../server/db/index')
@@ -71,5 +72,20 @@ describe('fetchCommentsForActivePosts', () => {
     const out = await fetchCommentsForActivePosts({ maxCommentsPerPost: 100 })
     expect(out.summary.errors).toHaveLength(1)
     expect(out.summary.commentsFetched).toBe(1)
+  })
+
+  it('aborts immediately on Apify quota error', async () => {
+    pool.query.mockResolvedValueOnce({ rows: [
+      { id: 10, platform: 'instagram', post_id: 'P1', post_url: 'u1' },
+      { id: 11, platform: 'instagram', post_id: 'P2', post_url: 'u2' },
+      { id: 12, platform: 'tiktok',    post_id: 'V3', post_url: 'u3' },
+    ]})
+    platforms.getPostComments
+      .mockRejectedValueOnce(new Error('APIFY_QUOTA_EXCEEDED: 402'))
+
+    const out = await fetchCommentsForActivePosts({ maxCommentsPerPost: 100 })
+    expect(out.summary.quotaExhausted).toBe(true)
+    expect(platforms.getPostComments).toHaveBeenCalledTimes(1)
+    expect(out.summary.errors).toHaveLength(1)
   })
 })

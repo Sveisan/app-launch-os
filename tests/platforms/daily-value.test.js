@@ -166,3 +166,23 @@ describe('getPostComments', () => {
       .rejects.toThrow(/actor response may have changed/i)
   })
 })
+
+describe('runActor quota detection', () => {
+  it('throws QUOTA_EXCEEDED on HTTP 402', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 402 })
+    await expect(platforms.getPostComments('instagram', 'P', { postUrl: 'u' }))
+      .rejects.toThrow(/APIFY_QUOTA_EXCEEDED.*402/)
+  })
+
+  it('throws QUOTA_EXCEEDED on HTTP 429', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 429 })
+    await expect(platforms.getRecentPosts('instagram', 'u', { sinceHours: 24 }))
+      .rejects.toThrow(/APIFY_QUOTA_EXCEEDED.*429/)
+  })
+
+  it('throws plain Apify error on other non-OK status', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 500 })
+    await expect(platforms.getRecentPosts('instagram', 'u', { sinceHours: 24 }))
+      .rejects.toThrow(/Apify responded 500/)
+  })
+})

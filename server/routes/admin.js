@@ -222,6 +222,19 @@ router.get('/', checkAuth, async (req, res) => {
             LIMIT 10
         `);
 
+        // Daily Value: most recent run summary (for status badge)
+        let dailyValueLastRun = null;
+        try {
+            const lr = await pool.query(`
+                SELECT message, created_at FROM scout_logs
+                WHERE message LIKE 'Daily Value:%'
+                ORDER BY created_at DESC LIMIT 1
+            `);
+            if (lr.rows[0]) dailyValueLastRun = lr.rows[0];
+        } catch (err) {
+            console.warn('Daily Value last run lookup skipped:', err.message);
+        }
+
         // Daily Value: initial payload for the new board section
         let dailyValueByStatus = { new: [], drafted: [], replied: [], skipped: [] };
         try {
@@ -260,6 +273,7 @@ router.get('/', checkAuth, async (req, res) => {
             pipelineStatus,
             totalCounts,
             dailyValueByStatus,
+            dailyValueLastRun,
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
