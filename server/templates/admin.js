@@ -844,6 +844,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         // Initialize on Load
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.kanban-column').forEach(col => {
+                if (col.dataset.board === 'daily-value') return;
                 const status = col.id.replace('col-', '');
                 columnState[status] = { page: 1, platform: 'all' };
                 applyFilter(status);
