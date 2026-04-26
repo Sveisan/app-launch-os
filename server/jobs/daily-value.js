@@ -1,4 +1,5 @@
 const { pool } = require('../db/index')
+const platforms = require('../platforms')
 
 async function resolveMonitoredAccounts() {
   const pipelineRes = await pool.query(`
@@ -26,4 +27,28 @@ async function resolveMonitoredAccounts() {
   return [...map.values()]
 }
 
-module.exports = { resolveMonitoredAccounts }
+async function discoverPosts(accounts, { sinceHours = 24 } = {}) {
+  const summary = { accountsScanned: 0, postsDiscovered: 0, errors: [] }
+  for (const acct of accounts) {
+    summary.accountsScanned++
+    try {
+      const posts = await platforms.getRecentPosts(acct.platform, acct.handle, { sinceHours })
+      for (const p of posts) {
+        const result = await pool.query(`
+          INSERT INTO monitored_posts (
+            platform, post_id, account_handle, source, source_ref_id,
+            post_url, caption, thumbnail_url, published_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ON CONFLICT (platform, post_id) DO NOTHING
+        `, [p.platform, p.post_id, acct.handle, acct.source, acct.source_ref_id,
+            p.post_url, p.caption, p.thumbnail_url, p.published_at])
+        if (result.rowCount > 0) summary.postsDiscovered++
+      }
+    } catch (err) {
+      summary.errors.push(`@${acct.handle} (${acct.platform}): ${err.message}`)
+    }
+  }
+  return summary
+}
+
+module.exports = { resolveMonitoredAccounts, discoverPosts }
