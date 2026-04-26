@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { generateContent } = require('./content-generator');
 const { scoutAgentRun } = require('./scout');
 const { runDailyValue } = require('./daily-value');
+const { runRedditProspector } = require('./reddit-prospector');
 const { pool } = require('../db/index');
 const config = require('../../config/app');
 const QUEUE = require('./topic-queue');
@@ -45,4 +46,14 @@ cron.schedule(config.digest.cron, async () => {
     }
 });
 
-console.log('Content scheduler initialized. Scout Agent active. Daily Value cron registered.');
+// Reddit Prospector: every 6h
+cron.schedule(config.reddit.cron, async () => {
+    console.log('Reddit Prospector: run starting...');
+    try {
+        await runRedditProspector();
+    } catch (err) {
+        console.error('Reddit Prospector job error:', err);
+    }
+});
+
+console.log('Content scheduler initialized. Scout Agent active. Daily Value cron registered. Reddit Prospector cron registered.');

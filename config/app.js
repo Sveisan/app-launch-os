@@ -25,4 +25,14 @@ module.exports = {
     replyDraftModel: process.env.DIGEST_REPLY_MODEL || 'claude-haiku-4-5-20251001',
     digestUrlBase: process.env.DIGEST_URL_BASE || 'http://localhost:3000',
   },
+  reddit: {
+    cron: process.env.REDDIT_CRON || '0 */6 * * *',
+    maxCandidatesPerRun: parseInt(process.env.REDDIT_MAX_CANDIDATES, 10) || 10,
+    judgeModel: process.env.REDDIT_JUDGE_MODEL || 'claude-haiku-4-5-20251001',
+    contactEmail: process.env.REDDIT_CONTACT_EMAIL || 'support@breathecollection.app',
+    userAgent: process.env.REDDIT_USER_AGENT
+      || `node:breathe-collection:1.0 (contact: ${process.env.REDDIT_CONTACT_EMAIL || 'support@breathecollection.app'})`,
+    requestTimeoutMs: parseInt(process.env.REDDIT_REQUEST_TIMEOUT_MS, 10) || 10000,
+    staleCacheRetryMs: parseInt(process.env.REDDIT_STALE_CACHE_RETRY_MS, 10) || 30000,
+  },
 }
