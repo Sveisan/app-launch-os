@@ -93,7 +93,12 @@ async function getInstagramRecentPosts(handle, sinceHours) {
   const username = handle.replace(/^@/, '').toLowerCase()
   const data = await runActor('apify~instagram-profile-scraper', { usernames: [username] })
   if (!data || !data[0]) return []
-  const latest = data[0].latestPosts || []
+  const profile = data[0]
+  if (!Array.isArray(profile.latestPosts)) {
+    console.warn('[platforms] Instagram posts: latestPosts missing or not an array. Keys:', Object.keys(profile))
+    throw new Error('Instagram latestPosts field missing — actor response may have changed')
+  }
+  const latest = profile.latestPosts
   const cutoff = Date.now() - sinceHours * 3600 * 1000
   return latest
     .map(p => ({
@@ -115,7 +120,10 @@ async function getTikTokRecentPosts(handle, sinceHours) {
     shouldDownloadVideos: false,
     shouldDownloadCovers: false,
   })
-  if (!Array.isArray(data)) return []
+  if (!Array.isArray(data)) {
+    console.warn('[platforms] TikTok posts: expected array, got:', typeof data)
+    throw new Error('TikTok recent posts response shape unexpected — actor response may have changed')
+  }
   const cutoff = Date.now() - sinceHours * 3600 * 1000
   return data
     .map(v => ({
@@ -143,7 +151,10 @@ async function getInstagramPostComments(postUrl, limit) {
     directUrls: [postUrl],
     resultsLimit: limit,
   })
-  if (!Array.isArray(data)) return []
+  if (!Array.isArray(data)) {
+    console.warn('[platforms] Instagram comments: expected array, got:', typeof data)
+    throw new Error('Instagram comments response shape unexpected — actor response may have changed')
+  }
   return data.map(c => ({
     comment_id: String(c.id || ''),
     commenter_handle: c.ownerUsername || c.owner?.username || '',
@@ -157,7 +168,10 @@ async function getTikTokPostComments(postUrl, limit) {
     postURLs: [postUrl],
     commentsPerPost: limit,
   })
-  if (!Array.isArray(data)) return []
+  if (!Array.isArray(data)) {
+    console.warn('[platforms] TikTok comments: expected array, got:', typeof data)
+    throw new Error('TikTok comments response shape unexpected — actor response may have changed')
+  }
   return data.map(c => ({
     comment_id: String(c.cid || c.id || ''),
     commenter_handle: c.uniqueId || c.user?.uniqueId || '',

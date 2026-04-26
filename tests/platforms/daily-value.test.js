@@ -85,6 +85,24 @@ describe('getRecentPosts', () => {
     await expect(platforms.getRecentPosts('youtube', 'u'))
       .rejects.toThrow(/Unsupported platform/)
   })
+
+  it('Instagram: throws when latestPosts is missing (actor schema regression)', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => [{ /* no latestPosts field */ followersCount: 5000 }],
+    })
+    await expect(platforms.getRecentPosts('instagram', 'creator', { sinceHours: 24 }))
+      .rejects.toThrow(/actor response may have changed/i)
+  })
+
+  it('TikTok: throws when response is not an array', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [] }),
+    })
+    await expect(platforms.getRecentPosts('tiktok', 'u', { sinceHours: 24 }))
+      .rejects.toThrow(/actor response may have changed/i)
+  })
 })
 
 describe('getPostComments', () => {
@@ -128,5 +146,23 @@ describe('getPostComments', () => {
     global.fetch.mockResolvedValue({ ok: false, status: 503 })
     await expect(platforms.getPostComments('instagram', 'X', { postUrl: 'u' }))
       .rejects.toThrow(/Apify responded 503/)
+  })
+
+  it('Instagram: throws when response is not an array', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [] }),
+    })
+    await expect(platforms.getPostComments('instagram', 'P1', { postUrl: 'u' }))
+      .rejects.toThrow(/actor response may have changed/i)
+  })
+
+  it('TikTok: throws when response is not an array', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [] }),
+    })
+    await expect(platforms.getPostComments('tiktok', 'V1', { postUrl: 'u' }))
+      .rejects.toThrow(/actor response may have changed/i)
   })
 })
