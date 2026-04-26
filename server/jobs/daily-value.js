@@ -86,4 +86,26 @@ async function fetchCommentsForActivePosts({ maxCommentsPerPost }) {
   return { comments: all, summary }
 }
 
-module.exports = { resolveMonitoredAccounts, discoverPosts, fetchCommentsForActivePosts }
+async function persistDigestItems(items) {
+  const summary = { itemsInserted: 0, itemsDuplicate: 0 }
+  for (const it of items) {
+    const result = await pool.query(`
+      INSERT INTO digest_items (
+        monitored_post_id, platform, comment_id, commenter_handle, comment_text,
+        comment_posted_at, relevance_strategy, relevance_score,
+        reply_draft, reply_draft_model, status, surfaced_in_digest_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'new', NOW())
+      ON CONFLICT (platform, comment_id) DO NOTHING
+      RETURNING id
+    `, [
+      it.monitored_post_id, it.platform, it.comment_id, it.commenter_handle, it.comment_text,
+      it.comment_posted_at, it.relevance_strategy, it.relevance_score,
+      it.reply_draft, it.reply_draft_model,
+    ])
+    if (result.rowCount > 0) summary.itemsInserted++
+    else summary.itemsDuplicate++
+  }
+  return summary
+}
+
+module.exports = { resolveMonitoredAccounts, discoverPosts, fetchCommentsForActivePosts, persistDigestItems }
