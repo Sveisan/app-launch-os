@@ -122,9 +122,21 @@ async function persistDigestItems(items) {
   return summary
 }
 
+function summarizeErrors(errors, { sampleSize = 5 } = {}) {
+  if (!errors.length) return ''
+  const buckets = new Map()
+  for (const e of errors) {
+    const tail = (e.split(':').slice(-1)[0] || e).trim().slice(0, 120)
+    buckets.set(tail, (buckets.get(tail) || 0) + 1)
+  }
+  const top = [...buckets.entries()].sort((a, b) => b[1] - a[1]).slice(0, sampleSize)
+  return ' | top errors: ' + top.map(([msg, n]) => `${n}× "${msg}"`).join('; ')
+}
+
 async function logRunSummary(summary) {
   const quotaSuffix = summary.quotaExhausted ? ' [APIFY QUOTA EXHAUSTED]' : ''
-  const msg = `Daily Value: ${summary.accountsScanned} accounts, ${summary.postsDiscovered} posts, ${summary.commentsFetched} comments, ${summary.itemsSurfaced} items (dup ${summary.itemsDuplicate}), ${summary.errors.length} errors, ${summary.wallMs}ms${quotaSuffix}`
+  const errSample = summarizeErrors(summary.errors)
+  const msg = `Daily Value: ${summary.accountsScanned} accounts, ${summary.postsDiscovered} posts, ${summary.commentsFetched} comments, ${summary.itemsSurfaced} items (dup ${summary.itemsDuplicate}), ${summary.errors.length} errors, ${summary.wallMs}ms${quotaSuffix}${errSample}`
   try { await pool.query('INSERT INTO scout_logs (message) VALUES ($1)', [msg]) }
   catch (err) { console.error('[daily-value] failed to log summary:', err.message) }
 }
