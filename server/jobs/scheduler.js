@@ -1,7 +1,9 @@
 const cron = require('node-cron');
 const { generateContent } = require('./content-generator');
 const { scoutAgentRun } = require('./scout');
+const { runDailyValue } = require('./daily-value');
 const { pool } = require('../db/index');
+const config = require('../../config/app');
 const QUEUE = require('./topic-queue');
 
 // Every Monday at 9am
@@ -33,4 +35,14 @@ cron.schedule('0 * * * *', async () => {
     }
 });
 
-console.log('Content scheduler initialized. Scout Agent active.');
+// Daily Value: nightly comment digest
+cron.schedule(config.digest.cron, async () => {
+    console.log('Daily Value: nightly run starting...');
+    try {
+        await runDailyValue();
+    } catch (err) {
+        console.error('Daily Value job error:', err);
+    }
+});
+
+console.log('Content scheduler initialized. Scout Agent active. Daily Value cron registered.');

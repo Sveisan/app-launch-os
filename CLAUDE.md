@@ -39,6 +39,10 @@ server/
   jobs/
     scheduler.js     # node-cron registry
     scout.js         # Scout agent (creator discovery)
+    daily-value.js   # Daily Value comment digest cron
+    digest-drafter.js # batched Claude reply drafter
+    digest-token.js  # HMAC tokens for one-shot email links
+    strategies/      # relevance strategies (questions_v1, ai_v1 future)
     content-generator.js
     video-generator.js
     lung-video-generator.js
@@ -64,6 +68,7 @@ docs/
 | `/api/feedback` | feedback |
 | `/api/video-studio` | video pipeline |
 | `/mission-control-x89` | admin panel (JWT) |
+| `/mission-control-x89/daily-value` | comment digest list / patch / run / token-flip |
 | `/breathing` + `/sitemap.xml` | SEO content |
 | `/library` | library |
 
@@ -128,3 +133,24 @@ Useful scripts: `npm run content` / `npm run generate` (content-admin), `npm run
 - Static HTML pages with inline JS — escape template literals carefully (recent commits fixed nested-template-literal bugs in `admin.js`).
 - Generic 500 handler in `server/index.js`; route-level errors should `next(err)`.
 - Background work belongs in `server/jobs/`, registered through `scheduler.js`.
+
+## Daily Value (comment digest)
+
+Nightly job that surfaces question-style comments on monitored accounts (pipeline contacts + manual `scout_watchlist`) for IG/TikTok, drafts replies via Claude Haiku 4.5, sends an email to `DIGEST_RECIPIENT`, and renders a kanban "Daily Value" board above the Influencer Pipeline in the admin panel.
+
+Cron: `DIGEST_CRON` (default `'0 6 * * *'`, set `TZ=Europe/Oslo` in Railway).
+
+Tables:
+- `scout_watchlist` — manually-curated accounts to monitor
+- `monitored_posts` — discovered posts (24h discovery, 7d comment-watch window)
+- `digest_items` — surfaced comments + drafted replies + status (new/drafted/replied/skipped)
+
+Helpers:
+- `scripts/digest-now.js` — trigger one full run
+- `scripts/digest-dry-run.js` — discover/fetch/filter/draft, no DB writes, no email
+- `scripts/import-watchlist.js path/to/file.csv` — bulk seed (`handle,platform[,display,notes]`)
+
+Config in `config/app.js`:
+- `DIGEST_RECIPIENT`, `DIGEST_CRON`, `DIGEST_RELEVANCE_STRATEGY`, `DIGEST_MAX_COMMENTS_PER_POST`, `DIGEST_REPLY_MODEL`, `DIGEST_URL_BASE`
+
+Future hooks: `digest_items.relevance_strategy` (slot for `ai_v1`), `digest_items.posted_via` (slot for semi-auto Apify reply posting).

@@ -209,6 +209,8 @@ async function migrate() {
       END IF;
     END $$;
   `)
+  const { migrate: runDailyValueMigration } = require('./migrate-runner')
+  await runDailyValueMigration(pool)
   console.log('Migration complete')
   await pool.end()
 }
