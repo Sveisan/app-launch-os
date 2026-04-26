@@ -66,6 +66,67 @@ const SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_digest_items_status ON digest_items (status);
   CREATE INDEX IF NOT EXISTS idx_digest_items_surfaced ON digest_items (surfaced_in_digest_at DESC);
+
+  -- Reddit Prospector: subreddit watchlist + candidate triage
+  CREATE TABLE IF NOT EXISTS reddit_subreddits (
+    id                SERIAL PRIMARY KEY,
+    name              TEXT NOT NULL UNIQUE,
+    audience          TEXT NOT NULL CHECK (audience IN ('anti_gamification','pain_point','biohacker')),
+    is_active         BOOLEAN NOT NULL DEFAULT TRUE,
+    last_fetched_at   TIMESTAMPTZ,
+    last_fetch_error  TEXT,
+    notes             TEXT,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  INSERT INTO reddit_subreddits (name, audience) VALUES
+    ('getdisciplined',      'anti_gamification'),
+    ('Anxiety',             'pain_point'),
+    ('PanicAttack',         'pain_point'),
+    ('insomnia',            'pain_point'),
+    ('sleep',               'pain_point'),
+    ('decidingtobebetter',  'pain_point'),
+    ('Biohackers',          'biohacker'),
+    ('HubermanLab',         'biohacker'),
+    ('Nootropics',          'biohacker'),
+    ('breathwork',          'biohacker'),
+    ('Wimhof',              'biohacker')
+  ON CONFLICT (name) DO NOTHING;
+
+  CREATE TABLE IF NOT EXISTS reddit_candidates (
+    id                    SERIAL PRIMARY KEY,
+    kind                  TEXT NOT NULL CHECK (kind IN ('post','comment')),
+    platform              TEXT NOT NULL DEFAULT 'reddit',
+    subreddit             TEXT NOT NULL,
+    thread_id             TEXT NOT NULL,
+    parent_id             TEXT,
+    thread_url            TEXT NOT NULL,
+    author_handle         TEXT,
+    title                 TEXT,
+    body                  TEXT,
+    posted_at             TIMESTAMPTZ,
+    score                 INTEGER,
+    num_comments          INTEGER,
+    audience              TEXT,
+    draft_reply           TEXT,
+    draft_contains_pitch  BOOLEAN NOT NULL DEFAULT FALSE,
+    draft_model           TEXT,
+    draft_generated_at    TIMESTAMPTZ,
+    status                TEXT NOT NULL DEFAULT 'pending'
+                          CHECK (status IN ('pending','replied','needs_edit','dismissed')),
+    reply_posted_at       TIMESTAMPTZ,
+    status_changed_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'reddit_candidates_platform_thread_unique') THEN
+      ALTER TABLE reddit_candidates ADD CONSTRAINT reddit_candidates_platform_thread_unique UNIQUE (platform, thread_id);
+    END IF;
+  END $$;
+
+  CREATE INDEX IF NOT EXISTS idx_reddit_candidates_status ON reddit_candidates (status);
+  CREATE INDEX IF NOT EXISTS idx_reddit_candidates_created ON reddit_candidates (created_at DESC);
 `
 
 async function migrate(pool) {

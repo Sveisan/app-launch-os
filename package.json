@@ -12,7 +12,10 @@
     "test": "jest --runInBand",
     "content": "node scripts/content-admin.js",
     "generate": "node scripts/content-admin.js generate",
-    "scout:view": "node scripts/view-scout.js"
+    "scout:view": "node scripts/view-scout.js",
+    "reddit:now": "node scripts/reddit-now.js",
+    "reddit:dry": "node scripts/reddit-dry-run.js",
+    "reddit:import": "node scripts/import-subreddits.js"
   },
   "jest": {
     "testEnvironment": "node"

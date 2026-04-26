@@ -41,6 +41,42 @@ function renderDailyValueCard(it) {
     `
 }
 
+function renderRedditCard(it) {
+    const statusButtons = ['pending','replied','needs_edit','dismissed']
+        .filter(s => s !== it.status)
+        .map(s => `<button onclick="rdSetStatus(${it.id}, '${s}', this)" style="background:none;border:1px solid var(--card-border);color:var(--text-muted);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;cursor:pointer;">&rarr; ${s.replace('_', ' ')}</button>`)
+        .join(' ')
+    const kindBadge = it.kind === 'post'
+        ? `<span style="background:rgba(82,171,152,0.15);color:var(--secondary);padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;">post</span>`
+        : `<span style="background:rgba(160,160,160,0.15);color:var(--text-muted);padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;">comment</span>`
+    const pitchBadge = it.draft_contains_pitch
+        ? `<span title="Draft mentions Breathe Collection — OP asked for a recommendation" style="background:rgba(224,123,57,0.15);color:var(--accent);padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;">pitch</span>`
+        : ''
+    const bodyPreview = (it.body || '').slice(0, 280)
+    return `
+    <div class="rd-card" data-id="${it.id}" data-status="${it.status}" style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;gap:0.4rem;flex-wrap:wrap;">
+            <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+                ${kindBadge}
+                ${pitchBadge}
+                <span style="font-size:0.75rem;color:var(--text-muted);">r/${esc(it.subreddit)}</span>
+            </div>
+            <div style="font-size:0.7rem;color:var(--text-muted);">@${esc(it.author_handle || '?')} · ${esc(timeAgo(it.posted_at))}</div>
+        </div>
+        ${it.title ? `<div style="font-weight:500;font-size:0.95rem;color:white;margin-bottom:0.4rem;">${esc(it.title.slice(0, 140))}</div>` : ''}
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;white-space:pre-wrap;">${esc(bodyPreview)}${(it.body || '').length > 280 ? '…' : ''}</div>
+        <textarea data-id="${it.id}" onblur="rdSaveDraft(${it.id}, this.value)" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--card-border);color:white;border-radius:8px;padding:0.6rem;font-size:0.85rem;font-family:inherit;resize:vertical;min-height:70px;margin-bottom:0.6rem;">${esc(it.draft_reply || '')}</textarea>
+        <div style="display:flex;justify-content:space-between;gap:0.4rem;flex-wrap:wrap;">
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                <button onclick="rdCopyDraft(${it.id})" style="background:rgba(82,171,152,0.1);color:var(--secondary);border:1px solid rgba(82,171,152,0.3);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;cursor:pointer;">Copy</button>
+                <a href="${esc(it.thread_url)}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.05);color:white;border:1px solid var(--card-border);padding:0.3rem 0.6rem;border-radius:6px;font-size:0.7rem;text-decoration:none;">Open thread &#8599;</a>
+            </div>
+            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">${statusButtons}</div>
+        </div>
+    </div>
+    `
+}
+
 function renderAdminDashboard(stats, userRole = 'owner') {
     const isOwner = userRole === 'owner';
 
@@ -274,6 +310,59 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </div>
         </div>
         ` : ''}
+
+        <h2 class="section-title">Reddit Prospector</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Reddit threads worth replying to. Refreshed every 6 hours. The agent never auto-posts — triage and post manually.</p>
+
+        ${(() => {
+            const lr = stats.redditLastRun;
+            if (!lr) {
+                return `<div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 0.8rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">No runs yet. Trigger a manual run or wait for the next 6h cron.</div>`;
+            }
+            const errMatch = lr.message.match(/(\d+)\s+errors/);
+            const errCount = errMatch ? parseInt(errMatch[1], 10) : 0;
+            const stale = /stale:/i.test(lr.message);
+            const bg = errCount > 0 || stale ? 'rgba(255, 165, 0, 0.08)' : 'rgba(82, 171, 152, 0.05)';
+            const border = errCount > 0 || stale ? 'rgba(255, 165, 0, 0.3)' : 'rgba(82, 171, 152, 0.2)';
+            const accent = errCount > 0 || stale ? '#ffa500' : 'var(--secondary)';
+            const when = new Date(lr.created_at).toLocaleString();
+            return `<div style="background: ${bg}; border: 1px solid ${border}; padding: 0.8rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.85rem;">
+                <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                    <div><span style="color: ${accent}; font-weight: 500;">Last run:</span> <span style="color: white;">${esc(lr.message.replace(/^Reddit:\s*/, ''))}</span></div>
+                    <div style="color: var(--text-muted);">${esc(when)}</div>
+                </div>
+            </div>`;
+        })()}
+
+        ${isOwner ? `
+        <div class="modal-status-bar" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
+            <div>
+                <h3 style="font-weight: 400; font-size: 1rem; margin-bottom: 0.2rem;">Manual Refresh</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Trigger a Reddit sweep now instead of waiting for the cron.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="rdRunNow" class="nav-btn" style="padding: 0.6rem 1.5rem;">Run Now</button>
+            </div>
+        </div>
+        ` : ''}
+
+        <div class="kanban-board" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem;">
+            ${['pending','replied','needs_edit','dismissed'].map(status => {
+                const title = { pending: 'Pending', replied: 'Replied', needs_edit: 'Needs Edit', dismissed: 'Dismissed' }[status];
+                const items = (stats.redditByStatus && stats.redditByStatus[status]) || [];
+                return `
+                <div class="kanban-column" data-board="reddit" data-status="${status}" id="rd-col-${status}" style="flex: 0 0 340px; min-height: 40vh; background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; max-height: 70vh;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h4 style="font-weight: 500; font-size: 1rem;">${title}</h4>
+                        <span style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">${items.length}</span>
+                    </div>
+                    <div class="rd-cards" id="rd-cards-${status}" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;">
+                        ${items.length === 0 ? `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0;">Empty</div>` : items.map(it => renderRedditCard(it)).join('')}
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        </div>
 
         <h2 class="section-title">Daily Value</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Comment threads worth showing up in. Refreshed nightly at 06:00.</p>
@@ -1359,6 +1448,50 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     dvRunBtn.textContent = 'Failed'
                 }
                 setTimeout(() => { dvRunBtn.disabled = false; dvRunBtn.textContent = 'Run Now' }, 5000)
+            })
+        }
+
+        // ----- Reddit Prospector handlers -----
+        async function rdSaveDraft(id, draft) {
+            try {
+                await fetch('/mission-control-x89/reddit/items/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ draft_reply: draft }),
+                })
+            } catch (e) { console.error('rdSaveDraft', e) }
+        }
+        async function rdSetStatus(id, status, btn) {
+            try {
+                const res = await fetch('/mission-control-x89/reddit/items/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status }),
+                })
+                if (res.ok) {
+                    const card = btn.closest('.rd-card')
+                    const target = document.getElementById('rd-cards-' + status)
+                    if (card && target) target.appendChild(card)
+                }
+            } catch (e) { console.error('rdSetStatus', e) }
+        }
+        function rdCopyDraft(id) {
+            const ta = document.querySelector('.rd-card[data-id="' + id + '"] textarea')
+            if (!ta) return
+            navigator.clipboard.writeText(ta.value).catch(() => {})
+        }
+        const rdRunBtn = document.getElementById('rdRunNow')
+        if (rdRunBtn) {
+            rdRunBtn.addEventListener('click', async () => {
+                rdRunBtn.disabled = true
+                rdRunBtn.textContent = 'Running...'
+                try {
+                    await fetch('/mission-control-x89/reddit/run', { method: 'POST' })
+                    rdRunBtn.textContent = 'Started — refresh in ~60s'
+                } catch (e) {
+                    rdRunBtn.textContent = 'Failed'
+                }
+                setTimeout(() => { rdRunBtn.disabled = false; rdRunBtn.textContent = 'Run Now' }, 5000)
             })
         }
     </script>

@@ -6,6 +6,7 @@ const { scoutAgentRun } = require('../jobs/scout');
 const { comparePassword, generateToken, verifyToken } = require('../db/auth');
 const { checkAuth, ownerOnly } = require('../middleware/auth');
 const dailyValueRouter = require('./daily-value');
+const redditRouter = require('./reddit');
 
 
 
@@ -264,6 +265,35 @@ router.get('/', checkAuth, async (req, res) => {
             console.warn('Daily Value initial payload skipped:', err.message);
         }
 
+        // Reddit Prospector: initial board payload + last run
+        let redditByStatus = { pending: [], replied: [], needs_edit: [], dismissed: [] };
+        let redditLastRun = null;
+        try {
+            const rr = await pool.query(`
+                SELECT id, kind, subreddit, thread_id, parent_id, thread_url, author_handle,
+                       title, body, posted_at, score, num_comments, audience,
+                       draft_reply, draft_contains_pitch, status, reply_posted_at, status_changed_at
+                FROM reddit_candidates
+                WHERE created_at > NOW() - INTERVAL '7 days'
+                ORDER BY status_changed_at DESC
+            `);
+            for (const row of rr.rows) {
+                if (redditByStatus[row.status]) redditByStatus[row.status].push(row);
+            }
+        } catch (err) {
+            console.warn('Reddit Prospector initial payload skipped:', err.message);
+        }
+        try {
+            const lr = await pool.query(`
+                SELECT message, created_at FROM scout_logs
+                WHERE message LIKE 'Reddit:%'
+                ORDER BY created_at DESC LIMIT 1
+            `);
+            if (lr.rows[0]) redditLastRun = lr.rows[0];
+        } catch (err) {
+            console.warn('Reddit Prospector last run lookup skipped:', err.message);
+        }
+
         const stats = {
             isDbReady,
             scoutLeads: scoutRes.rows[0].count,
@@ -274,6 +304,8 @@ router.get('/', checkAuth, async (req, res) => {
             totalCounts,
             dailyValueByStatus,
             dailyValueLastRun,
+            redditByStatus,
+            redditLastRun,
             systemLogs: logsRes.rows[0] ? logsRes.rows : []
         };
 
@@ -442,5 +474,6 @@ router.post('/claim-code', checkAuth, async (req, res) => {
 });
 
 router.use('/daily-value', dailyValueRouter);
+router.use('/reddit', redditRouter);
 
 module.exports = router;
