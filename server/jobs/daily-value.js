@@ -51,4 +51,39 @@ async function discoverPosts(accounts, { sinceHours = 24 } = {}) {
   return summary
 }
 
-module.exports = { resolveMonitoredAccounts, discoverPosts }
+async function fetchCommentsForActivePosts({ maxCommentsPerPost }) {
+  const summary = { postsFetched: 0, commentsFetched: 0, errors: [] }
+  const all = []
+
+  const postsRes = await pool.query(`
+    SELECT id, platform, post_id, post_url
+    FROM monitored_posts
+    WHERE archived_at IS NULL
+      AND published_at > NOW() - INTERVAL '7 days'
+    ORDER BY last_comments_fetched_at NULLS FIRST
+  `)
+
+  for (const post of postsRes.rows) {
+    try {
+      const comments = await platforms.getPostComments(post.platform, post.post_id, {
+        postUrl: post.post_url,
+        limit: maxCommentsPerPost,
+      })
+      summary.postsFetched++
+      summary.commentsFetched += comments.length
+      for (const c of comments) {
+        all.push({ ...c, monitored_post_id: post.id })
+      }
+      await pool.query(
+        `UPDATE monitored_posts SET last_comments_fetched_at = NOW() WHERE id = $1`,
+        [post.id]
+      )
+    } catch (err) {
+      summary.errors.push(`post ${post.platform}:${post.post_id}: ${err.message}`)
+    }
+  }
+
+  return { comments: all, summary }
+}
+
+module.exports = { resolveMonitoredAccounts, discoverPosts, fetchCommentsForActivePosts }
