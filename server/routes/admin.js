@@ -5,6 +5,7 @@ const { renderAdminDashboard, renderLogin, renderManual } = require('../template
 const { scoutAgentRun } = require('../jobs/scout');
 const { comparePassword, generateToken, verifyToken } = require('../db/auth');
 const { checkAuth, ownerOnly } = require('../middleware/auth');
+const dailyValueRouter = require('./daily-value');
 
 
 
@@ -395,5 +396,7 @@ router.post('/claim-code', checkAuth, async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+router.use('/daily-value', dailyValueRouter);
 
 module.exports = router;
