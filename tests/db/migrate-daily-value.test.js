@@ -16,7 +16,8 @@ describeIfDb('daily-value migration', () => {
 
     const tables = await pool.query(`
       SELECT table_name FROM information_schema.tables
-      WHERE table_name IN ('scout_watchlist','monitored_posts','digest_items')
+      WHERE table_schema = 'public'
+        AND table_name IN ('scout_watchlist','monitored_posts','digest_items')
     `)
     expect(tables.rows.map(r => r.table_name).sort())
       .toEqual(['digest_items','monitored_posts','scout_watchlist'])
