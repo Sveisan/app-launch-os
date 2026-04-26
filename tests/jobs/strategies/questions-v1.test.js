@@ -37,6 +37,10 @@ describe('questions-v1 filter', () => {
     expect(filter([c('first!')])).toEqual([])
     expect(filter([c('check my profile')])).toEqual([])
     expect(filter([c('amazing')])).toEqual([])
+    expect(filter([c('am loving this')])).toEqual([])
+    expect(filter([c('am so grateful')])).toEqual([])
+    expect(filter([c('hay que practicar mas')])).toEqual([])
+    expect(filter([c('hay muchos beneficios')])).toEqual([])
   })
 
   it('rejects empty/whitespace', () => {
