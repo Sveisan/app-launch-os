@@ -4,6 +4,7 @@ jest.mock('../../server/db/index', () => ({
 jest.mock('../../server/platforms', () => ({
   getRecentPosts: jest.fn(),
   getPostComments: jest.fn(),
+  QUOTA_TAG: 'APIFY_QUOTA_EXCEEDED',
 }))
 
 const { pool } = require('../../server/db/index')
@@ -55,5 +56,22 @@ describe('discoverPosts', () => {
     expect(summary.postsDiscovered).toBe(1)
     expect(summary.errors).toHaveLength(1)
     expect(summary.errors[0]).toMatch(/a.*apify down/i)
+  })
+
+  it('aborts immediately on Apify quota error', async () => {
+    platforms.getRecentPosts
+      .mockRejectedValueOnce(new Error('APIFY_QUOTA_EXCEEDED: Apify 402 for x'))
+
+    const accounts = [
+      { handle: 'a', platform: 'instagram', source: 'watchlist', source_ref_id: 1 },
+      { handle: 'b', platform: 'tiktok',    source: 'watchlist', source_ref_id: 2 },
+      { handle: 'c', platform: 'instagram', source: 'watchlist', source_ref_id: 3 },
+    ]
+    const summary = await discoverPosts(accounts)
+
+    expect(summary.quotaExhausted).toBe(true)
+    expect(summary.accountsScanned).toBe(1)
+    expect(platforms.getRecentPosts).toHaveBeenCalledTimes(1)
+    expect(summary.errors).toHaveLength(1)
   })
 })

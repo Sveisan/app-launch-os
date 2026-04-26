@@ -276,7 +276,27 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         ` : ''}
 
         <h2 class="section-title">Daily Value</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 2rem;">Comment threads worth showing up in. Refreshed nightly at 06:00.</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Comment threads worth showing up in. Refreshed nightly at 06:00.</p>
+
+        ${(() => {
+            const lr = stats.dailyValueLastRun;
+            if (!lr) {
+                return `<div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 0.8rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">No runs yet. Trigger a manual run or wait for the 06:00 cron.</div>`;
+            }
+            const quota = /APIFY QUOTA EXHAUSTED/i.test(lr.message);
+            const errMatch = lr.message.match(/(\d+)\s+errors/);
+            const errCount = errMatch ? parseInt(errMatch[1], 10) : 0;
+            const bg = quota ? 'rgba(255, 71, 87, 0.1)' : (errCount > 0 ? 'rgba(255, 165, 0, 0.08)' : 'rgba(82, 171, 152, 0.05)');
+            const border = quota ? 'rgba(255, 71, 87, 0.4)' : (errCount > 0 ? 'rgba(255, 165, 0, 0.3)' : 'rgba(82, 171, 152, 0.2)');
+            const accent = quota ? '#ff4757' : (errCount > 0 ? '#ffa500' : 'var(--secondary)');
+            const when = new Date(lr.created_at).toLocaleString();
+            return `<div style="background: ${bg}; border: 1px solid ${border}; padding: 0.8rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-size: 0.85rem;">
+                <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                    <div><span style="color: ${accent}; font-weight: 500;">Last run:</span> <span style="color: white;">${esc(lr.message.replace(/^Daily Value:\s*/, ''))}</span></div>
+                    <div style="color: var(--text-muted);">${esc(when)}</div>
+                </div>
+            </div>`;
+        })()}
 
         ${isOwner ? `
         <div class="modal-status-bar" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px;">
