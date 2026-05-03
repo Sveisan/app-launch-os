@@ -96,14 +96,14 @@ async function saveAndNotify({ handle, platform, email, followers, wantsGiveaway
   let codes = []
   try {
     const codeRes = await pool.query(`
-      UPDATE offer_codes 
-      SET is_used = TRUE, used_by_email = $1, used_at = NOW() 
+      UPDATE offer_codes
+      SET is_used = TRUE, used_by_email = $1, used_at = NOW()
       WHERE id IN (
-        SELECT id FROM offer_codes 
-        WHERE type = 'trial' AND is_used = FALSE 
-        LIMIT 11 
+        SELECT id FROM offer_codes
+        WHERE type = 'trial' AND platform = 'ios' AND is_used = FALSE
+        LIMIT 11
         FOR UPDATE SKIP LOCKED
-      ) 
+      )
       RETURNING code
     `, [email])
     

@@ -281,12 +281,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 <div class="stat-label">Creator Applications</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${stats.codesLeft.trial}</div>
-                <div class="stat-label">1-Month Codes Remaining</div>
+                <div class="stat-value">${stats.codesLeft.ios.trial} / ${stats.codesLeft.android.trial}</div>
+                <div class="stat-label">1-Month Codes (iOS / Android)</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${stats.codesLeft.lifetime}</div>
-                <div class="stat-label">Lifetime Codes Remaining</div>
+                <div class="stat-value">${stats.codesLeft.ios.lifetime} / ${stats.codesLeft.android.lifetime}</div>
+                <div class="stat-label">Lifetime Codes (iOS / Android)</div>
             </div>
         </div>
 
@@ -616,10 +616,13 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     <div id="reward-trial" style="background: rgba(224, 123, 57, 0.05); border: 1px dashed rgba(224, 123, 57, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
                         <div>
                             <h4 style="font-weight: 500; color: var(--accent); font-size: 0.9rem; margin-bottom: 0.2rem;">1 Month Pro Access</h4>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Standard onboarding code. <br><strong>${stats.codesLeft.trial}</strong> remaining.</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Standard onboarding code. <br><strong>${stats.codesLeft.ios.trial}</strong> iOS / <strong>${stats.codesLeft.android.trial}</strong> Android remaining.</p>
                         </div>
-                        <div id="promoContainer-trial">
-                            <button id="claimCodeBtn-trial" onclick="claimCode('trial')" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim 1-Month</button>
+                        <div id="promoContainer-trial-ios">
+                            <button id="claimCodeBtn-trial-ios" onclick="claimCode('trial', 'ios')" style="background: var(--accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim 1-Month (iOS)</button>
+                        </div>
+                        <div id="promoContainer-trial-android">
+                            <button id="claimCodeBtn-trial-android" onclick="claimCode('trial', 'android')" style="background: rgba(224, 123, 57, 0.15); color: var(--accent); border: 1px solid rgba(224, 123, 57, 0.4); padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim 1-Month (Android)</button>
                         </div>
                     </div>
 
@@ -627,10 +630,13 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     <div id="reward-lifetime" style="background: rgba(82, 171, 152, 0.05); border: 1px dashed rgba(82, 171, 152, 0.3); padding: 1.5rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
                         <div>
                             <h4 style="font-weight: 500; color: var(--secondary); font-size: 0.9rem; margin-bottom: 0.2rem;">Lifetime Pro Access</h4>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">High-value reward for top creators. <br><strong>${stats.codesLeft.lifetime}</strong> remaining.</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">High-value reward for top creators. <br><strong>${stats.codesLeft.ios.lifetime}</strong> iOS / <strong>${stats.codesLeft.android.lifetime}</strong> Android remaining.</p>
                         </div>
-                        <div id="promoContainer-lifetime">
-                            <button id="claimCodeBtn-lifetime" onclick="claimCode('lifetime')" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim Lifetime</button>
+                        <div id="promoContainer-lifetime-ios">
+                            <button id="claimCodeBtn-lifetime-ios" onclick="claimCode('lifetime', 'ios')" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim Lifetime (iOS)</button>
+                        </div>
+                        <div id="promoContainer-lifetime-android">
+                            <button id="claimCodeBtn-lifetime-android" onclick="claimCode('lifetime', 'android')" style="background: rgba(82, 171, 152, 0.15); color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.4); padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%;">Claim Lifetime (Android)</button>
                         </div>
                     </div>
                 </div>
@@ -960,23 +966,25 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             });
         });
 
-        async function claimCode(rewardType) {
-            const btn = document.getElementById('claimCodeBtn-' + rewardType);
+        async function claimCode(rewardType, platform) {
+            platform = platform || 'ios';
+            const btn = document.getElementById('claimCodeBtn-' + rewardType + '-' + platform);
             if (!btn) return;
-            const originalText = rewardType === 'lifetime' ? 'Claim Lifetime' : 'Claim 1-Month';
-            
+            const platformLabel = platform === 'android' ? ' (Android)' : ' (iOS)';
+            const originalText = (rewardType === 'lifetime' ? 'Claim Lifetime' : 'Claim 1-Month') + platformLabel;
+
             btn.disabled = true;
             btn.textContent = 'Claiming...';
-            
+
             try {
                 const res = await fetch('/mission-control-x89/claim-code?auth=breathe88', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ handle: currentHandle, rewardType: rewardType })
+                    body: JSON.stringify({ handle: currentHandle, rewardType: rewardType, platform: platform })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showCode(data.code, rewardType);
+                    showCode(data.code, rewardType, platform);
                 } else {
                     alert('Error: ' + data.error);
                     btn.disabled = false;
@@ -989,11 +997,14 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             }
         }
 
-        function showCode(code, type) {
-            const fullUrl = 'https://breathecollection.app/creators?code=' + code;
-            const container = document.getElementById('promoContainer-' + type);
+        function showCode(code, type, platform) {
+            platform = platform || 'ios';
+            const fullUrl = platform === 'android'
+                ? 'https://play.google.com/redeem?code=' + code
+                : 'https://breathecollection.app/creators?code=' + code;
+            const container = document.getElementById('promoContainer-' + type + '-' + platform);
             if (!container) return;
-            
+
             container.innerHTML = \`
                 <div style="display: flex; flex-direction: column; gap: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.6rem; border-radius: 6px; border: 1px solid var(--accent); overflow: hidden;">
                     <code style="color: var(--accent); font-weight: 500; font-size: 0.75rem; word-break: break-all; margin-bottom: 0.3rem;">\${fullUrl}</code>
