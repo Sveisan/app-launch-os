@@ -195,6 +195,10 @@ async function migrate() {
     ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS assigned_to_handle TEXT;
     ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
 
+    -- Platform split: existing codes are iOS App Store; Google Play codes import as 'android'
+    ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'ios';
+    UPDATE offer_codes SET platform = 'ios' WHERE platform IS NULL;
+
     -- Add unique constraint for Scout Agent storage
     DO $$ 
     BEGIN 

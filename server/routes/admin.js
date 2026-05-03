@@ -163,17 +163,21 @@ router.get('/', checkAuth, async (req, res) => {
         // 4. Creator Applications
         const creatorRes = await pool.query("SELECT COUNT(*) FROM contacts WHERE scout_logged = FALSE");
         
-        // 5. Offer Codes Left (By Type)
+        // 5. Offer Codes Left (by platform + type)
         const codesRes = await pool.query(`
-            SELECT type, COUNT(*) as count 
-            FROM offer_codes 
+            SELECT platform, type, COUNT(*) as count
+            FROM offer_codes
             WHERE is_used = FALSE AND assigned_to_handle IS NULL
-            GROUP BY type
+            GROUP BY platform, type
         `);
-        const codesLeft = { trial: 0, lifetime: 0 };
+        const codesLeft = {
+            ios: { trial: 0, lifetime: 0 },
+            android: { trial: 0, lifetime: 0 },
+        };
         codesRes.rows.forEach(r => {
-            if (codesLeft[r.type] !== undefined) {
-                codesLeft[r.type] = parseInt(r.count);
+            const platform = r.platform || 'ios';
+            if (codesLeft[platform] && codesLeft[platform][r.type] !== undefined) {
+                codesLeft[platform][r.type] = parseInt(r.count);
             }
         });
         
@@ -439,31 +443,35 @@ router.post('/regenerate-draft', checkAuth, async (req, res) => {
 
 router.post('/claim-code', checkAuth, async (req, res) => {
     try {
-        const { handle, rewardType } = req.body;
+        const { handle, rewardType, platform: rawPlatform } = req.body;
         if (!handle) return res.status(400).json({ success: false, error: 'Handle is required' });
         const type = rewardType || 'trial';
+        const platform = ['ios', 'android'].includes(rawPlatform) ? rawPlatform : 'ios';
 
-        // 1. Check if handle already has a code of this type
-        const existing = await pool.query('SELECT code FROM offer_codes WHERE assigned_to_handle = $1 AND type = $2', [handle, type]);
+        // 1. Check if handle already has a code of this platform + type
+        const existing = await pool.query(
+            'SELECT code FROM offer_codes WHERE assigned_to_handle = $1 AND type = $2 AND platform = $3',
+            [handle, type, platform]
+        );
         if (existing.rows.length > 0) {
             return res.json({ success: true, code: existing.rows[0].code, alreadyAssigned: true });
         }
 
-        // 2. Find and claim a new code of the requested type
+        // 2. Find and claim a new code of the requested platform + type
         const result = await pool.query(`
-            UPDATE offer_codes 
-            SET assigned_to_handle = $1, assigned_at = NOW() 
+            UPDATE offer_codes
+            SET assigned_to_handle = $1, assigned_at = NOW()
             WHERE id = (
-                SELECT id FROM offer_codes 
-                WHERE is_used = FALSE AND assigned_to_handle IS NULL AND type = $2
-                ORDER BY created_at ASC 
+                SELECT id FROM offer_codes
+                WHERE is_used = FALSE AND assigned_to_handle IS NULL AND type = $2 AND platform = $3
+                ORDER BY created_at ASC
                 LIMIT 1
-            ) 
+            )
             RETURNING code
-        `, [handle, type]);
+        `, [handle, type, platform]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: `No available ${type} promo codes found` });
+            return res.status(404).json({ success: false, error: `No available ${platform} ${type} promo codes found` });
         }
 
         res.json({ success: true, code: result.rows[0].code });
