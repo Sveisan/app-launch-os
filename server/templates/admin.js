@@ -312,27 +312,6 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </div>
         </div>
 
-        ${isOwner ? `
-        <h2 class="section-title">Video Studio (TikTok Pipeline)</h2>
-        <div id="videoStudioCard" class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 3rem;">
-            <div class="modal-status-bar" style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem;">
-                <div>
-                    <h3 style="font-weight: 400; font-size: 1.2rem; margin-bottom: 0.5rem;">Automated Batch Production</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px;">Generate 6 research-backed TikTok videos (9:16) with Ultra-Glass aesthetics and Liam voiceover. Total production time is ~3-4 minutes.</p>
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="clearCacheBtn" class="btn" style="background: transparent; border: 1px solid var(--card-border); opacity: 0.6; padding: 0.8rem 1.5rem; border-radius: 12px; color: white;">Clear Cache</button>
-                    <button id="generateVideosBtn" class="btn-primary" style="background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.9rem; font-weight: 500; cursor: pointer;">● Generate 6 TikTok Videos</button>
-                </div>
-            </div>
-
-            <div id="videoProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                <!-- Filled via JS -->
-                <div class="empty-state" style="grid-column: 1/-1; padding: 2rem; border: 1px dashed var(--card-border); border-radius: 12px;">No active production. Click generate to start.</div>
-            </div>
-        </div>
-        ` : ''}
-
         <h2 class="section-title">Reddit Prospector</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -1rem; margin-bottom: 1rem;">Reddit threads worth replying to. Refreshed every 6 hours. The agent never auto-posts — triage and post manually.</p>
 
