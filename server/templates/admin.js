@@ -290,6 +290,28 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             </div>
         </div>
 
+        <div id="socialCampaignCard" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 1.5rem 1.75rem; border-radius: 20px; margin-bottom: 2.5rem; display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center;">
+            <div>
+                <h3 style="font-weight: 400; font-size: 1.05rem; margin: 0 0 0.35rem;">Social Campaign — "Comment 'breathe'"</h3>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 0.6rem;">
+                    Pulls a 1-month trial code from the shared pool. Marked as given out so it leaves the influencer counter.
+                </p>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted);">
+                    <span>Pool available: <strong style="color: var(--text-main);">${stats.codesLeft.ios.trial} iOS</strong> · <strong style="color: var(--text-main);">${stats.codesLeft.android.trial} Android</strong></span>
+                    <span>Given out: <strong style="color: var(--text-main);">${stats.socialGiven.total}</strong> (last 24h: <strong style="color: var(--text-main);">${stats.socialGiven.today}</strong>)</span>
+                </div>
+                <div id="socialLastPulled" style="display: none; margin-top: 0.9rem; padding: 0.7rem 0.9rem; background: rgba(0,0,0,0.25); border: 1px solid var(--accent); border-radius: 10px; font-size: 0.78rem;">
+                    <span style="color: var(--text-muted);">Last pulled:</span>
+                    <code id="socialLastUrl" style="color: var(--accent); word-break: break-all; margin-left: 0.4rem;"></code>
+                    <button onclick="copySocialUrl()" style="margin-left: 0.6rem; background: var(--accent); border: none; color: white; cursor: pointer; font-size: 0.72rem; border-radius: 6px; padding: 0.3rem 0.7rem; font-weight: 500;">Copy URL</button>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; min-width: 200px;">
+                <button id="pullSocialIosBtn" onclick="pullSocialCode('ios')" style="background: var(--accent); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get iOS code</button>
+                <button id="pullSocialAndroidBtn" onclick="pullSocialCode('android')" style="background: rgba(224, 123, 57, 0.15); color: var(--accent); border: 1px solid rgba(224, 123, 57, 0.4); padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get Android code</button>
+            </div>
+        </div>
+
         ${isOwner ? `
         <h2 class="section-title">Video Studio (TikTok Pipeline)</h2>
         <div id="videoStudioCard" class="card" style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 2rem; border-radius: 20px; margin-bottom: 3rem;">
@@ -1015,6 +1037,52 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
             alert('Code copied: ' + text);
+        }
+
+        let lastSocialUrl = '';
+        async function pullSocialCode(platform) {
+            const btn = document.getElementById(platform === 'android' ? 'pullSocialAndroidBtn' : 'pullSocialIosBtn');
+            if (!btn) return;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Pulling...';
+
+            try {
+                const res = await fetch('/mission-control-x89/pull-social-code?auth=breathe88', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    lastSocialUrl = data.redeemUrl;
+                    const wrap = document.getElementById('socialLastPulled');
+                    const urlEl = document.getElementById('socialLastUrl');
+                    if (wrap && urlEl) {
+                        urlEl.textContent = data.redeemUrl;
+                        wrap.style.display = 'block';
+                    }
+                    try {
+                        await navigator.clipboard.writeText(data.redeemUrl);
+                    } catch (e) { /* clipboard may be blocked, URL is still visible */ }
+                    btn.textContent = 'Copied · pull next';
+                    setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 1500);
+                } else {
+                    alert(data.error || 'Failed to pull code');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                alert('Connection failed');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        function copySocialUrl() {
+            if (!lastSocialUrl) return;
+            navigator.clipboard.writeText(lastSocialUrl);
+            alert('Copied: ' + lastSocialUrl);
         }
 
         // Modal pipeline navigation
