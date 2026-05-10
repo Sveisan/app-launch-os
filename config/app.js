@@ -10,6 +10,12 @@ module.exports = {
   apify: {
     apiToken: process.env.APIFY_API_TOKEN,
   },
+  scout: {
+    // Set SCOUT_ENABLED=false to pause the Scout agent's Apify discovery
+    // sweeps without affecting the creator self-service eligibility check
+    // (which uses a separate Apify code path in server/platforms/index.js).
+    enabled: process.env.SCOUT_ENABLED !== 'false',
+  },
   eligibility: {
     followerThreshold: 500,
   },

@@ -5,6 +5,7 @@ const { renderAdminDashboard, renderLogin, renderManual } = require('../template
 const { scoutAgentRun } = require('../jobs/scout');
 const { comparePassword, generateToken, verifyToken } = require('../db/auth');
 const { checkAuth, ownerOnly } = require('../middleware/auth');
+const config = require('../../config/app');
 const dailyValueRouter = require('./daily-value');
 const redditRouter = require('./reddit');
 
@@ -94,8 +95,15 @@ router.post('/repair', checkAuth, ownerOnly, async (req, res) => {
 
 router.post('/trigger', checkAuth, ownerOnly, async (req, res) => {
     try {
+        if (!config.scout.enabled) {
+            return res.status(503).json({
+                success: false,
+                error: 'Scout is paused (SCOUT_ENABLED=false). Flip the env var in Railway and redeploy to resume.',
+            });
+        }
+
         console.log('Manual Scout Trigger received. Launching background process...');
-        
+
         // 1. Respond immediately to avoid timeout
         res.json({ success: true, message: 'Scout has been sent into the field. Refresh in 60s.' });
 
@@ -105,7 +113,7 @@ router.post('/trigger', checkAuth, ownerOnly, async (req, res) => {
         }).catch(err => {
             console.error('Background Scout Sweep failed:', err);
         });
-        
+
     } catch (err) {
         console.error('Trigger Route Error:', err);
         res.status(500).json({ success: false, error: err.message });

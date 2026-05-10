@@ -26,15 +26,19 @@ cron.schedule('0 9 * * 1', async () => {
     }
 });
 
-// Scout Agent Profile: Every hour
-cron.schedule('0 * * * *', async () => {
-    console.log('Scout Agent waking up for hourly sweep...');
-    try {
-        await scoutAgentRun();
-    } catch (err) {
-        console.error('Scout Agent Error:', err);
-    }
-});
+// Scout Agent Profile: Every hour (skipped entirely when SCOUT_ENABLED=false)
+if (config.scout.enabled) {
+    cron.schedule('0 * * * *', async () => {
+        console.log('Scout Agent waking up for hourly sweep...');
+        try {
+            await scoutAgentRun();
+        } catch (err) {
+            console.error('Scout Agent Error:', err);
+        }
+    });
+} else {
+    console.log('Scout Agent PAUSED via SCOUT_ENABLED=false. Hourly cron not registered. Eligibility checks still work.');
+}
 
 // Daily Value: nightly comment digest
 cron.schedule(config.digest.cron, async () => {
@@ -56,4 +60,4 @@ cron.schedule(config.reddit.cron, async () => {
     }
 });
 
-console.log('Content scheduler initialized. Scout Agent active. Daily Value cron registered. Reddit Prospector cron registered.');
+console.log(`Content scheduler initialized. Scout Agent ${config.scout.enabled ? 'active' : 'PAUSED'}. Daily Value cron registered. Reddit Prospector cron registered.`);
