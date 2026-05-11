@@ -294,11 +294,12 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             <div>
                 <h3 style="font-weight: 400; font-size: 1.05rem; margin: 0 0 0.35rem;">Social Campaign — "Comment 'breathe'"</h3>
                 <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 0.6rem;">
-                    Pulls a 1-month trial code from the shared pool. Marked as given out so it leaves the influencer counter.
+                    Pulls a code from the shared pool. Marked as given out so it leaves the influencer counter.
                 </p>
                 <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted);">
-                    <span>Pool available: <strong style="color: var(--text-main);">${stats.codesLeft.ios.trial} iOS</strong> · <strong style="color: var(--text-main);">${stats.codesLeft.android.trial} Android</strong></span>
-                    <span>Given out: <strong style="color: var(--text-main);">${stats.socialGiven.total}</strong> (last 24h: <strong style="color: var(--text-main);">${stats.socialGiven.today}</strong>)</span>
+                    <span>Trial pool: <strong style="color: var(--text-main);">${stats.codesLeft.ios.trial} iOS</strong> · <strong style="color: var(--text-main);">${stats.codesLeft.android.trial} Android</strong></span>
+                    <span>Lifetime pool: <strong style="color: var(--text-main);">${stats.codesLeft.ios.lifetime} iOS</strong> · <strong style="color: var(--text-main);">${stats.codesLeft.android.lifetime} Android</strong></span>
+                    <span>Given out: <strong style="color: var(--text-main);">${stats.socialGiven.trial} trial</strong> · <strong style="color: var(--text-main);">${stats.socialGiven.lifetime} lifetime</strong> (last 24h: <strong style="color: var(--text-main);">${stats.socialGiven.today}</strong>)</span>
                 </div>
                 <div id="socialLastPulled" style="display: none; margin-top: 0.9rem; padding: 0.7rem 0.9rem; background: rgba(0,0,0,0.25); border: 1px solid var(--accent); border-radius: 10px; font-size: 0.78rem;">
                     <span style="color: var(--text-muted);">Last pulled:</span>
@@ -306,9 +307,16 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                     <button onclick="copySocialUrl()" style="margin-left: 0.6rem; background: var(--accent); border: none; color: white; cursor: pointer; font-size: 0.72rem; border-radius: 6px; padding: 0.3rem 0.7rem; font-weight: 500;">Copy URL</button>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; min-width: 200px;">
-                <button id="pullSocialIosBtn" onclick="pullSocialCode('ios')" style="background: var(--accent); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get iOS code</button>
-                <button id="pullSocialAndroidBtn" onclick="pullSocialCode('android')" style="background: rgba(224, 123, 57, 0.15); color: var(--accent); border: 1px solid rgba(224, 123, 57, 0.4); padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get Android code</button>
+            <div style="display: flex; flex-direction: column; gap: 0.55rem; min-width: 220px;">
+                <button id="pullSocialIosBtn" onclick="pullSocialCode('ios', 'trial')" style="background: var(--accent); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get iOS code</button>
+                <button id="pullSocialAndroidBtn" onclick="pullSocialCode('android', 'trial')" style="background: rgba(224, 123, 57, 0.15); color: var(--accent); border: 1px solid rgba(224, 123, 57, 0.4); padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; cursor: pointer;">Get Android code</button>
+
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin: 0.4rem 0 0.1rem; font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">
+                    <span style="flex: 0 0 auto;">Lifetime (gift sparingly)</span>
+                    <span style="flex: 1; height: 1px; background: var(--card-border);"></span>
+                </div>
+                <button id="pullSocialLifetimeIosBtn" onclick="pullSocialCode('ios', 'lifetime')" style="background: transparent; color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.35); padding: 0.55rem 1.2rem; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;">Lifetime · iOS</button>
+                <button id="pullSocialLifetimeAndroidBtn" onclick="pullSocialCode('android', 'lifetime')" style="background: transparent; color: var(--secondary); border: 1px solid rgba(82, 171, 152, 0.35); padding: 0.55rem 1.2rem; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;">Lifetime · Android</button>
             </div>
         </div>
 
@@ -1019,9 +1027,17 @@ function renderAdminDashboard(stats, userRole = 'owner') {
         }
 
         let lastSocialUrl = '';
-        async function pullSocialCode(platform) {
-            const btn = document.getElementById(platform === 'android' ? 'pullSocialAndroidBtn' : 'pullSocialIosBtn');
+        async function pullSocialCode(platform, type) {
+            type = type || 'trial';
+            const btnId = type === 'lifetime'
+                ? (platform === 'android' ? 'pullSocialLifetimeAndroidBtn' : 'pullSocialLifetimeIosBtn')
+                : (platform === 'android' ? 'pullSocialAndroidBtn' : 'pullSocialIosBtn');
+            const btn = document.getElementById(btnId);
             if (!btn) return;
+            if (type === 'lifetime') {
+                const platformLabel = platform === 'android' ? 'Android' : 'iOS';
+                if (!confirm('Pull a LIFETIME ' + platformLabel + ' code? These are high-value — only gift when you mean it.')) return;
+            }
             const originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = 'Pulling...';
@@ -1030,7 +1046,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
                 const res = await fetch('/mission-control-x89/pull-social-code?auth=breathe88', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ platform })
+                    body: JSON.stringify({ platform, type })
                 });
                 const data = await res.json();
                 if (data.success) {
