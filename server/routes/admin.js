@@ -191,18 +191,19 @@ router.get('/', checkAuth, async (req, res) => {
 
         // 5b. Social Campaign — codes already given out via the panel button
         const socialRes = await pool.query(`
-            SELECT platform, COUNT(*) as count,
+            SELECT platform, type, COUNT(*) as count,
                    COUNT(*) FILTER (WHERE used_at >= NOW() - INTERVAL '24 hours') as today_count
             FROM offer_codes
             WHERE used_by_email = 'social-campaign'
-            GROUP BY platform
+            GROUP BY platform, type
         `);
-        const socialGiven = { ios: 0, android: 0, total: 0, today: 0 };
+        const socialGiven = { ios: 0, android: 0, total: 0, today: 0, trial: 0, lifetime: 0 };
         socialRes.rows.forEach(r => {
             const platform = r.platform || 'ios';
             const count = parseInt(r.count);
             const today = parseInt(r.today_count);
-            if (socialGiven[platform] !== undefined) socialGiven[platform] = count;
+            if (socialGiven[platform] !== undefined) socialGiven[platform] += count;
+            if (socialGiven[r.type] !== undefined) socialGiven[r.type] += count;
             socialGiven.total += count;
             socialGiven.today += today;
         });
@@ -510,8 +511,9 @@ router.post('/claim-code', checkAuth, async (req, res) => {
 
 router.post('/pull-social-code', checkAuth, async (req, res) => {
     try {
-        const { platform: rawPlatform } = req.body || {};
+        const { platform: rawPlatform, type: rawType } = req.body || {};
         const platform = ['ios', 'android'].includes(rawPlatform) ? rawPlatform : null;
+        const type = ['trial', 'lifetime'].includes(rawType) ? rawType : 'trial';
         if (!platform) {
             return res.status(400).json({ success: false, error: 'platform must be "ios" or "android"' });
         }
@@ -524,7 +526,7 @@ router.post('/pull-social-code', checkAuth, async (req, res) => {
             WHERE id = (
                 SELECT id FROM offer_codes
                 WHERE platform = $1
-                  AND type = 'trial'
+                  AND type = $2
                   AND is_used = FALSE
                   AND assigned_to_handle IS NULL
                 ORDER BY created_at ASC
@@ -532,12 +534,12 @@ router.post('/pull-social-code', checkAuth, async (req, res) => {
                 FOR UPDATE SKIP LOCKED
             )
             RETURNING code
-        `, [platform]);
+        `, [platform, type]);
 
         if (result.rows.length === 0) {
             return res.status(409).json({
                 success: false,
-                error: `No available ${platform} trial codes left in the pool`,
+                error: `No available ${platform} ${type} codes left in the pool`,
             });
         }
 
@@ -546,7 +548,7 @@ router.post('/pull-social-code', checkAuth, async (req, res) => {
             ? `https://play.google.com/redeem?code=${encodeURIComponent(code)}`
             : `https://breathecollection.app/creators?code=${encodeURIComponent(code)}`;
 
-        res.json({ success: true, code, platform, redeemUrl });
+        res.json({ success: true, code, platform, type, redeemUrl });
     } catch (err) {
         console.error('Pull Social Code Error:', err);
         res.status(500).json({ success: false, error: err.message });
