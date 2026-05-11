@@ -546,7 +546,7 @@ router.post('/pull-social-code', checkAuth, async (req, res) => {
         const code = result.rows[0].code;
         const redeemUrl = platform === 'android'
             ? `https://play.google.com/redeem?code=${encodeURIComponent(code)}`
-            : `https://breathecollection.app/creators?code=${encodeURIComponent(code)}`;
+            : `https://apps.apple.com/redeem?ctx=offercodes&id=6760255541&code=${encodeURIComponent(code)}`;
 
         res.json({ success: true, code, platform, type, redeemUrl });
     } catch (err) {

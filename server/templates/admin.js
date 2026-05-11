@@ -1010,7 +1010,7 @@ function renderAdminDashboard(stats, userRole = 'owner') {
             platform = platform || 'ios';
             const fullUrl = platform === 'android'
                 ? 'https://play.google.com/redeem?code=' + code
-                : 'https://breathecollection.app/creators?code=' + code;
+                : 'https://apps.apple.com/redeem?ctx=offercodes&id=6760255541&code=' + code;
             const container = document.getElementById('promoContainer-' + type + '-' + platform);
             if (!container) return;
 
