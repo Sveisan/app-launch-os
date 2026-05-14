@@ -199,6 +199,17 @@ async function migrate() {
     ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL DEFAULT 'ios';
     UPDATE offer_codes SET platform = 'ios' WHERE platform IS NULL;
 
+    -- Campaign tag for event/promotional code batches
+    ALTER TABLE offer_codes ADD COLUMN IF NOT EXISTS campaign TEXT;
+
+    -- Free Event Claims tracking for abuse prevention
+    CREATE TABLE IF NOT EXISTS free_event_claims (
+      id SERIAL PRIMARY KEY,
+      ip TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      claimed_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     -- Add unique constraint for Scout Agent storage
     DO $$ 
     BEGIN 

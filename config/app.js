@@ -41,4 +41,5 @@ module.exports = {
     requestTimeoutMs: parseInt(process.env.REDDIT_REQUEST_TIMEOUT_MS, 10) || 10000,
     staleCacheRetryMs: parseInt(process.env.REDDIT_STALE_CACHE_RETRY_MS, 10) || 30000,
   },
+  freeEventDeadline: process.env.FREE_EVENT_DEADLINE || '2026-05-31T23:59:00+02:00',
 }

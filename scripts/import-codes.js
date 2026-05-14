@@ -3,19 +3,37 @@ const fs = require('fs')
 const { pool } = require('../server/db/index')
 
 async function run() {
-  const [,, type, filepath, platformArg] = process.argv
-  const platform = (platformArg || 'ios').toLowerCase()
+  const args = process.argv.slice(2)
+  const type = args[0]
+  const filepath = args[1]
+  let platform = 'ios'
+  let campaign = null
+
+  // Parse optional --platform and --campaign flags
+  for (let i = 2; i < args.length; i++) {
+    if (args[i] === '--platform' && args[i + 1]) {
+      platform = args[i + 1].toLowerCase()
+      i++
+    } else if (args[i] === '--campaign' && args[i + 1]) {
+      campaign = args[i + 1]
+      i++
+    } else if (args[i] && !args[i].startsWith('--')) {
+      // Positional argument (old style: platform as 3rd arg)
+      platform = args[i].toLowerCase()
+    }
+  }
 
   if (!type || !filepath) {
-    console.log('Usage: node scripts/import-codes.js <type> <filepath> [platform]')
-    console.log('       type:     "trial" or "lifetime"')
+    console.log('Usage: node scripts/import-codes.js <type> <filepath> [platform] [--campaign <name>]')
+    console.log('       type:     "trial", "lifetime", or "monthly"')
     console.log('       filepath: path to a .txt or .csv file with one code per line')
     console.log('       platform: "ios" (default) or "android"')
+    console.log('       --campaign <name>: optional campaign tag (e.g., "free-event-2026")')
     process.exit(1)
   }
 
-  if (!['trial', 'lifetime'].includes(type)) {
-    console.error('Error: type must be "trial" or "lifetime"')
+  if (!['trial', 'lifetime', 'monthly'].includes(type)) {
+    console.error('Error: type must be "trial", "lifetime", or "monthly"')
     process.exit(1)
   }
 
@@ -41,7 +59,7 @@ async function run() {
     process.exit(0)
   }
 
-  console.log(`Found ${codes.length} codes. Inserting as "${type}" / platform "${platform}"...`)
+  console.log(`Found ${codes.length} codes. Inserting as "${type}" / platform "${platform}"${campaign ? ` / campaign "${campaign}"` : ''}...`)
 
   let successCount = 0
 
@@ -49,10 +67,17 @@ async function run() {
   try {
     for (const code of codes) {
       try {
-        await client.query(
-          `INSERT INTO offer_codes (code, type, platform) VALUES ($1, $2, $3) ON CONFLICT (code) DO NOTHING`,
-          [code, type, platform]
-        )
+        if (campaign) {
+          await client.query(
+            `INSERT INTO offer_codes (code, type, platform, campaign) VALUES ($1, $2, $3, $4) ON CONFLICT (code) DO NOTHING`,
+            [code, type, platform, campaign]
+          )
+        } else {
+          await client.query(
+            `INSERT INTO offer_codes (code, type, platform) VALUES ($1, $2, $3) ON CONFLICT (code) DO NOTHING`,
+            [code, type, platform]
+          )
+        }
         successCount++
       } catch (err) {
         console.error(`Failed to insert ${code}:`, err.message)

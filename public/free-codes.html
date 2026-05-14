@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe Collection | Free Access — Limited Time</title>
+    <meta name="description" content="Claim your free Breathe Collection code. 10 codes available per platform — get yours before they're gone.">
+    <link rel="canonical" href="https://breathecollection.app/free-codes">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://breathecollection.app/free-codes">
+    <meta property="og:title" content="Breathe Collection | Free Access — Limited Time">
+    <meta property="og:description" content="Claim your free Breathe Collection code. Limited availability.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @property --glow-color {
+            syntax: '<color>';
+            inherits: true;
+            initial-value: #4A90E2;
+        }
+
+        :root {
+            --bg: #000000;
+            --primary: #2C7873;
+            --secondary: #52AB98;
+            --accent: #E07B39;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --success: #52AB98;
+            --error: #E07B39;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            letter-spacing: 0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 100vh;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 3rem auto;
+            font-weight: 300;
+        }
+
+        .countdown {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 4rem;
+        }
+
+        .countdown.expired {
+            color: var(--text-muted);
+        }
+
+        .platforms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .platform-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .platform-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(82, 171, 152, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .platform-card:hover:not(.expired) {
+            transform: translateY(-5px);
+            border-color: rgba(82, 171, 152, 0.3);
+        }
+
+        .platform-card:hover:not(.expired)::before {
+            opacity: 1;
+        }
+
+        .platform-card.expired {
+            opacity: 0.5;
+        }
+
+        .platform-name {
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .scarcity-section {
+            margin-bottom: 2rem;
+        }
+
+        .scarcity-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.75rem;
+        }
+
+        .scarcity-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .scarcity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            transition: width 0.3s ease;
+        }
+
+        .scarcity-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .btn-claim {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background-color: var(--text-main);
+            color: var(--bg);
+            padding: 1rem 1.5rem;
+            border-radius: 100px;
+            border: none;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .btn-claim:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-claim:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success-box {
+            background: rgba(82, 171, 152, 0.1);
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-label {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .redemption-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            word-break: break-all;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background-color: transparent;
+            color: var(--secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 100px;
+            border: 1px solid var(--secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-copy:hover {
+            background-color: rgba(82, 171, 152, 0.1);
+        }
+
+        .btn-copy.copied {
+            color: var(--text-main);
+            border-color: var(--text-main);
+            background-color: transparent;
+        }
+
+        .error-message {
+            background: rgba(224, 123, 57, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .expired-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 1.5rem 2rem;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-main);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-muted);
+            border-top-color: var(--text-main);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                min-height: auto;
+                padding: 4rem 1rem;
+            }
+
+            h1 {
+                margin-bottom: 0.5rem;
+            }
+
+            .platforms {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .countdown {
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <h1>Free Access — Limited Time</h1>
+            <p class="subtitle">Join hundreds claiming their free monthly Breathe Collection code</p>
+            <div class="countdown" id="countdown">Loading countdown...</div>
+
+            <div class="platforms" id="platforms">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Share this link with a friend: <strong>breathecollection.app/free-codes</strong></p>
+        <p style="margin-top: 2rem;">
+            <a href="/">Home</a> •
+            <a href="/creators.html">Become a Creator</a> •
+            <a href="/breathe/privacy">Privacy</a>
+        </p>
+    </footer>
+
+    <script>
+        const DEADLINE = '2026-05-31T23:59:00+02:00';
+        const API_BASE = '/api/free-event';
+        const POLL_INTERVAL = 30000; // 30 seconds
+
+        const PLATFORM_CONFIG = {
+            ios: { name: 'Apple', label: 'iOS' },
+            android: { name: 'Android', label: 'Android' }
+        };
+
+        let state = {
+            ios: { total: 10, claimed: 0 },
+            android: { total: 10, claimed: 0 },
+            expired: false,
+            claimed: JSON.parse(localStorage.getItem('free-event-claimed') || '{}')
+        };
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/status`);
+                if (!res.ok) throw new Error('Status fetch failed');
+                const data = await res.json();
+                state.ios = data.ios || { total: 10, claimed: 0 };
+                state.android = data.android || { total: 10, claimed: 0 };
+                state.expired = data.expired;
+                render();
+            } catch (err) {
+                console.error('Status fetch error:', err);
+            }
+        }
+
+        async function claimCode(platform) {
+            if (state.expired) {
+                showError('This promotion has ended.');
+                return;
+            }
+
+            if (state.claimed[platform]) {
+                showError(`You've already claimed an ${PLATFORM_CONFIG[platform].label} code.`);
+                return;
+            }
+
+            const btn = document.querySelector(`[data-platform="${platform}"] .btn-claim`);
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Claiming...';
+
+            try {
+                const res = await fetch(`${API_BASE}/claim`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform })
+                });
+
+                if (res.status === 410) {
+                    const data = await res.json();
+                    if (data.error === 'expired') {
+                        showError('This promotion has ended.');
+                        state.expired = true;
+                    } else if (data.error === 'none_left') {
+                        showError(`All ${PLATFORM_CONFIG[platform].label} codes have been claimed!`);
+                    } else if (data.error === 'limit_reached') {
+                        showError("You've reached the 3-code limit. Check your other devices!");
+                    }
+                    render();
+                    return;
+                }
+
+                if (!res.ok) throw new Error(`Claim failed: ${res.statusText}`);
+
+                const data = await res.json();
+                state.claimed[platform] = {
+                    url: data.redemptionUrl,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('free-event-claimed', JSON.stringify(state.claimed));
+
+                await fetchStatus();
+                render();
+            } catch (err) {
+                console.error('Claim error:', err);
+                showError('Failed to claim code. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = `Get my free ${PLATFORM_CONFIG[platform].label} code`;
+            }
+        }
+
+        function showError(msg) {
+            alert(msg); // Simple fallback; could be improved with toast
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const deadline = new Date(DEADLINE);
+            const diff = deadline - now;
+
+            if (diff <= 0) {
+                state.expired = true;
+                document.getElementById('countdown').innerHTML = '<strong>This offer has ended</strong>';
+                document.getElementById('countdown').classList.add('expired');
+                render();
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+
+            let text = '';
+            if (days > 0) text += `${days}d `;
+            text += `${hours}h ${minutes}m remaining`;
+
+            document.getElementById('countdown').textContent = text;
+        }
+
+        function render() {
+            const container = document.getElementById('platforms');
+            container.innerHTML = Object.entries(PLATFORM_CONFIG).map(([key, config]) => {
+                const data = state[key] || { total: 10, claimed: 0 };
+                const available = data.total - data.claimed;
+                const percentage = Math.max(0, Math.min(100, (data.claimed / data.total) * 100));
+                const claimed = state.claimed[key];
+
+                let content = '';
+                if (claimed) {
+                    content = `
+                        <div class="success-box">
+                            <div class="success-label">✓ Code claimed</div>
+                            <div style="margin: 1rem 0; font-size: 0.9rem; color: var(--text-muted);">Your redemption link:</div>
+                            <div class="redemption-url">${claimed.url}</div>
+                            <button class="btn-copy" onclick="copyToClipboard('${claimed.url}')">Copy link</button>
+                        </div>
+                    `;
+                } else if (state.expired || available <= 0) {
+                    content = `
+                        <div class="expired-state">
+                            <p>${available <= 0 ? 'All codes claimed!' : 'Offer ended'}</p>
+                        </div>
+                    `;
+                } else {
+                    content = `
+                        <button class="btn-claim" data-platform="${key}" onclick="claimCode('${key}')">
+                            Get my free ${config.label} code
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="platform-card ${state.expired || available <= 0 ? 'expired' : ''}" data-platform="${key}">
+                        <div class="platform-name">${config.name}</div>
+                        <div class="scarcity-section">
+                            <div class="scarcity-label">Codes remaining</div>
+                            <div class="scarcity-bar">
+                                <div class="scarcity-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="scarcity-text">${available} of 10 available</div>
+                        </div>
+                        ${content}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const original = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Initial load
+        updateCountdown();
+        fetchStatus();
+
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+
+        // Poll status every 30 seconds
+        setInterval(fetchStatus, POLL_INTERVAL);
+    </script>
+</body>
+</html>
