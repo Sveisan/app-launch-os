@@ -1,6 +1,7 @@
 const { pool } = require('./index')
 
 async function migrate() {
+  await pool.query('SET statement_timeout = 30000')
   await pool.query(`
     CREATE TABLE IF NOT EXISTS contacts (
       id SERIAL PRIMARY KEY,
@@ -202,11 +203,13 @@ async function migrate() {
     -- Add unique constraint for Scout Agent storage
     DO $$ 
     BEGIN 
-      -- First, clean up any existing duplicates to allow constraint creation
-      DELETE FROM contacts a USING contacts b
-      WHERE a.id < b.id 
-      AND a.handle = b.handle 
-      AND a.platform = b.platform;
+      -- Only run the self-join DELETE if duplicates actually exist (avoids full table scan on every deploy)
+      IF EXISTS (SELECT 1 FROM contacts GROUP BY handle, platform HAVING COUNT(*) > 1) THEN
+        DELETE FROM contacts a USING contacts b
+        WHERE a.id < b.id
+        AND a.handle = b.handle
+        AND a.platform = b.platform;
+      END IF;
 
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'contacts_handle_platform_unique') THEN
         ALTER TABLE contacts ADD CONSTRAINT contacts_handle_platform_unique UNIQUE (handle, platform);
