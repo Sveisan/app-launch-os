@@ -2,9 +2,18 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs-extra');
+const multer = require('multer');
 const videoGenerator = require('../jobs/video-generator');
 const lungGenerator = require('../jobs/lung-video-generator');
+const { runBrief } = require('../jobs/brief-pipeline');
 const { checkAuth } = require('../middleware/auth');
+
+// 15MB cap is plenty for an iPhone Pro still. Stays in memory; we hand the
+// buffer straight to Replicate as a base64 data URI, no disk I/O.
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 
 // In-memory job state
@@ -66,6 +75,52 @@ router.post('/generate-lung', checkAuth, async (req, res) => {
         console.error('Lung Video Generation Failed:', err);
         JOBS[jobId].status = 'error';
         JOBS[jobId].error = err.message;
+    });
+
+    res.json({ success: true, jobId });
+});
+
+// Freelancer dashboard: brief (+ optional uploaded image) -> Flux -> Kling -> Dropbox.
+router.post('/brief', checkAuth, upload.single('image'), async (req, res) => {
+    const brief = (req.body && req.body.brief ? String(req.body.brief) : '').trim();
+    const file = req.file;
+
+    if (!brief && !file) {
+        return res.status(400).json({ error: 'Provide a brief, an image, or both.' });
+    }
+    if (!process.env.REPLICATE_API_TOKEN || !process.env.DROPBOX_ACCESS_TOKEN) {
+        return res.status(503).json({ error: 'Video pipeline not configured (missing API tokens).' });
+    }
+
+    const jobId = 'brief-' + Date.now();
+    JOBS[jobId] = {
+        id: jobId,
+        type: 'brief',
+        status: 'processing',
+        phase: 'starting',
+        label: 'Starting…',
+        brief,
+        hasUpload: !!file,
+        timestamp: new Date(),
+    };
+
+    runBrief({
+        brief,
+        imageBuffer: file ? file.buffer : null,
+        imageMime: file ? file.mimetype : null,
+        onProgress: ({ phase, label }) => {
+            JOBS[jobId].phase = phase;
+            JOBS[jobId].label = label;
+            console.log(`[brief ${jobId}] ${phase} :: ${label}`);
+        },
+    }).then((result) => {
+        JOBS[jobId].status = 'completed';
+        JOBS[jobId].label = 'Done';
+        JOBS[jobId].result = result;
+    }).catch((err) => {
+        console.error(`[brief ${jobId}] failed:`, err);
+        JOBS[jobId].status = 'error';
+        JOBS[jobId].error = err.message || String(err);
     });
 
     res.json({ success: true, jobId });
