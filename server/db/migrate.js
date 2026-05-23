@@ -1,6 +1,20 @@
 const { pool } = require('./index')
 
 async function migrate() {
+  // Bail out fast if DB is unreachable so the app can still start and serve static pages.
+  try {
+    const client = await Promise.race([
+      pool.connect(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('DB connect timeout (10s)')), 10000))
+    ])
+    client.release()
+  } catch (err) {
+    console.warn('[migrate] DB unreachable, skipping migration:', err.message)
+    console.warn('[migrate] Server will start anyway; DB-backed routes will return errors until DB is back.')
+    await pool.end().catch(() => {})
+    return
+  }
+
   await pool.query('SET statement_timeout = 30000')
   await pool.query(`
     CREATE TABLE IF NOT EXISTS contacts (
@@ -223,6 +237,7 @@ async function migrate() {
 }
 
 migrate().catch(err => {
-  console.error('Migration failed:', err)
-  process.exit(1)
+  console.error('[migrate] Migration failed:', err.message)
+  console.error('[migrate] Server will start anyway; investigate ASAP.')
+  process.exit(0)
 })
