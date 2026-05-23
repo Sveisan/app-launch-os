@@ -67,8 +67,9 @@ docs/
 | `/api/check-eligibility` | eligibility checks |
 | `/api/feedback` | feedback |
 | `/api/video-studio` | video pipeline |
-| `/mission-control-x89` | admin panel (JWT) |
+| `/mission-control-x89` | admin panel (JWT, owner) |
 | `/mission-control-x89/daily-value` | comment digest list / patch / run / token-flip |
+| `/dashboard` | freelancer studio (JWT, any role) — video brief composer |
 | `/breathing` + `/sitemap.xml` | SEO content |
 | `/library` | library |
 
@@ -76,7 +77,8 @@ docs/
 
 - Mounted at `/mission-control-x89` (obscured path).
 - JWT in cookie, two roles: **owner** and **freelancer**.
-- `admin_users` table; create via `node scripts/create-admin.js`.
+- After login, owners redirect to `/mission-control-x89`; freelancers redirect to `/dashboard` (video studio).
+- `admin_users` table; create via `node scripts/create-admin.js` or one-shot `node scripts/setup-freelancer.js` for the canonical pair (support@ as owner, topnotchreme@ as freelancer).
 - Frontend served from `public/` HTML + inline JS (no framework).
 
 ## Scout agent
