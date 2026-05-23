@@ -207,7 +207,7 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
     <main>
         <div class="eyebrow">Studio</div>
         <h1>What are we shooting today?</h1>
-        <p class="lede">Drop a single idea — a feeling, a moment, a body sensation. We turn it into a 15-second loop ready for TikTok and Instagram.</p>
+        <p class="lede">Drop a single idea — a feeling, a moment, a body sensation. Or drop an image. We turn it into a 15-second loop ready for TikTok and Instagram.</p>
 
         <form class="composer" onsubmit="return false;">
             <div class="field">
@@ -228,7 +228,7 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
                 <h3>Format</h3>
                 <ul>
                     <li><em>15-second</em> seamless loop, 9:16, 1080×1920.</li>
-                    <li>Three image beats per video, cross-faded forward only.</li>
+                    <li>One image, animated into motion — slow, deep, atmospheric.</li>
                     <li>No baked-in text, no logos, no branding — we add captions in TikTok.</li>
                 </ul>
 
