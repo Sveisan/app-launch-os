@@ -16,9 +16,12 @@ const redditRouter = require('./reddit');
 
 
 router.get('/login', (req, res) => {
-    // If already logged in, go to dashboard
-    if (req.cookies && req.cookies.admin_jwt && verifyToken(req.cookies.admin_jwt)) {
-        return res.redirect('/mission-control-x89');
+    // If already logged in, send to role-appropriate landing
+    if (req.cookies && req.cookies.admin_jwt) {
+        const decoded = verifyToken(req.cookies.admin_jwt);
+        if (decoded) {
+            return res.redirect(decoded.role === 'freelancer' ? '/dashboard' : '/mission-control-x89');
+        }
     }
     res.send(renderLogin());
 });
@@ -49,7 +52,7 @@ router.post('/login', async (req, res) => {
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
             });
-            res.redirect('/mission-control-x89');
+            res.redirect(user.role === 'freelancer' ? '/dashboard' : '/mission-control-x89');
         } else {
             res.send(renderLogin('Invalid email or password'));
         }
