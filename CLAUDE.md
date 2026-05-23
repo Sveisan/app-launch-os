@@ -81,6 +81,20 @@ docs/
 - `admin_users` table; create via `node scripts/create-admin.js` or one-shot `node scripts/setup-freelancer.js` for the canonical pair (support@ as owner, topnotchreme@ as freelancer).
 - Frontend served from `public/` HTML + inline JS (no framework).
 
+## Freelancer video pipeline (brief → 15s loop)
+
+Lives at `/dashboard`. Backend at `POST /api/video-studio/brief` with status polling at `GET /api/video-studio/status/:jobId`.
+
+Pipeline (`server/jobs/brief-pipeline.js`):
+1. Source image — either the freelancer's upload (base64 data URI) or Flux 1.1 Pro generated from the brief.
+2. Animation — Kling v1.6 standard image-to-video, 10s, 9:16, atmospheric.
+3. Upload — Dropbox SDK writes to `/Videos/<timestamp>-<slug>.mp4` inside the app folder.
+4. Returns a public shared link.
+
+Required env vars: `REPLICATE_API_TOKEN`, `DROPBOX_ACCESS_TOKEN`. Without them the route returns 503.
+
+In-memory job state lives in `server/routes/video-studio.js` (`JOBS` map). Restarting the server drops in-progress jobs — accepted tradeoff for v1.
+
 ## Scout agent
 
 Core domain. Lives in `server/jobs/scout.js`, runs via `server/jobs/scheduler.js`.
