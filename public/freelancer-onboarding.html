@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Welcome — Breathe Collection Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafaf7;
+            --paper: #ffffff;
+            --ink: #0d1614;
+            --ink-soft: #4a544f;
+            --ink-mute: #8a948f;
+            --rule: #e6e3dc;
+            --teal: #2C7873;
+            --teal-bright: #52AB98;
+            --amber: #E07B39;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: var(--bg); }
+        body {
+            font-family: 'Outfit', sans-serif;
+            color: var(--ink);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            padding: 4rem 1.5rem;
+        }
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+            background: var(--paper);
+            padding: 4rem 4rem 5rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 30px 80px -30px rgba(0,0,0,0.15);
+        }
+        header {
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 2rem;
+            margin-bottom: 3rem;
+        }
+        .eyebrow {
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            font-size: 0.65rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-weight: 200;
+            font-size: 2.8rem;
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+            margin-bottom: 1.2rem;
+        }
+        h1 em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--teal);
+        }
+        .deck {
+            color: var(--ink-soft);
+            font-size: 1.05rem;
+            font-weight: 300;
+            max-width: 540px;
+        }
+        section { margin-bottom: 3.5rem; }
+        section:last-child { margin-bottom: 0; }
+
+        h2 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--ink);
+            margin-bottom: 1.4rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--rule);
+        }
+        .step {
+            display: grid;
+            grid-template-columns: 2.4rem 1fr;
+            gap: 1rem;
+            margin-bottom: 1.6rem;
+        }
+        .step:last-child { margin-bottom: 0; }
+        .step-num {
+            color: var(--teal-bright);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding-top: 0.1rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .step-body h3 {
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.005em;
+        }
+        .step-body p {
+            color: var(--ink-soft);
+            font-weight: 300;
+            font-size: 0.95rem;
+        }
+        .step-body code {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-family: 'SF Mono', Menlo, monospace;
+            font-size: 0.85rem;
+            color: var(--teal);
+        }
+
+        .pull {
+            font-weight: 200;
+            font-size: 1.4rem;
+            line-height: 1.45;
+            color: var(--ink);
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--rule);
+            border-bottom: 1px solid var(--rule);
+            margin: 2rem 0;
+            letter-spacing: -0.01em;
+        }
+        .pull em {
+            font-style: italic;
+            color: var(--teal);
+        }
+
+        .vibe-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .vibe {
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 1.2rem 1rem;
+        }
+        .vibe-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--ink-mute);
+            margin-bottom: 0.5rem;
+        }
+        .vibe-word {
+            font-size: 1.15rem;
+            font-weight: 300;
+            color: var(--ink);
+            letter-spacing: -0.005em;
+        }
+
+        ul.tight {
+            list-style: none;
+            padding: 0;
+        }
+        ul.tight li {
+            padding: 0.55rem 0;
+            border-bottom: 1px dashed var(--rule);
+            color: var(--ink-soft);
+            font-weight: 300;
+            font-size: 0.95rem;
+            display: grid;
+            grid-template-columns: 1.6rem 1fr;
+            gap: 0.6rem;
+        }
+        ul.tight li:last-child { border-bottom: none; }
+        ul.tight li::before {
+            content: '→';
+            color: var(--teal-bright);
+            font-size: 0.9rem;
+        }
+        ul.tight li.no::before {
+            content: '×';
+            color: var(--amber);
+        }
+        ul.tight strong {
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .example {
+            background: var(--bg);
+            border-left: 3px solid var(--teal-bright);
+            padding: 1rem 1.2rem;
+            font-style: italic;
+            color: var(--ink-soft);
+            font-weight: 300;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+        .example::before {
+            content: 'For example';
+            display: block;
+            font-style: normal;
+            font-weight: 500;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--ink-mute);
+            margin-bottom: 0.4rem;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--rule);
+            color: var(--ink-mute);
+            font-size: 0.78rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        footer .signature {
+            font-style: italic;
+            color: var(--ink-soft);
+            font-weight: 300;
+        }
+
+        .print-only { display: none; }
+        .no-print {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--ink);
+            color: white;
+            border: none;
+            padding: 0.55rem 1.1rem;
+            border-radius: 999px;
+            font-family: inherit;
+            font-size: 0.78rem;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+            font-weight: 400;
+        }
+        .no-print:hover { background: var(--teal); }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .page { padding: 2.4rem 1.6rem 3rem; }
+            h1 { font-size: 2rem; }
+            .vibe-row { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; padding: 1.5cm; border-radius: 0; max-width: 100%; }
+            .no-print { display: none; }
+            .print-only { display: block; }
+            section { page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+            .pull { page-break-inside: avoid; }
+            a { color: var(--teal); text-decoration: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="no-print" onclick="window.print()">Save as PDF</button>
+
+    <article class="page">
+        <header>
+            <div class="eyebrow">Welcome to the studio</div>
+            <h1>You make the breath <em>visible</em>.</h1>
+            <p class="deck">A short guide to what Breathe Collection is, how the studio works, and the kind of work we're making together.</p>
+        </header>
+
+        <section>
+            <h2>1 · The Why</h2>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem; margin-bottom: 1rem;">Breathe Collection is an app that teaches people the breathwork techniques that actually move the nervous system — box breathing, the physiological sigh, Wim Hof, slow nasal coherence. Most people only meet these methods once, in a stressful moment, on a noisy feed. We want them to meet them <em>well</em>.</p>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem;">Your role is the front door. The videos you make are the first thing a panic-attack-sufferer or burnt-out founder sees before they ever open the app. They're not ads. They're invitations.</p>
+        </section>
+
+        <div class="pull">"If a video doesn't make <em>me</em> exhale, it isn't ready."</div>
+
+        <section>
+            <h2>2 · Getting Logged In</h2>
+
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                    <h3>Open the login page</h3>
+                    <p>Go to <code>breathecollection.app/mission-control-x89/login</code>.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                    <h3>Enter your credentials</h3>
+                    <p>Email: <code>topnotchreme@gmail.com</code> · Password: shared separately. Change it after first login if you'd like — ping Eirik and he'll rotate it.</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                    <h3>You land on the studio</h3>
+                    <p>You'll be sent automatically to <code>/dashboard</code>. That's your home. One page, one job: brief a video.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>3 · How the Studio Works</h2>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem; margin-bottom: 1.2rem;">The dashboard is intentionally bare. One text box, placeholder reads <em>"Next"</em>. You drop a single idea — a feeling, a moment, a body sensation — and the pipeline produces a 15-second loop ready for TikTok and Instagram.</p>
+            <ul class="tight">
+                <li><span><strong>Brief.</strong> One sentence. Lead with the feeling, then the setting, then the body.</span></li>
+                <li><span><strong>Generate.</strong> The system produces three image beats and stitches them into a seamless 15s loop.</span></li>
+                <li><span><strong>Review.</strong> You watch, you approve, you nudge. We never ship something neither of us would exhale to.</span></li>
+                <li><span><strong>Hand off.</strong> Finished loops land in shared storage — you grab, you post, you tag the right techniques.</span></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>4 · The Vibe</h2>
+            <div class="vibe-row">
+                <div class="vibe">
+                    <div class="vibe-label">Feeling</div>
+                    <div class="vibe-word">Inner peacefulness</div>
+                </div>
+                <div class="vibe">
+                    <div class="vibe-label">Setting</div>
+                    <div class="vibe-word">Nature</div>
+                </div>
+                <div class="vibe">
+                    <div class="vibe-label">Treatment</div>
+                    <div class="vibe-word">Pure</div>
+                </div>
+            </div>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem; margin-top: 1.4rem;">The arc is <em>hippie to animal</em>: starts gentle and human, ends primal and elemental. Elegant. Subtly majestic. iPhone&nbsp;16&nbsp;Pro grade — never amateur, never overproduced.</p>
+        </section>
+
+        <section>
+            <h2>5 · Guardrails</h2>
+            <ul class="tight">
+                <li><span><strong>15-second loop.</strong> Seamless. 9:16. 1080×1920.</span></li>
+                <li><span><strong>Three image beats per video,</strong> cross-faded forward only.</span></li>
+                <li class="no"><span><strong>No boomerang humans.</strong> A person mid-breath played in reverse creates a phantom inhale. Forward-only xfade, always.</span></li>
+                <li class="no"><span><strong>No baked-in text, logos, or branding.</strong> Captions live in TikTok, not in the composite.</span></li>
+                <li class="no"><span><strong>No metronomic orb.</strong> Particles or fill carry the rhythm; an orb-as-clock fights the body motion.</span></li>
+                <li><span><strong>Motion judged by MediaPipe,</strong> not Gemini. Deterministic, not aesthetic vibes.</span></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>6 · How to Write a Brief</h2>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem;">A good brief is one sentence and three nouns. Lead with the feeling. Name the setting in three words. Name the body.</p>
+            <div class="example">
+                The slow exhale that drops the shoulders at the end of a long Tuesday. Alpine fjord, gold hour. Woman, eyes closed, slow exhale.
+            </div>
+        </section>
+
+        <section>
+            <h2>7 · Who to Ping</h2>
+            <p style="font-weight:300; color: var(--ink-soft); font-size: 0.98rem;">Anything stuck, anything weird, anything that doesn't feel right — Eirik at <code>support@breathecollection.app</code>. Same login, owner side, sees the same studio you do.</p>
+        </section>
+
+        <footer>
+            <span>Breathe Collection · Studio onboarding</span>
+            <span class="signature">v1 · 2026</span>
+        </footer>
+    </article>
+</body>
+</html>

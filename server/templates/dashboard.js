@@ -201,7 +201,7 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
 <body>
     <div class="topbar">
         <span class="brand">Breathe&nbsp;Collection</span>
-        <span>${esc(userEmail)} &middot; <a href="#" onclick="logout(event)">logout</a></span>
+        <span>${esc(userEmail)} &middot; <a href="/freelancer-onboarding.html" target="_blank">guide</a> &middot; <a href="#" onclick="logout(event)">logout</a></span>
     </div>
 
     <main>
