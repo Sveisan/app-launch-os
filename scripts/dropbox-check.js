@@ -1,25 +1,67 @@
 // Diagnose the Dropbox token: verify auth, show which account it belongs to,
-// list /Videos/, and write a tiny test file.
+// list /Videos/, and write a tiny test file. Tries multiple namespace/scoping
+// variants so we can see which one a Business team account actually accepts.
 //
-// Run locally with the public URL trick (you already know this pattern):
-//   DROPBOX_ACCESS_TOKEN='sl.your-token' node scripts/dropbox-check.js
+// Run locally:
+//   DROPBOX_ACCESS_TOKEN='sl.u.YOUR_TOKEN' node scripts/dropbox-check.js
 
 const { Dropbox } = require('dropbox')
+
+async function dumpError(err) {
+  const summary = err && err.error && err.error.error_summary
+  if (summary) {
+    console.log('       error_summary:', summary)
+    return
+  }
+  // The SDK wraps the raw Response; try to recover the text body.
+  if (err && err.error && typeof err.error.text === 'function') {
+    try { console.log('       body:', await err.error.text()) } catch (_) {}
+  }
+  if (err && err.status) console.log('       status:', err.status)
+  if (err && err.headers && err.headers.get) {
+    const reqId = err.headers.get('x-dropbox-request-id')
+    if (reqId) console.log('       x-dropbox-request-id:', reqId)
+  }
+  if (err && typeof err.error === 'object') {
+    try { console.log('       raw error:', JSON.stringify(err.error).slice(0, 500)) } catch (_) {}
+  }
+  console.log('       message:', err.message)
+}
+
+async function tryWrite(label, dbx) {
+  const stamp = Date.now()
+  const testPath = `/_dropbox-check-${stamp}.txt`
+  try {
+    await dbx.filesUpload({
+      path: testPath,
+      contents: Buffer.from(`hello ${new Date().toISOString()}`),
+      mode: { '.tag': 'add' },
+      autorename: true,
+      mute: true,
+    })
+    console.log(`✅ [${label}] Test write succeeded at ${testPath}`)
+    return true
+  } catch (err) {
+    console.log(`❌ [${label}] Test write failed:`)
+    await dumpError(err)
+    return false
+  }
+}
 
 async function main() {
   const token = process.env.DROPBOX_ACCESS_TOKEN
   if (!token) {
-    console.error('❌ DROPBOX_ACCESS_TOKEN is not set in your shell.')
+    console.error('❌ DROPBOX_ACCESS_TOKEN is not set.')
     process.exit(1)
   }
   console.log('Token present (length:', token.length, 'starts with:', token.slice(0, 6) + '...)\n')
 
-  let dbx = new Dropbox({ accessToken: token, fetch })
+  const baseDbx = new Dropbox({ accessToken: token, fetch })
 
   // 1) Whose token is this?
   let me
   try {
-    const r = await dbx.usersGetCurrentAccount()
+    const r = await baseDbx.usersGetCurrentAccount()
     me = r.result
     console.log('✅ Auth works.')
     console.log('   Account:', me.email)
@@ -33,60 +75,53 @@ async function main() {
     }
     console.log('')
   } catch (err) {
-    console.error('❌ Auth failed:', err && err.error_summary ? err.error_summary : err)
+    console.error('❌ Auth failed:')
+    await dumpError(err)
     process.exit(2)
   }
 
-  // For team accounts, file ops need to be scoped to the user's home namespace
-  // (otherwise calls land in the team root and return 400). Re-create the
-  // client with pathRoot set to the user's home.
-  if (me.team && me.root_info && me.root_info.home_namespace_id) {
-    const homeNs = me.root_info.home_namespace_id
-    console.log('ℹ️  Team account detected — scoping file ops to home namespace', homeNs, '\n')
-    dbx = new Dropbox({
-      accessToken: token,
-      fetch,
-      pathRoot: JSON.stringify({ '.tag': 'namespace_id', namespace_id: homeNs }),
+  // 2) Try several variants
+  const home = me.root_info && me.root_info.home_namespace_id
+  const member = me.team_member_id
+
+  const variants = [
+    { label: 'no pathRoot', opts: { accessToken: token, fetch } },
+    { label: 'pathRoot=home', opts: { accessToken: token, fetch, pathRoot: JSON.stringify({ '.tag': 'home' }) } },
+  ]
+  if (home) {
+    variants.push({
+      label: `pathRoot=namespace_id(${home})`,
+      opts: { accessToken: token, fetch, pathRoot: JSON.stringify({ '.tag': 'namespace_id', namespace_id: String(home) }) },
     })
   }
-
-  // 2) What's in /Videos/?
-  try {
-    const list = await dbx.filesListFolder({ path: '/Videos' })
-    console.log('✅ /Videos folder exists. Entries:', list.result.entries.length)
-    list.result.entries.slice(0, 10).forEach(e => {
-      console.log('   -', e.name, '(' + (e['.tag']) + ')')
+  if (member) {
+    variants.push({
+      label: `selectUser=${member.slice(0, 14)}…`,
+      opts: { accessToken: token, fetch, selectUser: member },
     })
-    console.log('')
-  } catch (err) {
-    const summary = err && err.error && err.error.error_summary
-    if (summary && summary.startsWith('path/not_found')) {
-      console.log('ℹ️  /Videos folder does not exist yet (this is fine — it gets created on first upload).\n')
-    } else {
-      console.warn('⚠️  Could not list /Videos:', summary || err.message)
+    if (home) {
+      variants.push({
+        label: 'selectUser + pathRoot=home',
+        opts: { accessToken: token, fetch, selectUser: member, pathRoot: JSON.stringify({ '.tag': 'home' }) },
+      })
     }
   }
 
-  // 3) Try a real write
-  try {
-    const stamp = Date.now()
-    const testPath = `/_dropbox-check-${stamp}.txt`
-    await dbx.filesUpload({
-      path: testPath,
-      contents: Buffer.from(`Hello from dropbox-check at ${new Date().toISOString()}`),
-      mode: { '.tag': 'add' },
-      autorename: true,
-      mute: true,
-    })
-    console.log('✅ Test write succeeded at', testPath)
-    console.log('   → Look for this file in Dropbox to confirm where the app folder actually lives.')
-  } catch (err) {
-    const summary = err && err.error && err.error.error_summary
-    console.error('❌ Test write FAILED:', summary || err.message)
-    console.error('   This is the same call /api/video-studio/brief makes. Whatever this error is, it explains why videos vanish.')
-    if (summary && summary.includes('missing_scope')) {
-      console.error('   → Your Dropbox app is missing the files.content.write permission. Go to https://www.dropbox.com/developers/apps, open your app, Permissions tab, check files.content.write and files.content.read, hit Submit, then GENERATE A NEW TOKEN (existing tokens don\'t inherit new scopes).')
+  let winner = null
+  for (const v of variants) {
+    console.log(`\n--- Trying: ${v.label} ---`)
+    const dbx = new Dropbox(v.opts)
+    if (await tryWrite(v.label, dbx)) {
+      winner = v
+      break
     }
+  }
+
+  if (winner) {
+    console.log('\n🎯 WORKING CONFIG:', winner.label)
+    console.log('   Look for the _dropbox-check-*.txt file in Dropbox to confirm location.')
+  } else {
+    console.log('\n❌ None of the variants worked. The app config itself is the problem — most likely the token was generated before files.content.write was checked-and-submitted. Re-submit permissions, then re-generate the token.')
     process.exit(3)
   }
 }
