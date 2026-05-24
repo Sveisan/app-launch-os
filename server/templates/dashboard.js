@@ -449,7 +449,7 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
         </div>
 
         <div class="status-panel result hidden" id="resultPanel">
-            <video id="resultVideo" controls playsinline></video>
+            <video id="resultVideo" controls playsinline loop autoplay muted></video>
             <div class="status-line" id="resultLine">Ready</div>
             <div class="status-sub" id="resultSub">Saved to Dropbox · Apps · Breathe Collection Studio · Videos</div>
             <div class="row">
