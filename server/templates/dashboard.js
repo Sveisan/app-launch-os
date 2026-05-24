@@ -347,46 +347,53 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             padding: 1.4rem;
             background: rgba(255,255,255,0.02);
         }
-        .promo-code-block {
+        .promo-url-block {
             font-family: 'Courier New', monospace;
-            font-size: 1.15rem;
-            letter-spacing: 0.05em;
+            font-size: 0.95rem;
             color: var(--secondary);
             background: rgba(0,0,0,0.35);
             border-radius: 8px;
-            padding: 0.85rem 1rem;
+            padding: 1rem 1.1rem;
             cursor: pointer;
             user-select: all;
             word-break: break-all;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             transition: background 150ms;
             text-align: center;
+            line-height: 1.45;
         }
-        .promo-code-block:hover { background: rgba(82,171,152,0.07); }
+        .promo-url-block:hover { background: rgba(82,171,152,0.07); }
         .promo-copy-hint {
             font-size: 0.7rem;
             color: var(--text-soft);
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.9rem;
             text-align: center;
+        }
+        .promo-code-line {
+            text-align: center;
+            color: var(--text-soft);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 1.2rem;
+            font-family: 'Courier New', monospace;
+        }
+        .promo-code-line span {
+            color: var(--text-muted);
+            user-select: all;
         }
         .promo-result-actions {
             display: flex;
-            gap: 0.8rem;
+            gap: 1rem;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
         }
         a.promo-redeem-link {
-            background: var(--secondary);
-            color: #042521;
-            padding: 0.6rem 1.3rem;
-            border-radius: 999px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-block;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            text-decoration: underline;
         }
-        a.promo-redeem-link:hover { background: #6bc1ae; }
+        a.promo-redeem-link:hover { color: var(--secondary); }
         button.promo-again {
             background: none;
             border: none;
@@ -497,10 +504,11 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
                 </button>
             </div>
             <div class="promo-result hidden" id="promoResult">
-                <div class="promo-code-block" id="promoCode" onclick="copyPromoCode()" title="Click to copy"></div>
-                <div class="promo-copy-hint" id="promoCopyHint">Click code to copy</div>
+                <div class="promo-url-block" id="promoUrl" onclick="copyPromoUrl()" title="Click to copy"></div>
+                <div class="promo-copy-hint" id="promoCopyHint">Click to copy — paste into TikTok / IG bio</div>
+                <div class="promo-code-line" id="promoCodeLine"></div>
                 <div class="promo-result-actions">
-                    <a class="promo-redeem-link" id="promoRedeemLink" target="_blank" rel="noopener">Open redeem link</a>
+                    <a class="promo-redeem-link" id="promoRedeemLink" target="_blank" rel="noopener">Open in browser</a>
                     <button class="promo-again" onclick="resetPromo()">Pull another</button>
                 </div>
             </div>
@@ -699,10 +707,12 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
 
         var promoGrid = document.getElementById('promoGrid');
         var promoResult = document.getElementById('promoResult');
-        var promoCodeEl = document.getElementById('promoCode');
+        var promoUrlEl = document.getElementById('promoUrl');
+        var promoCodeLineEl = document.getElementById('promoCodeLine');
         var promoCopyHint = document.getElementById('promoCopyHint');
         var promoRedeemLink = document.getElementById('promoRedeemLink');
         var promoEmpty = document.getElementById('promoEmpty');
+        var PROMO_COPY_HINT_DEFAULT = 'Click to copy — paste into TikTok / IG bio';
 
         async function pullCode(platform, type) {
             var btns = promoGrid.querySelectorAll('.promo-btn');
@@ -723,9 +733,10 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
                     btns.forEach(function(b) { b.disabled = false; });
                     return;
                 }
-                promoCodeEl.textContent = j.code;
+                promoUrlEl.textContent = j.redeemUrl;
+                promoCodeLineEl.innerHTML = 'Code: <span>' + j.code + '</span>';
                 promoRedeemLink.href = j.redeemUrl;
-                promoCopyHint.textContent = 'Click code to copy';
+                promoCopyHint.textContent = PROMO_COPY_HINT_DEFAULT;
                 promoResult.classList.remove('hidden');
             } catch (err) {
                 alert('Request failed: ' + err.message);
@@ -734,15 +745,15 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
         }
         window.pullCode = pullCode;
 
-        function copyPromoCode() {
-            var code = promoCodeEl.textContent;
-            if (!code) return;
-            navigator.clipboard.writeText(code).then(function() {
+        function copyPromoUrl() {
+            var url = promoUrlEl.textContent;
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(function() {
                 promoCopyHint.textContent = 'Copied!';
-                setTimeout(function() { promoCopyHint.textContent = 'Click code to copy'; }, 1800);
+                setTimeout(function() { promoCopyHint.textContent = PROMO_COPY_HINT_DEFAULT; }, 1800);
             });
         }
-        window.copyPromoCode = copyPromoCode;
+        window.copyPromoUrl = copyPromoUrl;
 
         function resetPromo() {
             promoResult.classList.add('hidden');
