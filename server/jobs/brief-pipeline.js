@@ -23,11 +23,24 @@ function buildReplicate() {
   return new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 }
 
-function buildDropbox() {
+// Build a Dropbox client. For Business team accounts, scope all file ops to
+// the user's home namespace via pathRoot — otherwise calls land in the team
+// root and return an unhelpful 400.
+async function buildDropbox() {
   if (!process.env.DROPBOX_ACCESS_TOKEN) {
     throw new Error('DROPBOX_ACCESS_TOKEN missing in environment')
   }
-  return new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN, fetch })
+  const token = process.env.DROPBOX_ACCESS_TOKEN
+  const probe = new Dropbox({ accessToken: token, fetch })
+  const me = (await probe.usersGetCurrentAccount()).result
+  if (me.team && me.root_info && me.root_info.home_namespace_id) {
+    return new Dropbox({
+      accessToken: token,
+      fetch,
+      pathRoot: JSON.stringify({ '.tag': 'namespace_id', namespace_id: me.root_info.home_namespace_id }),
+    })
+  }
+  return probe
 }
 
 function slugify(s) {
@@ -50,7 +63,11 @@ function outputToUrl(output) {
 
 async function runBrief({ brief, imageBuffer, imageMime, onProgress = () => {} }) {
   const replicate = buildReplicate()
-  const dbx = buildDropbox()
+
+  // Build Dropbox client up front so we fail fast (and don't burn Replicate
+  // credit) if the token is broken or the app is misconfigured.
+  onProgress({ phase: 'connecting', label: 'Checking Dropbox…' })
+  const dbx = await buildDropbox()
 
   // Step 1: source image
   let imageInput
