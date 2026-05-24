@@ -23,24 +23,18 @@ function buildReplicate() {
   return new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 }
 
-// Build a Dropbox client. For Business team accounts, scope all file ops to
-// the user's home namespace via pathRoot — otherwise calls land in the team
-// root and return an unhelpful 400.
+// Build a Dropbox client. Verified end-to-end with an "App folder" app on a
+// Business team account (Lokebox); the SDK's default scoping works as long as
+// the app has files.{content,metadata}.{read,write} + sharing.write scopes.
 async function buildDropbox() {
   if (!process.env.DROPBOX_ACCESS_TOKEN) {
     throw new Error('DROPBOX_ACCESS_TOKEN missing in environment')
   }
-  const token = process.env.DROPBOX_ACCESS_TOKEN
-  const probe = new Dropbox({ accessToken: token, fetch })
-  const me = (await probe.usersGetCurrentAccount()).result
-  if (me.team && me.root_info && me.root_info.home_namespace_id) {
-    return new Dropbox({
-      accessToken: token,
-      fetch,
-      pathRoot: JSON.stringify({ '.tag': 'namespace_id', namespace_id: me.root_info.home_namespace_id }),
-    })
-  }
-  return probe
+  const dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN, fetch })
+  // Pre-flight: fail fast (and don't burn Replicate credit) if the token is
+  // broken, expired, or missing scopes.
+  await dbx.usersGetCurrentAccount()
+  return dbx
 }
 
 function slugify(s) {
