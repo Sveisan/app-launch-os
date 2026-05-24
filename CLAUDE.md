@@ -67,6 +67,7 @@ docs/
 | `/api/check-eligibility` | eligibility checks |
 | `/api/feedback` | feedback |
 | `/api/video-studio` | video pipeline |
+| `/api/promo-codes` | promo code pool — `POST /pull` returns one unused code (JWT, any role) |
 | `/mission-control-x89` | admin panel (JWT, owner) |
 | `/mission-control-x89/daily-value` | comment digest list / patch / run / token-flip |
 | `/dashboard` | freelancer studio (JWT, any role) — video brief composer |
