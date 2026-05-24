@@ -120,10 +120,38 @@ async function main() {
   if (winner) {
     console.log('\n🎯 WORKING CONFIG:', winner.label)
     console.log('   Look for the _dropbox-check-*.txt file in Dropbox to confirm location.')
-  } else {
-    console.log('\n❌ None of the variants worked. The app config itself is the problem — most likely the token was generated before files.content.write was checked-and-submitted. Re-submit permissions, then re-generate the token.')
-    process.exit(3)
+    return
   }
+
+  console.log('\n--- Raw fetch (bypasses SDK so we can see Dropbox\'s actual error body) ---')
+  const variantsRaw = [
+    { label: 'no headers',     headers: {} },
+    { label: 'pathRoot=home',  headers: { 'Dropbox-API-Path-Root': JSON.stringify({ '.tag': 'home' }) } },
+    { label: 'selectUser',     headers: { 'Dropbox-API-Select-User': member || '' } },
+    { label: 'selectAdmin',    headers: { 'Dropbox-API-Select-Admin': member || '' } },
+  ]
+  for (const v of variantsRaw) {
+    if (Object.values(v.headers).some(x => x === '')) continue
+    try {
+      const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...v.headers,
+        },
+        body: JSON.stringify({ path: '' }),
+      })
+      const body = await res.text()
+      console.log(`[${v.label}] HTTP ${res.status}`)
+      console.log('  body:', body.slice(0, 600))
+    } catch (err) {
+      console.log(`[${v.label}] network error:`, err.message)
+    }
+  }
+
+  console.log('\n❌ None of the variants worked. The full raw responses above should reveal why.')
+  process.exit(3)
 }
 
 main().catch(err => { console.error('Unexpected:', err); process.exit(99) })
