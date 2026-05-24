@@ -12,7 +12,7 @@ async function pullSocialCode(platform, type) {
         AND type = $2
         AND is_used = FALSE
         AND assigned_to_handle IS NULL
-      ORDER BY created_at ASC
+      ORDER BY created_at DESC
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     )
