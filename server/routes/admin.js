@@ -8,6 +8,7 @@ const { checkAuth, ownerOnly } = require('../middleware/auth');
 const config = require('../../config/app');
 const dailyValueRouter = require('./daily-value');
 const redditRouter = require('./reddit');
+const { pullSocialCode } = require('../services/offer-codes');
 
 
 
@@ -521,37 +522,15 @@ router.post('/pull-social-code', checkAuth, async (req, res) => {
             return res.status(400).json({ success: false, error: 'platform must be "ios" or "android"' });
         }
 
-        const result = await pool.query(`
-            UPDATE offer_codes
-            SET is_used = TRUE,
-                used_at = NOW(),
-                used_by_email = 'social-campaign'
-            WHERE id = (
-                SELECT id FROM offer_codes
-                WHERE platform = $1
-                  AND type = $2
-                  AND is_used = FALSE
-                  AND assigned_to_handle IS NULL
-                ORDER BY created_at ASC
-                LIMIT 1
-                FOR UPDATE SKIP LOCKED
-            )
-            RETURNING code
-        `, [platform, type]);
-
-        if (result.rows.length === 0) {
+        const result = await pullSocialCode(platform, type);
+        if (!result) {
             return res.status(409).json({
                 success: false,
                 error: `No available ${platform} ${type} codes left in the pool`,
             });
         }
 
-        const code = result.rows[0].code;
-        const redeemUrl = platform === 'android'
-            ? `https://play.google.com/redeem?code=${encodeURIComponent(code)}`
-            : `https://apps.apple.com/redeem?ctx=offercodes&id=6760255541&code=${encodeURIComponent(code)}`;
-
-        res.json({ success: true, code, platform, type, redeemUrl });
+        res.json({ success: true, ...result });
     } catch (err) {
         console.error('Pull Social Code Error:', err);
         res.status(500).json({ success: false, error: err.message });

@@ -15,6 +15,7 @@ app.use('/api/feedback', require('./routes/feedback'))
 app.use('/mission-control-x89', require('./routes/admin'))
 app.use('/dashboard', require('./routes/dashboard'))
 app.use('/api/video-studio', require('./routes/video-studio'))
+app.use('/api/promo-codes', require('./routes/promo-codes'))
 
 
 app.use('/breathing', require('./routes/content'))

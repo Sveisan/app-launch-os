@@ -294,6 +294,119 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
         }
 
         .hidden { display: none !important; }
+
+        .promo-section {
+            margin-top: 3.5rem;
+            border-top: 1px solid var(--card-border);
+            padding-top: 1.8rem;
+            width: 100%;
+        }
+        .promo-heading {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            font-weight: 400;
+        }
+        .promo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+        .promo-btn {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 300;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 200ms ease, background 200ms ease;
+        }
+        .promo-btn:hover:not(:disabled) {
+            border-color: rgba(82,171,152,0.35);
+            background: rgba(255,255,255,0.04);
+        }
+        .promo-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .promo-btn .btn-platform {
+            display: block;
+            color: var(--secondary);
+            font-size: 0.65rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+        }
+        .promo-result {
+            margin-top: 1.2rem;
+            border: 1px solid rgba(82,171,152,0.2);
+            border-radius: 12px;
+            padding: 1.4rem;
+            background: rgba(255,255,255,0.02);
+        }
+        .promo-code-block {
+            font-family: 'Courier New', monospace;
+            font-size: 1.15rem;
+            letter-spacing: 0.05em;
+            color: var(--secondary);
+            background: rgba(0,0,0,0.35);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            user-select: all;
+            word-break: break-all;
+            margin-bottom: 0.5rem;
+            transition: background 150ms;
+            text-align: center;
+        }
+        .promo-code-block:hover { background: rgba(82,171,152,0.07); }
+        .promo-copy-hint {
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin-bottom: 1.2rem;
+            text-align: center;
+        }
+        .promo-result-actions {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        a.promo-redeem-link {
+            background: var(--secondary);
+            color: #042521;
+            padding: 0.6rem 1.3rem;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        a.promo-redeem-link:hover { background: #6bc1ae; }
+        button.promo-again {
+            background: none;
+            border: none;
+            color: var(--text-soft);
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+        button.promo-again:hover { color: var(--text-muted); }
+        .promo-empty {
+            margin-top: 1rem;
+            color: var(--text-soft);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -366,11 +479,59 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
                 </ul>
             </div>
         </details>
+
+        <div class="promo-section">
+            <div class="promo-heading">Promo codes</div>
+            <div class="promo-grid" id="promoGrid">
+                <button class="promo-btn" onclick="pullCode('ios','trial')">
+                    <span class="btn-platform">iOS</span>Trial
+                </button>
+                <button class="promo-btn" onclick="pullCode('ios','lifetime')">
+                    <span class="btn-platform">iOS</span>Lifetime
+                </button>
+                <button class="promo-btn" onclick="pullCode('android','trial')">
+                    <span class="btn-platform">Android</span>Trial
+                </button>
+                <button class="promo-btn" onclick="pullCode('android','lifetime')">
+                    <span class="btn-platform">Android</span>Lifetime
+                </button>
+            </div>
+            <div class="promo-result hidden" id="promoResult">
+                <div class="promo-code-block" id="promoCode" onclick="copyPromoCode()" title="Click to copy"></div>
+                <div class="promo-copy-hint" id="promoCopyHint">Click code to copy</div>
+                <div class="promo-result-actions">
+                    <a class="promo-redeem-link" id="promoRedeemLink" target="_blank" rel="noopener">Open redeem link</a>
+                    <button class="promo-again" onclick="resetPromo()">Pull another</button>
+                </div>
+            </div>
+            <div class="promo-empty hidden" id="promoEmpty">Out of stock — ping support</div>
+        </div>
     </main>
 
     <footer>built quietly &nbsp;·&nbsp; ${esc(userRole)}</footer>
 
     <script>
+        // XHR shim: some browser extensions (Web3 wallets running SES lockdown
+        // — MetaMask, Phantom, "dapp-connector", etc.) wrap window.fetch and
+        // abort multipart POSTs on this page. Plain XMLHttpRequest is not
+        // wrapped, so we route every dashboard request through here.
+        function xhrJSON(method, url, body, headers) {
+            return new Promise(function(resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(method, url);
+                if (headers) {
+                    Object.keys(headers).forEach(function(k) { xhr.setRequestHeader(k, headers[k]); });
+                }
+                xhr.onload = function() {
+                    var parsed = {};
+                    try { parsed = JSON.parse(xhr.responseText || '{}'); } catch (e) {}
+                    resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, body: parsed });
+                };
+                xhr.onerror = function() { reject(new Error('Network error')); };
+                xhr.send(body !== undefined ? body : null);
+            });
+        }
+
         const ta = document.getElementById('concept');
         const btn = document.getElementById('submitBtn');
         const form = document.getElementById('composer');
@@ -457,8 +618,8 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             statusSub.textContent = ' ';
 
             try {
-                const r = await fetch('/api/video-studio/brief', { method: 'POST', body: fd });
-                const j = await r.json();
+                const r = await xhrJSON('POST', '/api/video-studio/brief', fd);
+                const j = r.body;
                 if (!r.ok || !j.jobId) {
                     throw new Error(j.error || 'Submit failed');
                 }
@@ -473,8 +634,8 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             const tick = async () => {
                 tries++;
                 try {
-                    const r = await fetch('/api/video-studio/status/' + encodeURIComponent(jobId));
-                    const j = await r.json();
+                    const r = await xhrJSON('GET', '/api/video-studio/status/' + encodeURIComponent(jobId));
+                    const j = r.body;
                     if (j.status === 'completed' && j.result) {
                         showResult(j.result);
                         return;
@@ -532,9 +693,64 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
 
         async function logout(e) {
             e.preventDefault();
-            await fetch('/mission-control-x89/logout', { method: 'POST' });
+            try { await xhrJSON('POST', '/mission-control-x89/logout'); } catch (err) {}
             window.location = '/mission-control-x89/login';
         }
+
+        var promoGrid = document.getElementById('promoGrid');
+        var promoResult = document.getElementById('promoResult');
+        var promoCodeEl = document.getElementById('promoCode');
+        var promoCopyHint = document.getElementById('promoCopyHint');
+        var promoRedeemLink = document.getElementById('promoRedeemLink');
+        var promoEmpty = document.getElementById('promoEmpty');
+
+        async function pullCode(platform, type) {
+            var btns = promoGrid.querySelectorAll('.promo-btn');
+            btns.forEach(function(b) { b.disabled = true; });
+            promoResult.classList.add('hidden');
+            promoEmpty.classList.add('hidden');
+
+            try {
+                var r = await xhrJSON('POST', '/api/promo-codes/pull', JSON.stringify({ platform: platform, type: type }), { 'Content-Type': 'application/json' });
+                var j = r.body;
+                if (j.outOfStock) {
+                    promoEmpty.classList.remove('hidden');
+                    btns.forEach(function(b) { b.disabled = false; });
+                    return;
+                }
+                if (!j.success) {
+                    alert(j.error || 'Something went wrong');
+                    btns.forEach(function(b) { b.disabled = false; });
+                    return;
+                }
+                promoCodeEl.textContent = j.code;
+                promoRedeemLink.href = j.redeemUrl;
+                promoCopyHint.textContent = 'Click code to copy';
+                promoResult.classList.remove('hidden');
+            } catch (err) {
+                alert('Request failed: ' + err.message);
+                btns.forEach(function(b) { b.disabled = false; });
+            }
+        }
+        window.pullCode = pullCode;
+
+        function copyPromoCode() {
+            var code = promoCodeEl.textContent;
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(function() {
+                promoCopyHint.textContent = 'Copied!';
+                setTimeout(function() { promoCopyHint.textContent = 'Click code to copy'; }, 1800);
+            });
+        }
+        window.copyPromoCode = copyPromoCode;
+
+        function resetPromo() {
+            promoResult.classList.add('hidden');
+            promoEmpty.classList.add('hidden');
+            var btns = promoGrid.querySelectorAll('.promo-btn');
+            btns.forEach(function(b) { b.disabled = false; });
+        }
+        window.resetPromo = resetPromo;
     </script>
 </body>
 </html>`
