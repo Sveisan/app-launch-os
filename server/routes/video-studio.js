@@ -88,7 +88,9 @@ router.post('/brief', checkAuth, upload.single('image'), async (req, res) => {
     if (!brief && !file) {
         return res.status(400).json({ error: 'Provide a brief, an image, or both.' });
     }
-    if (!process.env.REPLICATE_API_TOKEN || !process.env.DROPBOX_ACCESS_TOKEN) {
+    const dropboxConfigured = process.env.DROPBOX_ACCESS_TOKEN ||
+        (process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET && process.env.DROPBOX_REFRESH_TOKEN)
+    if (!process.env.REPLICATE_API_TOKEN || !dropboxConfigured) {
         return res.status(503).json({ error: 'Video pipeline not configured (missing API tokens).' });
     }
 

@@ -23,17 +23,54 @@ function buildReplicate() {
   return new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 }
 
-// Build a Dropbox client. Verified end-to-end with an "App folder" app on a
-// Business team account (Lokebox); the SDK's default scoping works as long as
-// the app has files.{content,metadata}.{read,write} + sharing.write scopes.
+// Build a Dropbox client. Supports two auth modes:
+//   1. Refresh-token flow (preferred): set DROPBOX_APP_KEY + DROPBOX_APP_SECRET +
+//      DROPBOX_REFRESH_TOKEN — the SDK rotates access tokens automatically.
+//   2. Static access token (legacy): set DROPBOX_ACCESS_TOKEN — expires in ~4 h,
+//      requires manual rotation in Railway.
+//
+// Verified end-to-end with an "App folder" app on a Business team account
+// (Lokebox); the SDK's default scoping works with files.{content,metadata}.
+// {read,write} + sharing.write scopes.
 async function buildDropbox() {
-  if (!process.env.DROPBOX_ACCESS_TOKEN) {
-    throw new Error('DROPBOX_ACCESS_TOKEN missing in environment')
+  const hasRefreshFlow =
+    process.env.DROPBOX_APP_KEY &&
+    process.env.DROPBOX_APP_SECRET &&
+    process.env.DROPBOX_REFRESH_TOKEN
+
+  if (!hasRefreshFlow && !process.env.DROPBOX_ACCESS_TOKEN) {
+    throw new Error(
+      'Dropbox not configured — set DROPBOX_ACCESS_TOKEN ' +
+      '(or DROPBOX_APP_KEY + DROPBOX_APP_SECRET + DROPBOX_REFRESH_TOKEN) in Railway'
+    )
   }
-  const dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN, fetch })
+
+  const opts = hasRefreshFlow
+    ? {
+        clientId: process.env.DROPBOX_APP_KEY,
+        clientSecret: process.env.DROPBOX_APP_SECRET,
+        refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
+      }
+    : { accessToken: process.env.DROPBOX_ACCESS_TOKEN }
+
+  const dbx = new Dropbox({ ...opts, fetch })
+
   // Pre-flight: fail fast (and don't burn Replicate credit) if the token is
   // broken, expired, or missing scopes.
-  await dbx.usersGetCurrentAccount()
+  try {
+    await dbx.usersGetCurrentAccount()
+  } catch (err) {
+    const msg = (err && err.message) || ''
+    if (msg.includes('401') || (err && err.status === 401)) {
+      throw new Error(
+        hasRefreshFlow
+          ? 'Dropbox refresh token is invalid or revoked — re-authorise the app and update Railway env vars'
+          : 'Dropbox access token has expired — update DROPBOX_ACCESS_TOKEN in Railway settings (or switch to refresh-token flow)'
+      )
+    }
+    throw err
+  }
+
   return dbx
 }
 
