@@ -53,6 +53,9 @@ async function buildDropbox() {
       refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
       fetch,
     })
+    // v10 doesn't reliably exchange the refresh token before the first RPC
+    // call — do it explicitly so the pre-flight has a live access token.
+    await auth.checkAndRefreshAccessToken()
     dbx = new Dropbox({ auth, fetch })
   } else {
     dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN, fetch })
