@@ -414,6 +414,64 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             border: 1px solid var(--card-border);
             border-radius: 10px;
         }
+
+        .recent-section {
+            margin-top: 3.5rem;
+            border-top: 1px solid var(--card-border);
+            padding-top: 1.8rem;
+            width: 100%;
+        }
+        .recent-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .recent-heading {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+        a.recent-folder-link {
+            color: var(--text-soft);
+            font-size: 0.72rem;
+            text-decoration: underline;
+            white-space: nowrap;
+        }
+        a.recent-folder-link:hover { color: var(--secondary); }
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 0.7rem;
+        }
+        .recent-tile {
+            position: relative;
+            aspect-ratio: 9 / 16;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--card-border);
+            cursor: pointer;
+            transition: border-color 200ms ease, transform 120ms ease;
+        }
+        .recent-tile:hover {
+            border-color: rgba(82,171,152,0.35);
+            transform: translateY(-2px);
+        }
+        .recent-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .recent-note {
+            color: var(--text-soft);
+            font-size: 0.78rem;
+            padding: 0.3rem 0;
+        }
     </style>
 </head>
 <body>
@@ -513,6 +571,15 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
                 </div>
             </div>
             <div class="promo-empty hidden" id="promoEmpty">Out of stock — ping support</div>
+        </div>
+
+        <div class="recent-section" id="recentSection">
+            <div class="recent-head">
+                <span class="recent-heading">Recent videos</span>
+                <a class="recent-folder-link hidden" id="recentFolderLink" target="_blank" rel="noopener">Open Videos folder in Dropbox ↗</a>
+            </div>
+            <div class="recent-note" id="recentNote">Loading…</div>
+            <div class="recent-grid hidden" id="recentGrid"></div>
         </div>
     </main>
 
@@ -679,6 +746,8 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             resultSub.textContent = result.dropboxPath
                 ? 'Saved to Dropbox · Apps · Breathe Collection Studio' + result.dropboxPath
                 : 'Saved to Dropbox';
+            // The new clip is already in Dropbox; refresh the gallery so it shows.
+            loadRecent();
         }
 
         function showError(msg) {
@@ -762,6 +831,56 @@ function renderDashboard({ userEmail = '', userRole = 'freelancer' } = {}) {
             btns.forEach(function(b) { b.disabled = false; });
         }
         window.resetPromo = resetPromo;
+
+        // ---- Recent videos gallery ----
+        var recentGrid = document.getElementById('recentGrid');
+        var recentNote = document.getElementById('recentNote');
+        var recentFolderLink = document.getElementById('recentFolderLink');
+
+        async function loadRecent() {
+            try {
+                var r = await xhrJSON('GET', '/api/video-studio/recent');
+                var data = r.body || {};
+                if (data.folderUrl) {
+                    recentFolderLink.href = data.folderUrl;
+                    recentFolderLink.classList.remove('hidden');
+                }
+                renderRecent((data.videos) || []);
+            } catch (err) {
+                recentNote.textContent = 'Could not load recent videos.';
+            }
+        }
+
+        function renderRecent(vids) {
+            recentGrid.innerHTML = '';
+            if (!vids.length) {
+                recentNote.textContent = 'Nothing here yet — your first video will show up here.';
+                recentNote.classList.remove('hidden');
+                recentGrid.classList.add('hidden');
+                return;
+            }
+            recentNote.classList.add('hidden');
+            recentGrid.classList.remove('hidden');
+            vids.forEach(function(v) {
+                var tile = document.createElement('div');
+                tile.className = 'recent-tile';
+                tile.title = v.name;
+                var vid = document.createElement('video');
+                vid.src = v.url;
+                vid.muted = true;
+                vid.loop = true;
+                vid.playsInline = true;
+                vid.preload = 'metadata';
+                tile.appendChild(vid);
+                // Hover to preview, click to open full-size in a new tab.
+                tile.addEventListener('mouseenter', function() { vid.play().catch(function() {}); });
+                tile.addEventListener('mouseleave', function() { vid.pause(); });
+                tile.addEventListener('click', function() { window.open(v.url, '_blank', 'noopener'); });
+                recentGrid.appendChild(tile);
+            });
+        }
+
+        loadRecent();
     </script>
 </body>
 </html>`

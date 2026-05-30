@@ -189,4 +189,53 @@ async function runBrief({ brief, imageBuffer, imageMime, onProgress = () => {} }
   }
 }
 
-module.exports = { runBrief }
+// List the most recent MP4s in /Videos for the dashboard reference gallery.
+// Returns short-lived direct streaming links (filesGetTemporaryLink, ~4h) plus
+// a shared link to the folder itself for an "open in Dropbox" affordance. Best
+// effort: individual failures are skipped, and an empty list is returned rather
+// than throwing, so the gallery never blocks the page.
+async function listRecentVideos(limit = 12) {
+  const dbx = await buildDropbox()
+
+  let entries = []
+  try {
+    const resp = await dbx.filesListFolder({ path: '/Videos' })
+    entries = resp.result.entries || []
+  } catch (err) {
+    const summary = err && err.error && err.error.error_summary
+    if (summary && summary.includes('not_found')) return { videos: [], folderUrl: null }
+    throw err
+  }
+
+  const files = entries
+    .filter(e => e['.tag'] === 'file' && /\.mp4$/i.test(e.name))
+    .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified))
+    .slice(0, limit)
+
+  const videos = []
+  for (const f of files) {
+    try {
+      const link = await dbx.filesGetTemporaryLink({ path: f.path_lower })
+      videos.push({ name: f.name, url: link.result.link, modified: f.server_modified })
+    } catch (_) { /* skip individual failures */ }
+  }
+
+  // Get (or create) a shared link to the folder for the "open in Dropbox" link.
+  let folderUrl = null
+  try {
+    const r = await dbx.sharingCreateSharedLinkWithSettings({ path: '/Videos' })
+    folderUrl = r.result.url
+  } catch (err) {
+    const summary = err && err.error && err.error.error_summary
+    if (summary && summary.includes('shared_link_already_exists')) {
+      try {
+        const list = await dbx.sharingListSharedLinks({ path: '/Videos', direct_only: true })
+        folderUrl = list.result.links[0] && list.result.links[0].url
+      } catch (_) { /* leave folderUrl null */ }
+    }
+  }
+
+  return { videos, folderUrl }
+}
+
+module.exports = { runBrief, listRecentVideos }

@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const multer = require('multer');
 const videoGenerator = require('../jobs/video-generator');
 const lungGenerator = require('../jobs/lung-video-generator');
-const { runBrief } = require('../jobs/brief-pipeline');
+const { runBrief, listRecentVideos } = require('../jobs/brief-pipeline');
 const { checkAuth } = require('../middleware/auth');
 
 // 15MB cap is plenty for an iPhone Pro still. Stays in memory; we hand the
@@ -126,6 +126,22 @@ router.post('/brief', checkAuth, upload.single('image'), async (req, res) => {
     });
 
     res.json({ success: true, jobId });
+});
+
+// Recent videos for the dashboard reference gallery. Source of truth is the
+// Dropbox /Videos folder (survives server restarts, unlike the in-memory JOBS
+// map). Always returns 200 with a (possibly empty) list so the page never breaks.
+router.get('/recent', checkAuth, async (req, res) => {
+    const dropboxConfigured = process.env.DROPBOX_ACCESS_TOKEN ||
+        (process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET && process.env.DROPBOX_REFRESH_TOKEN);
+    if (!dropboxConfigured) return res.json({ videos: [], folderUrl: null });
+    try {
+        const data = await listRecentVideos(12);
+        res.json(data);
+    } catch (err) {
+        console.error('[recent videos] failed:', err.message);
+        res.json({ videos: [], folderUrl: null });
+    }
 });
 
 router.get('/status/:jobId', checkAuth, (req, res) => {
