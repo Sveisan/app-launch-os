@@ -11,7 +11,7 @@
 // $0.30-0.50 for Kling. Skipping image gen by uploading drops it to ~$0.40.
 
 const Replicate = require('replicate')
-const { Dropbox } = require('dropbox')
+const { Dropbox, DropboxAuth } = require('dropbox')
 
 const FLUX_MODEL = 'black-forest-labs/flux-1.1-pro'
 const KLING_MODEL = 'kwaivgi/kling-v1.6-standard'
@@ -45,15 +45,18 @@ async function buildDropbox() {
     )
   }
 
-  const opts = hasRefreshFlow
-    ? {
-        clientId: process.env.DROPBOX_APP_KEY,
-        clientSecret: process.env.DROPBOX_APP_SECRET,
-        refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
-      }
-    : { accessToken: process.env.DROPBOX_ACCESS_TOKEN }
-
-  const dbx = new Dropbox({ ...opts, fetch })
+  let dbx
+  if (hasRefreshFlow) {
+    const auth = new DropboxAuth({
+      clientId: process.env.DROPBOX_APP_KEY,
+      clientSecret: process.env.DROPBOX_APP_SECRET,
+      refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
+      fetch,
+    })
+    dbx = new Dropbox({ auth, fetch })
+  } else {
+    dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN, fetch })
+  }
 
   // Pre-flight: fail fast (and don't burn Replicate credit) if the token is
   // broken, expired, or missing scopes.
